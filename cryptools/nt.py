@@ -1,12 +1,15 @@
+"""
+Number theory tools:
+    lcm(a, b) least common mutiple of a and b
+    egcd(a,b) extended Euclidean agorithm
+    crt([a1, a2, ...],[m1, m2, ...]) Chinese Remainder Theorem
+    cf(Fraction(m,n)) continued fraction expansions
+    convergents()
+    sqrt_mod
+    order
+"""
+
 # Euclid and friends
-
-def gcd(a: int, b: int) -> int:
-    """Compute the greatest common divisor of a and b."""
-    if a == 0:
-        return b
-    else:
-        return gcd(b % a, a)
-
 
 def lcm(a: int, b: int) -> int:
     """Compute the least common multiple of a and b."""
@@ -203,6 +206,31 @@ def sqrt_mod(a: int, p: int) -> list:
         x1, x2 = (pow(x1, 2, p) + pow(x2, 2, p) * r) % p, 2 * (x1 * x2) % p  # now square
         i = i >> 1  # i= i/2
     return y1
+
+# Euler phi and Carmichael function
+
+from math import prod
+
+
+def euler_phi(n: int) -> int:
+    """Euler's phi function of n."""
+    k = factorint(n)
+    return prod([(p - 1) * p ** (k[p] - 1) for p in k])
+
+
+def carmichael_lambda(n: int) -> int:
+    """Carmichael's lambda function of n."""
+    k = factorint(n)
+    lam_all = []  # values corresponding to the prime factors
+    for p in k:
+        lam = (p - 1) * p ** (k[p] - 1)
+        if p == 2 and k[p] > 2:
+            lam = lam // 2
+        lam_all += [lam]
+    lam = lam_all[0]  # now take the least common multiple of all values
+    for l in lam_all[1:]:
+        lam = lcm(lam, l)
+    return lam
 
 # Order in Z_p^*
 

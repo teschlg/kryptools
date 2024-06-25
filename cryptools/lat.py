@@ -1,203 +1,164 @@
-# Linear algebra
+# Lattice
 
 from math import sqrt, prod
+from .la import Matrix
 
-class Matrix:
-    def __init__(self, matrix, map = None):
-        if not isinstance(matrix[0], list|tuple):
-            matrix = [ [x] for x in matrix ]
-        self.matrix = matrix
-        self.cols = len(matrix[0])
-        self.rows = len(matrix)
-        if map:
-            self.map(map)
+def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
+    "Babai's rounding algorithm for solving the CVP."
+    s = U.inv() * x
+    k = s.map(round)
+    return U * k
 
-    def __repr__(self) -> str:
-        out = ["[ "] * self.rows
-        for j in range(self.cols):
-            tmp = [ "" ] * self.rows
-            max_len = 0
-            for i in range(self.rows):
-                tmp[i] = str(self.matrix[i][j])
-                max_len = max(max_len, len(tmp[i]))
-            for i in range(self.rows):
-                out[i] += " " * (max_len - len(tmp[i])) + tmp[i]
-                if j < self.cols - 1:
-                    out[i] += ", "
-        for i in range(self.rows):
-            out[i] += " ]" 
-        return '\n'.join(out)  
+def hermite_nf(M: Matrix) -> Matrix:
+    "Compute the Hermite normal form of a matrix M."
+    n, m = M.cols, M.rows
+    H = M[:, :]
+    j = n - 1
+    for i in reversed(range(m)):
+        j0 = j
+        minimum = abs(H[i, j])  # search for the pivot in the present row
+        for jj in range(j):
+            tmp = abs(H[i, jj])
+            if tmp > 0 and (tmp < minimum or minimum == 0):
+                minimum = tmp
+                j0 = jj
+        if minimum == 0:
+            continue  # all entries are zero
+        if j0 < j:
+            H[:, j], H[:, j0] = (
+                H[:, j0],
+                H[:, j],
+            )  # swap columns, to move the pivot in place
+        if H[i, j] < 0:
+            H[:, j] *= -1  # make the pivot positive
+        jj = j - 1
+        while jj >= 0:  # make the row entries left to the pivot zero
+            tmp = H[i, jj] // H[i, j]
+            H[:, jj] -= tmp * H[:, j]
+            if H[i, jj]:
+                H[:, j], H[:, jj] = H[:, jj], H[:, j]  # swap columns
+            else:
+                jj -= 1
+        for jj in range(j + 1, n):  # reduce the row entries right to the pivot
+            tmp = H[i, jj] // H[i, j]
+            H[:, jj] -= tmp * H[:, j]
+        #print(H)
+        j -= 1
+    while H.cols> 1 and all(not H[i, 0] for i in range(m)): # remove zero columns
+        H = H[:,1:]
+    return H
 
-    def __len__(self):
-        return self.cols * self.rows
+def norm2(v: Matrix) -> float:
+    "Square of the Euclidean norm of a vector v."
+    return sum(map(lambda x: x * x, v))
 
-    def __getitem__(self, item):
-        if isinstance(item, tuple):
-            i, j = item
-            if isinstance(i, int) and isinstance(j, int):
-                return self.matrix[i][j]
-            rows = range(self.rows)[i]
-            if isinstance(i, int):
-                rows = [ rows ]
-            cols = range(self.cols)[j]
-            if isinstance(j, int):
-                cols = [ cols ]
-            return Matrix([[self.matrix[i][j] for j in cols] for i in rows])
-        i, j = divmod(item, self.cols)
-        return self.matrix[i][j]
+def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
+    "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
+    M = Matrix.eye(U.cols, U.rows)
+    Us = U[:, :]
+    for j in range(1, U.rows):
+        tmp = U[:, j]
+        for i in range(j):
+            M[i, j] = U[:, j].dot(Us[:, i]) / norm2(Us[:, i])
+            tmp -= M[i, j] * Us[:, i]
+        Us[:, j] = tmp
+    return Us, M
+
+def gram_det(U: Matrix) -> float:
+    Us = gram_schmidt(U)[0]
+    return prod([Us[:, i].norm() for i in range(U.rows)])
+
+def hadamard_ratio(M: Matrix) -> float:
+    m = M.rows
+    return (gram_det(M) / prod([M[:, i].norm() for i in range(m)])) ** (1 / m)
+
+def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
+    "Babai's closest plane algorithm for solving the CVP."
+    Us = gram_schmidt(U)[0]
+    y = x
+    for k in range(U.cols - 1, -1, -1):
+        y = y - round(y.dot(Us[:, k]) / norm2(Us[:, k])) * U[:, k]
+    return (x - y).applyfunc(round)
+
+def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
+    "lll algorithm for lattice reduction"
     
-    def __setitem__(self, item, value):
-        if isinstance(item, tuple):
-            i, j = item
-            if isinstance(i, int) and isinstance(j, int):
-                self.matrix[i][j] = value
-                return
-            rows = range(self.rows)[i]
-            if isinstance(i, int):
-                rows = [ rows ]
-            cols = range(self.cols)[j]
-            if isinstance(j, int):
-                cols = [ cols ]
-            for i, ii in zip(cols,range(len(cols))):
-                for j, jj in zip(rows,range(len(rows))):
-                    self.matrix[j][i] = value[jj,ii]
-            return
-        i, j = divmod(item, self.cols)
-        self.matrix[i][j] = value
+    assert 0 < delta <= 1, f"LLL reqires 0 < delta={delta} <= 1"
+    j = 1
+    U = V[:, :]
+    Us = U[:, :]
+    M = Matrix.zeros(U.cols, U.rows)
+    M[0, 0] = norm2(Us[:, 0])  # we store the squared norms on the diagonal
+    for l in range(1, U.rows):  # Gram-Schmidt decomposition
+        tmp = U[:, l]
+        for i in range(l):
+            M[i, l] = U[:, l].dot(Us[:, i]) / M[i, i]
+            tmp -= M[i, l] * Us[:, i]
+        Us[:, l] = tmp
+        M[l, l] = norm2(Us[:, l])
 
-    def map(self, func):
-        for row in self.matrix:
-            row[:] = map(func, row)
-            
-    def applyfunc(self, func):
-        tmp = self[:,:]
-        tmp.map(func)
-        return tmp
+    while j < U.rows:
+        for i in range(j - 1, -1, -1):  # reduce the weights of the basis vectors
+            r = round(M[i, j])
+            if r:
+                U[:, j] -= r * U[:, i]
+                for k in range(j):
+                    if k == i:
+                        M[k, j] -= r
+                    else:
+                        M[k, j] -= r * M[k, i]
 
-    def norm2(self) -> float:
-        "Squared Frobenius/Euclidean norm."
-        return sum( sum(x*x for x in row) for row in self.matrix )
+        newM11 = M[j, j] + M[j - 1, j] ** 2 * M[j - 1, j - 1]
+        if (delta * M[j - 1, j - 1] <= newM11):  # Lovasz condition
+            j += 1
+            continue  # nothing to be done
+        # else swap vectors
+        U[:, j], U[:, j - 1] = U[:, j - 1], U[:, j]
+        # update the Gram-Schmidt decomposition
+        oldM11 = M[j - 1, j - 1]
+        oldM10 = M[j - 1, j]
+        oldM00 = M[j, j]
+        oldUs = Us[:, j - 1]
+        Us[:, j - 1] = Us[:, j] + M[j - 1, j] * Us[:, j - 1]
+        M[j - 1, j - 1] = newM11
+        M[j - 1, j] *= oldM11 / M[j - 1, j - 1]
+        Us[:, j] = oldUs - M[j - 1, j] * Us[:, j - 1]
+        M[j, j] = oldM11 - M[j - 1, j] ** 2 * M[j - 1, j - 1]
+        for l in range(j - 1):
+            M[l, j], M[l, j - 1] = M[l, j - 1], M[l, j]
+        tmp1 = oldM00 / M[j - 1, j - 1]
+        tmp2 = oldM10 * oldM11 / M[j - 1, j - 1]
+        for l in range(j + 1, U.rows):
+            M[j - 1, l], M[j, l] = (
+                tmp1 * M[j, l] + tmp2 * M[j - 1, l],
+                M[j - 1, l] - oldM10 * M[j, l],
+            )
+        j = max(j - 1, 1)  # redo the last step
 
-    def norm(self) -> float:
-        "Frobenius/Euclidean norm."
-        return sqrt(self.norm2())
+    if sort:  # sort the vectors according to their norm 
+        tmp = [U[:, j] for j in range(U.rows)]
+        tmp.sort(key=norm2)
+        for j in range(U.rows):
+            U[:, j] = tmp[j]
+    return U
 
-    def dot(self, other) -> int:
-        if self.rows == 1 and other.rows == 1 and self.cols == other.cols:
-            return sum(x * y for x, y in zip(self.matrix[0], other.matrix[0]))
-        if self.cols == 1 and other.cols == 1 and self.rows == other.rows:
-            return sum(x[0] * y[0] for x, y in zip(self.matrix, other.matrix))
-        return NotImplemented
+from random import choice, sample
 
-    def transpose(self) -> "Matrix":
-        return Matrix([list(i) for i in zip(*self.matrix)])
-    
-    def multiply(self, other) -> "Matrix":
-        if not isinstance(other, Matrix) or self.cols != other.rows:
-            return NotImplemented
-        result = [[0 for j in range(other.cols)] for i in range(self.rows)]
-        for i in range(self.rows):
-            for j in range(other.cols):
-                for k in range(other.rows):
-                    result[i][j] += self.matrix[i][k] * other.matrix[k][j]
-        return Matrix(result)
-    
-    def __add__(self, other) -> "Matrix":
-        if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
-            return Matrix([ [ x1 + y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
-        return NotImplemented
+def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = 9) -> Matrix:
+    "Create a random unimodular matrix of dimension n."
+    W = Matrix.zeros(n, n)
+    for i in range(n):
+        for j in range(i, n):
+            W[i, j] = choice([-1, 1])
+    W = W[sample(range(n), n), sample(range(n), n)]
+    for _ in range(iterations):
+        i, j = sample(range(n), 2)
+        tmp = W[i, :] + choice([-1, 1]) * W[j, :]
+        if max([abs(x) for x in tmp]) <= max_val:
+            W[i, :] = tmp
+        i, j = sample(range(n), 2)
+        tmp = W[:, i] + choice([-1, 1]) * W[:, j]
+        if max([abs(x) for x in tmp]) <= max_val:
+            W[:, i] = tmp
+    return W
 
-    def __sub__(self, other) -> "Matrix":
-        if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
-            return Matrix([ [ x1 - y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
-        return NotImplemented
-
-    def __neg__(self) -> "Matrix":
-        return -1 * self
-
-    def __mul__(self, other) -> "Matrix":
-        if isinstance(other, Matrix):
-            return self.multiply(other)
-        return NotImplemented
-
-    def __rmul__(self, other) -> "Matrix":
-        if isinstance(other, Matrix):
-            return self.multiply(other)
-        return Matrix([ [item * other for item in row] for row in self.matrix ])
-
-    def rref(self) -> "Matrix":
-        "Compute the reduced echelon form of a matrix M."
-        n, m = self.cols, self.rows
-        R = self[:, :]
-        i = 0
-        for j in range(n):
-            if not R[i, j]: # search for am nonzero entry in the present column
-                for ii in range(i+1,m):
-                    if R[ii, j]:
-                        R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
-                        break
-                else:
-                    continue  # all entries are zero
-            if R[i, j] != 1:
-                R[i, :] = 1/ R[i, j] * R[i, :]  # make the pivot one
-            for ii in range(m):  # remove the column entries above/below the pivot
-                if i == ii:
-                    continue
-                tmp = R[ii, j]
-                R[ii, ::] -= tmp * R[i, :]
-            i += 1
-            if i == m:
-                break
-        return R
-
-    def det(self) -> int:
-        "Compute the determinant of a matrix M."
-        if self.rows != self.rows:
-            raise ValueError("Matrix must be square!")
-        n = self.cols
-        R = self[:, :]
-        D = 1
-        i = 0
-        for j in range(n):
-            if not R[i, j]: # search for am nonzero entry in the present column
-                for ii in range(i+1,m):
-                    if R[ii, j]:
-                        D *= -1
-                        R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
-                        break
-                else:
-                    return 0  # all entries are zero
-            if R[i, j] != 1:
-                D *= R[i, j]
-                R[i, :] = 1/ R[i, j] * R[i, :]  # make the pivot one
-            for ii in range(i+1,n):  # remove the column entries below the pivot
-                if i == ii:
-                    continue
-                tmp = R[ii, j]
-                R[ii, ::] -= tmp * R[i, :]
-            i += 1
-        return D
-
-    def inv(self) -> "Matrix":
-        "Compute the inverse of a square matrix M."
-        if self.rows != self.rows:
-            raise ValueError("Matrix must be square!")
-        n = self.cols    
-        MM = Matrix([[0 for _ in range(2*n)] for _ in range(n)])
-        for i in range(n):
-            MM[i,n+i] = 1
-        MM[:,0:n] = self
-        MM = MM.rref()
-        if not prod(MM[i, i] for i in range(n)):
-            raise ValueError("Matrix is not invertible!")
-        return MM[:,n:]
-
-
-def zero(m:int, n: int) -> "Matrix":
-    return Matrix([[ 0 for j in range(n)] for i in range(m) ])
-
-def eye(m:int, n: int) -> "Matrix":
-    def delta(i, j):
-        if i == j: return 1
-        else: return 0
-    return Matrix([[ delta(i, j) for j in range(n) ] for i in range(m) ])
