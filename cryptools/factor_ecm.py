@@ -2,7 +2,7 @@ from math import gcd, isqrt, log
 from random import randint, seed
 from .primes import sieve_eratosthenes
 
-
+# Crandall and Pomerance: Primes (doi=10.1007/0-387-28979-8)
 # Algorithm 7.2.7
 
 
@@ -36,13 +36,18 @@ def mult(k, P, c2, p):
             R = dbl(R, c2, p)
     return R
 
-
+# Crandall and Pomerance: Primes (doi=10.1007/0-387-28979-8)
 # Algorithm 7.4.4 (Inversionless ECM)
 
 def _ecm_parameters(B1: int, B2: int = None, D: int = None, primes: tuple = None):
     "Precompute parameters for the ECM method."
+
+    # Stage-one/two limits must be even
+    B1 += B1 & 1
     if not B2:
         B2 = 100 * B1
+    else:
+        B2 += B2 & 1
     if not D:
         D = isqrt(B2)
     if not primes:
@@ -73,7 +78,6 @@ def _ecm_parameters(B1: int, B2: int = None, D: int = None, primes: tuple = None
 
 def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm_parameters: tuple = None):
     "Factors a number n using Lentsta's ECM method."    
-    # Stage-one/two limits must be even
 
     if ecm_parameters:
         curves, D, stage_one, stage_two_deltas = ecm_parameters
