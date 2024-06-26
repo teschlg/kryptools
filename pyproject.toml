@@ -16,3 +16,4 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/teschlg/kryptools"
 Issues = "https://github.com/teschlg/kryptools/issues"
+Docs = "https://github.com/teschlg/kryptools/doc"
