@@ -1,9 +1,20 @@
-# Linear algebra
+"""
+Linear algebra
+"""
 
 from math import sqrt, prod
 
 class Matrix:
-    # Matrix class"
+    """
+    Matrix class.
+
+    Example:
+    
+    To define a matrix use
+    >>> Matrix([[1, 2], [3, 4]])
+    [1, 2]
+    [3, 4]
+    """
     def __init__(self, matrix, ring = None):
         if not isinstance(matrix[0], list|tuple):
             matrix = [ [x] for x in matrix ]
@@ -26,8 +37,8 @@ class Matrix:
                 if j < self.cols - 1:
                     out[i] += ", "
         for i in range(self.rows):
-            out[i] += " ]" 
-        return '\n'.join(out)  
+            out[i] += " ]"
+        return '\n'.join(out)
 
     def __len__(self):
         return self.cols * self.rows
@@ -46,7 +57,7 @@ class Matrix:
             return Matrix([[self.matrix[i][j] for j in cols] for i in rows])
         i, j = divmod(item, self.cols)
         return self.matrix[i][j]
-    
+
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
             i, j = item
@@ -70,12 +81,12 @@ class Matrix:
         if not isinstance(other, self.__class__):
             return False
         return self.matrix == other.matrix
-    
+
     def map(self, func):
         "Apply a function to all elements in place"
         for row in self.matrix:
             row[:] = map(func, row)
-            
+
     def applyfunc(self, func):
         "Apply a function to all elements"
         tmp = self[:,:]
@@ -99,7 +110,7 @@ class Matrix:
 
     def transpose(self) -> "Matrix":
         return Matrix([list(i) for i in zip(*self.matrix)])
-    
+
     def multiply(self, other) -> "Matrix":
         if not isinstance(other, Matrix) or self.cols != other.rows:
             return NotImplemented
@@ -109,7 +120,7 @@ class Matrix:
                 for k in range(other.rows):
                     result[i][j] += self.matrix[i][k] * other.matrix[k][j]
         return Matrix(result)
-    
+
     def __add__(self, other) -> "Matrix":
         if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
             return Matrix([ [ x1 + y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
@@ -190,7 +201,7 @@ class Matrix:
         "Compute the inverse of a square matrix M."
         if self.rows != self.rows:
             raise ValueError("Matrix must be square!")
-        n = self.cols    
+        n = self.cols
         MM = Matrix([[0 for _ in range(2*n)] for _ in range(n)])
         for i in range(n):
             MM[i,n+i] = 1
@@ -206,6 +217,7 @@ def zeros(m:int, n: int) -> "Matrix":
 
 def eye(m:int, n: int) -> "Matrix":
     def delta(i, j):
-        if i == j: return 1
-        else: return 0
+        if i == j:
+            return 1
+        return 0
     return Matrix([[ delta(i, j) for j in range(n) ] for i in range(m) ])

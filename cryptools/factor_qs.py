@@ -1,6 +1,10 @@
+"""
+Integer factorization: Quadratic sieve
+"""
+
 from math import isqrt, gcd, sqrt, log, exp, ceil
 from .primes import sieve_eratosthenes
-from .nt import legendre_symbol, sqrtmod
+from .nt import legendre_symbol, sqrt_mod
 
 def bytexor(a: bytearray, b: bytes) -> bytes:
     """Xor the bytestring b to the bytearry a."""
@@ -44,11 +48,11 @@ def factor_qs(n: int) -> list:
             factorbase.append(p)
     lf = len(factorbase)  # length of the factorbase (including -1)
     lfb = ceil((lf+1) / 8)  # the number of bytes we need to store a relation
-    
+
     factorbase_log = [log(p) for p in factorbase]  # we add these up to test if a number will probably factor
     factorbase_root = [0] * lf # compute the roots of n mod p
     for i, p in enumerate(factorbase):
-        r1 = sqrtmod(n, p)
+        r1 = sqrt_mod(n, p)
         assert r1 is not None # only quadratic residues
         r2 = -r1 % p
         if r1 == r2:
@@ -111,7 +115,7 @@ def factor_qs(n: int) -> list:
         index = lf # this will be the index of the first nonzero entry
         # print(f'{j:3}', ' '.join(f'{b:08b}' for b in reversed(relation)))
         for i in range(lf):
-            if bytetest(relation, i) and relations[i] != None:  # make this entry zero if we can (Gauss elimination)
+            if bytetest(relation, i) and relations[i] is not None:  # make this entry zero if we can (Gauss elimination)
                 bytexor(relation, relations[i])
             if bytetest(relation, i) and index == lf:  # is this the index of the first nonzero entry?
                 index = i
@@ -142,7 +146,7 @@ def factor_qs(n: int) -> list:
         factors = {} # store the index of the primes dividing j
 
         do_sieve()
-        
+
         for j in sorted(factors.keys(),key=abs):
             v = d + (m2 + j) * j  # (j + m) ** 2 - n
             if factors[j][1] > 0.49 * log(abs(v)):

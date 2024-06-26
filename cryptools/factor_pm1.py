@@ -1,3 +1,7 @@
+"""
+Integer factorization: Pollard's p-1 method
+"""
+
 from math import gcd, log
 from .primes import sieve_eratosthenes
 
@@ -32,7 +36,7 @@ def factor_pm1(n: int, B1: int = 11000, B2: int = 1900000, x: int = 2, pm1_param
         stage_one, stage_two_deltas = pm1_parameters
     else:
         stage_one, stage_two_deltas = _pm1_parameters(B1, B2)
-    
+
     g = gcd(pow(x, stage_one, n) - 1, n)
     if 1 < g < n:
         return g

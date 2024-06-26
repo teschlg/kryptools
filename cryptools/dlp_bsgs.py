@@ -1,4 +1,7 @@
-# Discrete log solvers
+"""
+Discrete log solvers: Shanks' baby-step-giant-step algorithm
+"""
+
 from math import isqrt
 
 
@@ -22,6 +25,5 @@ def dlog_bsgs(a: int, b: int, n: int, m: int = None) -> int:
     for l in range(mm):
         if giant_step in baby_steps:
             return l * mm + baby_steps[giant_step]
-        else:
-            giant_step = giant_step * giant_stride % n
+        giant_step = giant_step * giant_stride % n
     return None  # no solution

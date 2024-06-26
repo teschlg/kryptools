@@ -1,4 +1,6 @@
-# Discrete log solvers
+"""
+Discrete log solvers: Pollard rho
+"""
 
 from math import gcd, isqrt
 from random import randint
@@ -11,16 +13,15 @@ def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
     if not m:
         m = n - 1
     trys = 10
-    max = 10 * isqrt(m)  # stop iterating and try a different start value
-    
+    max_iter = 10 * isqrt(m)  # stop iterating and try a different start value
+
     def f(x: int, alpha: int, beta: int) -> (int, int, int):
         r = x % 3
         if r == 0:
             return x * a % n, (alpha + 1) % m, beta
-        elif r == 1:
+        if r == 1:
             return pow(x, 2, n), (2 * alpha) % m, (2 * beta) % m
-        elif r == 2:
-            return (x * b) % n, alpha, (beta + 1) % m
+        return (x * b) % n, alpha, (beta + 1) % m
 
     while trys > 0:
         j0 = randint(1, m - 1)
@@ -29,7 +30,7 @@ def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
             i = 1
             x, alpha_x, beta_x = f(x, alpha_x, beta_x)  # x_1=f(x_0)
             y, alpha_y, beta_y = f(x, alpha_x, beta_x)  # y_1=f(f(x_0))
-            while x != y and i < max:
+            while x != y and i < max_iter:
                 i += 1
                 x, alpha_x, beta_x = f(x, alpha_x, beta_x)  # f(x_j)
                 y, alpha_y, beta_y = f(y, alpha_y, beta_y)
@@ -38,14 +39,14 @@ def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
             i = 1  # search for a cycle length k < 2^i
             k = 1  # cycle length
             y, alpha_y, beta_y = f(x, alpha_x, beta_x)  # f(x_0)
-            while x != y and i < max:
+            while x != y and i < max_iter:
                 if i == k:  # start a new power of two
                     x, alpha_x, beta_x = y, alpha_y, beta_y
                     i *= 2
                     k = 0
                 y, alpha_y, beta_y = f(y, alpha_y, beta_y)
                 k += 1
-        # we found a collission (or hit max)
+        # we found a collission (or hit max_iter)
         if x == y and (beta_y - beta_x) % m != 0:
             d = gcd(beta_y - beta_x, m)
             mm = m // d
@@ -59,4 +60,3 @@ def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
             return l
         trys -= 1
     raise Exception("Sorry, pollard rho failed!")
-

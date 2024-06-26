@@ -1,7 +1,17 @@
-# Polynomials
+"""
+Polynomials
+"""
 
 class Poly:
-    "Represents a polynomial as a list of coefficients."
+    """
+    Represents a polynomial as a list of coefficients.
+    
+    Example:
+    
+    To define a polynomial as alist of coefficients use
+    >>> Poly([1, 2, 3])
+    3 x^2 + 2 x + 1
+    """
 
     def __init__(self, coeff: list, ring = None, modulus: list = None):
         for i in range(len(coeff) - 1, 0, -1):
@@ -111,7 +121,7 @@ class Poly:
     def __mul__(self, other: "Poly") -> "Poly":
         if isinstance(other, int):
             return Poly([other * s for s in self.coeff])
-        elif not isinstance(other, self.__class__):
+        if not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot multiply {self} and {other}.")
         ls, lo = len(self.coeff), len(other.coeff)
         coeff = [0] * (ls + lo - 1)
@@ -133,7 +143,7 @@ class Poly:
     def __pow__(self, i: int) -> "Poly":
         res = self.__class__([1], modulus=self.modulus)
         if i < 0:
-            if not modulus:
+            if not self.modulus:
                 raise NotImplementedError(f"Cannot divide.")
             tmp = self.inv()
         else:

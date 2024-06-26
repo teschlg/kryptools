@@ -5,10 +5,11 @@ Discrete Log Problem:
 
 
 from math import gcd, log, sqrt
-from .nt import crt
+from .nt import crt, order
 from .dlp_bsgs import dlog_bsgs
-from .dlp_rho import dlog_rho
 from .dlp_qs import dlog_qs
+from .factor import factorint
+
 
 def dlog_naive(a: int, b: int, n: int, m: int = None) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order m by exhaustive search."""
@@ -44,13 +45,11 @@ def _dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
         aj = pow(a, q ** (k - j), n)
         bj = pow(b, q ** (k - j), n)
         yj = _dlog_switch(a1, bj * pow(aj, -xj, n) % n, n, q)
-        if yj == None:
+        if yj is None:
             return None
         xj = xj + q ** (j - 1) * yj % q**j
     return xj
 
-from .factor import factorint
-from .nt import crt, order
 
 def dlog(a: int, b: int, n: int, m: int = None) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order m using Pohlig-Hellman reduction."""
@@ -70,7 +69,7 @@ def dlog(a: int, b: int, n: int, m: int = None) -> int:
         aj = pow(a, m // pj**kj, n)
         bj = pow(b, m // pj**kj, n)
         l = _dlog_ph(aj, bj, n, pj, kj)
-        if l == None:
+        if l is None:
             return None
         mm += [pj**kj]
         ll += [l]

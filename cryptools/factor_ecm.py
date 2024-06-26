@@ -1,3 +1,7 @@
+"""
+Integer factorization: Lentra's ECM
+"""
+
 from math import gcd, isqrt, log
 from random import randint, seed
 from .primes import sieve_eratosthenes
@@ -83,7 +87,7 @@ def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm
         curves, D, stage_one, stage_two_deltas = ecm_parameters
     else:
         D, stage_one, stage_two_deltas = _ecm_parameters(B1, B2)
-    
+
     for _ in range(curves):
         # find a random curve
         sigma = randint(6, n - 1)
@@ -111,7 +115,7 @@ def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm
 
         for i in range(2, D):
             S.append(add(S[i - 1], S[0], S[i - 2], n))
-       
+
         beta = []
         for i in range(D):
             beta.append((S[i][0] * S[i][1]) % n)

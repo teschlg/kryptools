@@ -1,4 +1,6 @@
-# Discrete log solvers
+"""
+Discrete log solvers: Quadratic sieve
+"""
 
 from .nt import sqrt_mod
 from .primes import sieve_eratosthenes

@@ -1,6 +1,8 @@
-# Lattice
+"""
+Lattice tools
+"""
 
-from math import sqrt, prod
+from math import prod
 from fractions import Fraction
 from .la import Matrix, zeros, eye
 
@@ -83,7 +85,7 @@ def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
 
 def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     "lll algorithm for lattice reduction"
-    
+
     assert 0 < delta <= 1, f"LLL reqires 0 < delta={delta} <= 1"
     j = 1
     U = V[:, :]
@@ -138,7 +140,7 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
             )
         j = max(j - 1, 1)  # redo the last step
 
-    if sort:  # sort the vectors according to their norm 
+    if sort:  # sort the vectors according to their norm
         tmp = [U[:, j] for j in range(U.rows)]
         tmp.sort(key=norm2)
         for j in range(U.rows):
@@ -164,4 +166,3 @@ def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = 9) -> 
         if max([abs(x) for x in tmp]) <= max_val:
             W[:, i] = tmp
     return W
-

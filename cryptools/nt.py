@@ -8,7 +8,8 @@ Number theory tools:
     sqrt_mod(n, p) square root of n modulo a prime p
     order(a, n) oder of a in the multiplicative group Z_n^*
 """
-from math import gcd
+from math import gcd, prod
+from fractions import Fraction
 from .factor import factorint
 
 # Euclid and friends
@@ -36,8 +37,6 @@ def egcd(a: int, b: int) -> (int, int, int):
 
 # Chinese remainder theorem
 
-from math import prod
-
 def crt(a: list, m: list) -> int:
     """Solve given linear congruences x[j] % m[j] == a[j] using the Chinese Remainder Theorem."""
     l = len(a)
@@ -51,7 +50,7 @@ def crt(a: list, m: list) -> int:
 
 # class Fraction:
 #     "Rationl number"
-# 
+#
 #     def __init__(self, numerator: int, denominator: int = 1):
 #         assert denominator, "Denominator must be nozero."
 #         tmp = gcd(denominator, numerator)
@@ -60,59 +59,58 @@ def crt(a: list, m: list) -> int:
 #             numerator //= tmp
 #         self.numerator = numerator
 #         self.denominator = denominator
-# 
+#
 #     def __repr__(self):
 #         if self.denominator == 1:
 #             return str(self.numerator)
 #         else:
 #             return str(self.numerator) + "/" + str(self.denominator)
-# 
+#
 #     def __eq__(self, other):
 #         if not isinstance(other, self.__class__):
 #             return False
 #         return self.denominator == other.denominator and self.numerator == other.numerator
-# 
+#
 #     def __bool__(self):
 #         return self.numerator != 0
-# 
+#
 #     def __add__(self, other: "Fraction") -> "Fraction":
 #         if isinstance(other, self.__class__):
 #             return Rational(self.numerator * other.denominator + other.numerator * self.denominator, self.denominator * other.denominator)
-#         elif isinstance(other, int):
+#         if isinstance(other, int):
 #             return Rational(self.numerator + other * self.denominator, self.denominator)
 #         raise ValueError(f"Cannot add {self} and {other}.")
-#     
+#
 #     def __neg__(self) -> "Fraction":
 #         return Rational(- self.numerator, self.denominator)
-# 
+#
 #     def __sub__(self, other: "Fraction") -> "Fraction":
 #         if isinstance(other, self.__class__):
 #             return Rational(self.numerator * other.denominator - other.numerator * self.denominator, self.denominator * other.denominator)
-#         elif isinstance(other, int):
+#         if isinstance(other, int):
 #             return Rational(self.numerator - other * self.denominator, self.denominator)
 #         raise ValueError(f"Cannot subtract {self} and {other}.")
-# 
+#
 #     def __mul__(self, other: "Fraction") -> "Fraction":
 #         if isinstance(other, self.__class__):
 #             return Rational(self.numerator * other.numerator, self.denominator * other.denominator)
-#         elif isinstance(other, int):
+#         if isinstance(other, int):
 #             return Rational(self.numerator * other, self.denominator)
 #         raise ValueError(f"Cannot multiply {self} and {other}.")
-# 
+#
 #     def __rmul__(self, other: int) -> "Fraction":
 #         return Rational(self.denominator * other, self.numerator)
-# 
+#
 #     def __truediv__(self, other: "Fraction") -> "Fraction":
 #         if isinstance(other, self.__class__):
 #             return Rational(self.numerator * other.denominator, self.denominator * other.numerator)
-#         elif isinstance(other, int):
+#         if isinstance(other, int):
 #             return Rational(self.numerator, self.denominator * other)
 #         raise ValueError(f"Cannot divide {self} and {other}.")
-# 
+#
 #     def __pow__(self, scalar: int) -> "Fraction":
 #         return Rational(self.numerator**scalar, self.denominator**scalar)
 
-from fractions import Fraction
 
 def fraction_repr(self):
     if self.denominator == 1:
@@ -136,7 +134,7 @@ def cf(x: Fraction) -> list[int]:
         m, n = n, m
 
 
-def convergents(cf: list[int]) -> float:
+def convergents(cont_frac: list[int]) -> float:
     "Compute the convergents of a continued fraction expansion."
     res = []
 
@@ -145,7 +143,7 @@ def convergents(cf: list[int]) -> float:
 
     m, mm = 1, 0
     n, nn = 0, 1
-    for x in cf:
+    for x in cont_frac:
         m, mm = recursion(x, m, mm)
         n, nn = recursion(x, n, nn)
         res.append(Fraction(m, n))
@@ -270,5 +268,4 @@ def order(a: int, n: int, factor=False) -> int:
             factors_order[p] = k - i
     if factor:
         return order, factors_order
-    else:
-        return order
+    return order

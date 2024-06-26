@@ -3,7 +3,8 @@ Ring of intergers modulo `n`.
 """
 
 class Zmod:
-    """Ring of intergers modulo `n`.
+    """
+    Ring of intergers modulo `n`.
 
     Example:
     
@@ -62,6 +63,7 @@ class ZmodPoint:
         return self.x
 
     def sharp(self):
+        "Returns a symmetric (w.r.t. 0) representative."
         tmp = (self.ring.n - 1) // 2
         return (self.x + tmp) % self.ring.n - tmp
 
@@ -71,7 +73,7 @@ class ZmodPoint:
     def __add__(self, other: "ZmodPoint") -> "ZmodPoint":
         if isinstance(other, self.__class__) and self.ring == other.ring:
             return self.__class__(self.x + other.x, self.ring)
-        elif isinstance(other, int):
+        if isinstance(other, int):
             return self.__class__(self.x + other, self.ring)
         return NotImplemented
 
@@ -84,7 +86,7 @@ class ZmodPoint:
     def __sub__(self, other: "ZmodPoint") -> "ZmodPoint":
         if isinstance(other, self.__class__) and self.ring == other.ring:
             return self.__class__(self.x - other.x, self.ring)
-        elif isinstance(other, int):
+        if isinstance(other, int):
             return self.__class__(self.x - other, self.ring)
         return NotImplemented
 
@@ -94,7 +96,7 @@ class ZmodPoint:
     def __mul__(self, other: "ZmodPoint") -> "ZmodPoint":
         if isinstance(other, self.__class__) and self.ring == other.ring:
             return self.__class__(self.x * other.x, self.ring)
-        elif isinstance(other, int):
+        if isinstance(other, int):
             return self.__class__(self.x * other, self.ring)
         return NotImplemented
 

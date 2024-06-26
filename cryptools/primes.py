@@ -15,7 +15,7 @@ def sieve_eratosthenes(B: int) -> list:
     is_prime = [True] * (B + 1)  # to begin with, all numbers are potentially prime
     # sieve out the primes p=2*q+1 starting at 3 in steps of 2 (ignoring even numbers)
     for q in range(1, B1 + 1):
-        if is_prime[q]: # sieve out all multiples; note that numbers p*q with q<p were already sieved out previously
+        if is_prime[q]: # sieve out all multiples; numbers p*q with q<p were already sieved out previously
             qq = (q << 1) * (q + 1)
             p = (q << 1) | 1
             is_prime[qq :: p] = [False] * ((B - qq) // p + 1)
@@ -36,7 +36,7 @@ def miller_rabin_test(n: int, bases: list[int] | int) -> bool:
     while m % 2 == 0:
         m //= 2
         k += 1
-    if type(bases) == int:
+    if isinstance(bases, int):
         bases = [bases]
     for a in bases:
         b = pow(a, m, n)
@@ -84,7 +84,7 @@ def _lucas_sequence(n, D, k):
     return U % n, V % n, Qk
 
 
-def _is_strong_lucas_prp(n: int) -> bool:   
+def _is_strong_lucas_prp(n: int) -> bool:
     """Strong Lucas primality test."""
     from math import gcd
     from .nt import jacobi_symbol
@@ -104,10 +104,10 @@ def _is_strong_lucas_prp(n: int) -> bool:
         if jacobi_symbol(D, n) == -1:
             break
         if D > 0:
-          D = -D - 2
+            D = -D - 2
         else:
-          D = -D + 2
-            
+            D = -D + 2
+
     if D == 0:
         return False
 
@@ -115,7 +115,7 @@ def _is_strong_lucas_prp(n: int) -> bool:
 
     if U == 0 or V == 0:
         return True
-    for r in range(1, s):
+    for _ in range(1, s):
         V = (V*V - 2*Qk) % n
         if V == 0:
             return True

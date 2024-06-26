@@ -1,4 +1,6 @@
-# Elliptic curves
+"""
+Elliptic curves
+"""
 
 from math import isqrt, floor, sqrt
 from random import randint
@@ -7,7 +9,23 @@ from .nt import legendre_symbol, sqrt_mod, crt
 from .Zmod import Zmod
 
 class EC_Weierstrass():
-    "Elliptic curve in Weierstrass normal form y^2 = x^3 + ax + b mod p."
+    """
+    Elliptic curve in Weierstrass normal form y^2 = x^3 + ax + b mod p.
+    
+    Example:
+    
+    To define an elliptic curve use
+    >>> ec = EC_Weierstrass(239, 3, 1)
+    
+    To declare a point on the elliptic curve use
+    >>> P = ec(43, 222)
+    >>> Q = ec(148, 218))
+    
+
+    The usual arithmetic operations are supported.
+    >>> P + Q
+    (195, 41)
+    """
 
     def __init__(self, p: int, a: int, b: int, order: int = None):
         if p < 3:
@@ -85,17 +103,17 @@ class EC_Weierstrass():
     def mult(self, j: int, x, y):  # Addition-subtraction ladder
         if j == 0:
             return None, None
-        elif j < 0:
+        if j < 0:
             y = -y
             j *= -1
-        #        xx, yy = None, None
-        #        while j > 0:
-        #            # If j is odd, add x
-        #            if j & 1:
-        #                xx, yy = self.add(xx, yy, x, y)
-        #            # Now double
-        #            j >>= 1  # j= j//2
-        #            x, y = self.dbl(x, y)
+        #    xx, yy = None, None
+        #    while j > 0:
+        #        # If j is odd, add x
+        #        if j & 1:
+        #            xx, yy = self.add(xx, yy, x, y)
+        #        # Now double
+        #        j >>= 1  # j= j//2
+        #        x, y = self.dbl(x, y)
         xx, yy = x, y
         j3 = 3 * j
         form = "0" + str(j3.bit_length()) + "b"
@@ -166,7 +184,7 @@ class EC_Weierstrass():
             x = ec.gf(x)
             y2 = int(x**3 + ec.a * x + ec.b)
             y = ec.gf(sqrt_mod(y2, self.p))
-        
+
             A = {}
             xx, yy = ec.mult(ec.p + 1, x, y)
             for j in range(W):
@@ -179,7 +197,7 @@ class EC_Weierstrass():
             xg, yg = ec.mult(W, x, y)
             xx, yy = None, None
             for j in range(W + 1):
-                if xx == None:
+                if xx is None:
                     if xx in A:
                         B.append([A[None], j])
                 elif int(xx) in A:
@@ -189,9 +207,9 @@ class EC_Weierstrass():
                 beta, gamma = B[0]
                 break
         t = beta + gamma * W
-        if ec.mult(ec.p + 1 + t, x, y)[0] != None:
+        if ec.mult(ec.p + 1 + t, x, y)[0] is not None:
             t = beta - gamma * W
-            assert ec.mult(ec.p + 1 + t, x, y)[0] == None
+            assert ec.mult(ec.p + 1 + t, x, y)[0] is None
 
         return self.p + 1 + sigma * t
 
@@ -239,13 +257,13 @@ class ECPoint:
         if not self.curve == other.curve:
             return False
         if self.x is None:
-            return other.x == None
+            return other.x is None
         if other.x is None:
-            return self.x == None
+            return self.x is None
         return self.x == other.x and self.y == other.y
 
     def __bool__(self):
-        return self.x != None
+        return self.x is not None
 
     def __hash__(self):
         if self.x is None:
@@ -266,7 +284,7 @@ class ECPoint:
         return ECPoint(x, y, self.curve)
 
     def __neg__(self) -> "ECPoint":
-        if self.x == None or not self.y:
+        if self.x is None or not self.y:
             return self
         return ECPoint(self.x, -self.y, self.curve)
 
@@ -277,7 +295,7 @@ class ECPoint:
         for p, k in self.curve.group_order_factors.items():
             for _ in range(k):
                 order_try = order // p
-                if self.curve.mult(order_try, self.x, self.y)[0] == None:
+                if self.curve.mult(order_try, self.x, self.y)[0] is None:
                     order = order_try
                 else:
                     break
@@ -295,7 +313,7 @@ class ECPoint:
             Pj = (m // pj**kj) * P
             Qj = (m // pj**kj) * Q
             l = Qj.dlog_ph(Pj, pj, kj)
-            if l == None:
+            if l is None:
                 return None
             mm += [pj**kj]
             ll += [l]
@@ -315,13 +333,13 @@ class ECPoint:
             yj = Qj.dlog_switch(P1, q)
             xj = xj + q ** (j - 1) * yj % q**j
         return xj
-        
+
     def dlog_switch(Q, P: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m choosing an appropriate method."""
         if m < 100:
             return Q.dlog_naive(P, m)
         return Q.dlog_bsgs(P, m)
-            
+
     def dlog_naive(Q, P: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC using an exhaustive search."""
         if not Q.curve == P.curve and not isinstance(Q, P.__class__):
@@ -331,16 +349,15 @@ class ECPoint:
         while xx != Q.x:
             j += 1
             xx, yy = P.curve.add(xx, yy, P.x, P.y)
-            if xx == None:
+            if xx is None:
                 raise ValueError("DLP not solvabel!")
         if  yy == Q.y:
             return j
-        else:
-            return m - j
+        return m - j
 
     def dlog_bsgs(Q, P: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m using Shanks' baby-step-giant-step algorithm."""
-        if not Q.curve == P.curve and not isinstance(P, self.__class__):
+        if not Q.curve == P.curve and not isinstance(P, Q.__class__):
             raise ValueError(f"Points must be on the same curve!")
         mm = 1 + isqrt(m - 1)
         m2 = mm//2 + mm % 1  # we use the group symmetry to halve the number of steps

@@ -1,9 +1,11 @@
-# Discrete log solvers
+"""
+Discrete log solvers: Index calculus
+"""
 
-from math import exp, log, sqrt, gcd
-from .nt import sqrt_mod
+from math import gcd
+from random import randint
 from .primes import sieve_eratosthenes
-from .dlp.qs import determine_factorbound, determine_trialdivison_bounds, is_smooth
+from .dlp_qs import determine_factorbound, determine_trialdivison_bounds, is_smooth
 
 def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int = 0) -> int:
     """Compute the discrete log_a(b) in Z_p of an element a of prime order m using Index Calculus."""
@@ -11,7 +13,7 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
     # assert isprime(m), "The order of a must be prime."
     # assert n_order(a, n) == m, "The order of a is incorrect."
     # assert pow(b, m, n) == 1, "The DLP is not solvable."
-    
+
     def find_relation(include_b: bool) -> None or list:
         """Find a relation for b * a^x or a^x"""
         nonlocal a, b, m, n, max_trys, factorbase, factorbase_len, smallprimes_len, pollard_k
@@ -63,7 +65,7 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
                     relation[j] = (relation[j] - ri * relations[i][j]) % m
                 continue
             # normalize the first nonzero entry
-            rinv = pow(ri, -1, m)  
+            rinv = pow(ri, -1, m)
             relation[i] = 1
             for j in range(i+1, len_relations + 1):
                     relation[j] = rinv * relation[j] % m
@@ -84,8 +86,8 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
         #        if ri > 0:
         #            relations[i][index] = 0
         #            for j in range(index+1, len_relations + 1):
-        #                relations[i][j] = (relations[i][j] - ri * relation[j]) % m           
-        #print(n_relations, f"i={i}={index} ({len_relations})", relations)       
+        #                relations[i][j] = (relations[i][j] - ri * relation[j]) % m
+        #print(n_relations, f"i={i}={index} ({len_relations})", relations)
         if index == len_relations - 1:  # we found the solution
             if verbose:
                 print(f"Success after {n_relations} relations out of {len_relations}.")
@@ -113,7 +115,6 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
         print(f"Factorbase: bound = {B}, size = {factorbase_len}, max_trys = {max_trys}")
 
     # Start the work
-    mm = m - 1
     n_relations = 0  # number of relations found
 
     # first find a relation involving b
@@ -131,5 +132,5 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
         res = process_relation(relation)
         if res:
             return res
- 
+
     raise Exception("Sorry, Index Calculus could not find enough relations! ({n_relations} - {n_relations_redundant} = {n_relations - n_relations_redundant} out of {len_relations})")
