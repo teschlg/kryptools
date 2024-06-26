@@ -3,15 +3,15 @@
 class Poly:
     "Represents a polynomial as a list of coefficients."
 
-    def __init__(self, coeff: list, map=None, modulus: list = None):
+    def __init__(self, coeff: list, ring = None, modulus: list = None):
         for i in range(len(coeff) - 1, 0, -1):
             if coeff[i]:
                 break
             coeff.pop(i)
         self.coeff = coeff
         self.modulus = modulus
-        if map:
-            self.map(map)
+        if ring:
+            self.map(ring)
         if modulus:
             self.mod(modulus)
 

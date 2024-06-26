@@ -1,6 +1,11 @@
-# Discrete log solvers
+"""
+Discrete Log Problem:
+    dlog(a, b, n) solve the discrete log problem a^x = b mod n
+"""
+
 
 from math import gcd, log, sqrt
+from .nt import crt
 from .dlp_bsgs import dlog_bsgs
 from .dlp_rho import dlog_rho
 from .dlp_qs import dlog_qs
@@ -18,7 +23,7 @@ def dlog_naive(a: int, b: int, n: int, m: int = None) -> int:
             return i + 1
     return None  # no solution
 
-def dlog_switch(a: int, b: int, n: int, m: int) -> int:
+def _dlog_switch(a: int, b: int, n: int, m: int) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order m choosing an appropriate method."""
     if m < 1000:
         return dlog_naive(a, b, n, m)
@@ -27,18 +32,18 @@ def dlog_switch(a: int, b: int, n: int, m: int) -> int:
     else:
         return dlog_qs(a, b, n, m)
 
-def dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
+def _dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order q^k using Pohlig-Hellman reduction."""
     if k == 1 or q**k < 10000:
-        return dlog_switch(a, b, n, q**k)
+        return _dlog_switch(a, b, n, q**k)
     aj = pow(a, q ** (k - 1), n)
     a1 = aj
     bj = pow(b, q ** (k - 1), n)
-    xj = dlog_switch(a1, bj, n, q)
+    xj = _dlog_switch(a1, bj, n, q)
     for j in range(2, k + 1):
         aj = pow(a, q ** (k - j), n)
         bj = pow(b, q ** (k - j), n)
-        yj = dlog_switch(a1, bj * pow(aj, -xj, n) % n, n, q)
+        yj = _dlog_switch(a1, bj * pow(aj, -xj, n) % n, n, q)
         if yj == None:
             return None
         xj = xj + q ** (j - 1) * yj % q**j
@@ -64,7 +69,7 @@ def dlog(a: int, b: int, n: int, m: int = None) -> int:
     for pj, kj in mf.items():
         aj = pow(a, m // pj**kj, n)
         bj = pow(b, m // pj**kj, n)
-        l = dlog_ph(aj, bj, n, pj, kj)
+        l = _dlog_ph(aj, bj, n, pj, kj)
         if l == None:
             return None
         mm += [pj**kj]

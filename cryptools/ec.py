@@ -3,7 +3,7 @@
 from math import isqrt, floor, sqrt
 from random import randint
 from .factor import factorint
-from .nt import legendre_symbol, sqrt_mod
+from .nt import legendre_symbol, sqrt_mod, crt
 from .Zmod import Zmod
 
 class EC_Weierstrass():
@@ -15,7 +15,7 @@ class EC_Weierstrass():
         if (4 * pow(a, 3, p) + 27 * pow(b, 2, p) ) % p == 0:
             raise ValueError(f"Curve is singular!")
         self.p = p
-        self.gf = Zmod(p)
+        self.gf = Zmod(p, short = True)
         self.a = self.gf(a % p)
         self.b = self.gf(b % p)
         self.group_order = order
@@ -209,7 +209,7 @@ class ECPoint:
                 j = legendre_symbol(y2, curve.p)
                 if j == -1:
                     raise ValueError("Point not on curve!")
-                y1 = sqrtmod(y2, curve.p)
+                y1 = sqrt_mod(y2, curve.p)
                 if y % 2 == 0:
                     y = y1
                 else:
@@ -318,7 +318,6 @@ class ECPoint:
         
     def dlog_switch(Q, P: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m choosing an appropriate method."""
-        print("X",m)
         if m < 100:
             return Q.dlog_naive(P, m)
         return Q.dlog_bsgs(P, m)

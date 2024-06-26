@@ -1,7 +1,8 @@
 # Lattice
 
 from math import sqrt, prod
-from .la import Matrix
+from fractions import Fraction
+from .la import Matrix, zeros, eye
 
 def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
     "Babai's rounding algorithm for solving the CVP."
@@ -54,7 +55,7 @@ def norm2(v: Matrix) -> float:
 
 def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
     "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
-    M = Matrix.eye(U.cols, U.rows)
+    M = eye(U.cols, U.rows)
     Us = U[:, :]
     for j in range(1, U.rows):
         tmp = U[:, j]
@@ -87,7 +88,9 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     j = 1
     U = V[:, :]
     Us = U[:, :]
-    M = Matrix.zeros(U.cols, U.rows)
+    Us.map(Fraction)
+    M = zeros(U.cols, U.rows)
+    M.map(Fraction)
     M[0, 0] = norm2(Us[:, 0])  # we store the squared norms on the diagonal
     for l in range(1, U.rows):  # Gram-Schmidt decomposition
         tmp = U[:, l]

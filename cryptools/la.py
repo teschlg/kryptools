@@ -3,14 +3,15 @@
 from math import sqrt, prod
 
 class Matrix:
-    def __init__(self, matrix, map = None):
+    # Matrix class"
+    def __init__(self, matrix, ring = None):
         if not isinstance(matrix[0], list|tuple):
             matrix = [ [x] for x in matrix ]
         self.matrix = matrix
         self.cols = len(matrix[0])
         self.rows = len(matrix)
-        if map:
-            self.map(map)
+        if ring:
+            self.map(ring)
 
     def __repr__(self) -> str:
         out = ["[ "] * self.rows
@@ -65,11 +66,18 @@ class Matrix:
         i, j = divmod(item, self.cols)
         self.matrix[i][j] = value
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.matrix == other.matrix
+    
     def map(self, func):
+        "Apply a function to all elements in place"
         for row in self.matrix:
             row[:] = map(func, row)
             
     def applyfunc(self, func):
+        "Apply a function to all elements"
         tmp = self[:,:]
         tmp.map(func)
         return tmp
@@ -193,7 +201,7 @@ class Matrix:
         return MM[:,n:]
 
 
-def zero(m:int, n: int) -> "Matrix":
+def zeros(m:int, n: int) -> "Matrix":
     return Matrix([[ 0 for j in range(n)] for i in range(m) ])
 
 def eye(m:int, n: int) -> "Matrix":

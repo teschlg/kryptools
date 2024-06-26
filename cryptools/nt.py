@@ -4,10 +4,12 @@ Number theory tools:
     egcd(a,b) extended Euclidean agorithm
     crt([a1, a2, ...],[m1, m2, ...]) Chinese Remainder Theorem
     cf(Fraction(m,n)) continued fraction expansions
-    convergents()
-    sqrt_mod
-    order
+    convergents() convergents of a continued fraction
+    sqrt_mod(n, p) square root of n modulo a prime p
+    order(a, n) oder of a in the multiplicative group Z_n^*
 """
+from math import gcd
+from .factor import factorint
 
 # Euclid and friends
 
@@ -173,7 +175,7 @@ def jacobi_symbol(a: int, n: int) -> int:
             if tmp == 3 or tmp == 5:
                 t *= -1
         a, n = n, a
-        if a % 3 == 4 and n % 3 == 4:
+        if a % 4 == 3 and n % 4 == 3:
             t *= -1
         a %= n
     if n == 1:
@@ -233,9 +235,6 @@ def carmichael_lambda(n: int) -> int:
     return lam
 
 # Order in Z_p^*
-
-from math import gcd
-
 
 def order(a: int, n: int, factor=False) -> int:
     """Compute the order of a in the group Z_n^*."""

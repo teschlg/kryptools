@@ -1,4 +1,6 @@
-# Ring of integers modulo n
+"""
+Ring of intergers modulo `n`.
+"""
 
 class Zmod:
     """Ring of intergers modulo `n`.

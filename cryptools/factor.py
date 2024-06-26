@@ -1,3 +1,8 @@
+"""
+Factorization of integers:
+    factorint(n) factorize the integer n into prime factors
+"""
+
 from math import log, isqrt, gcd
 from .primes import sieve_eratosthenes, isprime
 
@@ -59,6 +64,8 @@ def factorint(n: int, verbose: int = 0) -> list:
             prime_factors[p] = k
     if n == 1:
             return prime_factors
+    if verbose:
+    	print("Trial division found:", list(prime_factors))
     if isprime(n):
         prime_factors[n] = 1
         return prime_factors
