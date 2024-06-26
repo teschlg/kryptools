@@ -6,12 +6,6 @@ from math import prod
 from fractions import Fraction
 from .la import Matrix, zeros, eye
 
-def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
-    "Babai's rounding algorithm for solving the CVP."
-    s = U.inv() * x
-    k = s.map(round)
-    return U * k
-
 def hermite_nf(M: Matrix) -> Matrix:
     "Compute the Hermite normal form of a matrix M."
     n, m = M.cols, M.rows
@@ -68,12 +62,20 @@ def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
     return Us, M
 
 def gram_det(U: Matrix) -> float:
+    "Compute the Gram determinant of a matrix."
     Us = gram_schmidt(U)[0]
     return prod([Us[:, i].norm() for i in range(U.rows)])
 
 def hadamard_ratio(M: Matrix) -> float:
+    "Compute the Hadamard ratio of a matrix."
     m = M.rows
     return (gram_det(M) / prod([M[:, i].norm() for i in range(m)])) ** (1 / m)
+
+def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
+    "Babai's rounding algorithm for solving the CVP."
+    s = U.inv() * x
+    k = s.applyfunc(round)
+    return U * k
 
 def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
     "Babai's closest plane algorithm for solving the CVP."
@@ -82,6 +84,18 @@ def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
     for k in range(U.cols - 1, -1, -1):
         y = y - round(y.dot(Us[:, k]) / norm2(Us[:, k])) * U[:, k]
     return (x - y).applyfunc(round)
+
+def lagrange_lr(V: Matrix) -> Matrix:
+    "Lagrange lattice reduction."
+    assert (V.rows, V.cols) == (2, 2)
+    v1, v2 = V[:, 0], V[:, 1]
+    if norm2(v1) > norm2(v2):
+        v1, v2 = v2, v1
+    v3 = v2 - round(v1.dot(v2) / norm2(v1)) * v1
+    while norm2(v3) < norm2(v1):
+        v2, v1 = v1, v3
+        v3 = v2 - round(v1.dot(v2) / norm2(v1)) * v1
+    return Matrix([list(v1), list(v3)]).transpose()
 
 def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     "lll algorithm for lattice reduction"

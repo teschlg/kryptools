@@ -2,10 +2,11 @@
 Discrete log solvers: Quadratic sieve
 """
 
+from math import exp, log, sqrt, gcd, isqrt
+from random import randint, seed
 from .nt import sqrt_mod
 from .primes import sieve_eratosthenes
-from math import exp, log, sqrt, gcd
-
+seed(0)
 
 def determine_factorbound(n: int) -> (int, int):
     """Determines the optimal factor bound and the expected number of trys until a for a given n."""
