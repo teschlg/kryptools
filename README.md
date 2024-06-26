@@ -2,7 +2,7 @@
 Gerald Teschl <Gerald.Teschl@univie.ac.at>
 
 This package was written for my course on cryptography. Consequently its intention is
-mainly educational, that is, to sho how basic algorithms are implemented. In particular,
+mainly educational, that is, to show how basic algorithms are implemented. In particular,
 you are welcome to read (and modify) the source. Any suggestions on how to make the
 code more readable or make it better are welcome. However, my main goal is to keep
 it simple and readability will be preferred over small speed improvements.
