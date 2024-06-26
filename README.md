@@ -1,4 +1,4 @@
-# cryptools
+# kryptools
 Gerald Teschl <Gerald.Teschl@univie.ac.at>
 
 This package was written for my course on cryptography. Consequently its intention is

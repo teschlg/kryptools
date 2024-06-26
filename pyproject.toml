@@ -1,5 +1,5 @@
 [project]
-name = "cryptools"
+name = "kryptools"
 version = "0.1"
 authors = [
   { name="Gerald Teschl", email="gerald.teschl@univie.ac.at" },
@@ -14,5 +14,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/teschlg/cryptools"
-Issues = "https://github.com/teschlg/cryptools/issues"
+Homepage = "https://github.com/teschlg/kryptools"
+Issues = "https://github.com/teschlg/kryptools/issues"
