@@ -19,3 +19,6 @@ The tools contained are:
 * Matrix: a class for Matrices (inverse, det, reduced echelon form, etc.)
 * Poly: a class for polynomials (division, modulo)
 * Zmod: a class for the ring of integers modulo an integer
+
+Documentation can be found in the jupyter notebook
+(currently incomplete: use the force, read the source).
