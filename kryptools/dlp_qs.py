@@ -50,18 +50,18 @@ def is_smooth(n: int, factorbase: list, factorbase_len: int, smallprimes_len: in
         while n % p == 0:  # divide by p as many times as possible
             factors[i] += 1
             n = n // p
-    if pollard_k: 
+    if pollard_k:
         if gcd(pow(2, pollard_k, n)-1, n) == 1: # Pollard p-1 test
             return None  # most likely not smooth, give up
         for i in range(smallprimes_len, factorbase_len):
             p = factorbase[i]
             while n % p == 0:  # divide by p as many times as possible
                 factors[i] += 1
-                n = n // p    
+                n = n // p
     if n != 1:
         return None  # the number factors if at the end nothing is left
     return factors
-    
+
 def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: float = None, verbose: int = 0) -> int:
     """
     Compute the discrete log_a(b) in Z_p of an element a of prime order m using Index Calculus with a quadratic sieve.
@@ -104,7 +104,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
             relation += [ 0, x ]
         relation = [0] * sieve_bound + relation # sieve values + primes + b + x
         return relation
-    
+
    # this functions does the linear algebra
     def process_relation(relation: list) -> None or int:
         """Add a new relation to the linear system and keep the system in echelon form."""
@@ -122,10 +122,10 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
                     relation[j] = (relation[j] - ri * relations[i][j]) % m
                 continue
             # normalize the first nonzero entry
-            rinv = pow(ri, -1, m)  
+            rinv = pow(ri, -1, m)
             relation[i] = 1
             for j in range(i+1, len_relations + 1):
-                    relation[j] = rinv * relation[j] % m
+                relation[j] = rinv * relation[j] % m
             relations[i] = relation
             if verbose > 2:
                 print(n_relations, f"rel found (index={i}) :", relation)
@@ -143,8 +143,8 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
         #        if ri > 0:
         #            relations[i][index] = 0
         #            for j in range(index+1, len_relations + 1):
-        #                relations[i][j] = (relations[i][j] - ri * relation[j]) % m           
-        #print(n_relations, f"i={i}={index} ({len_relations})", relations)       
+        #                relations[i][j] = (relations[i][j] - ri * relation[j]) % m
+        #print(n_relations, f"i={i}={index} ({len_relations})", relations)
         if index == len_relations - 1:  # we found the solution
             if verbose:
                 print(f"Success after {n_relations} relations out of {len_relations}.")
@@ -160,7 +160,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
     # Determine the parameters
     #
 
-    B, expected_trys, expected_trys2 = determine_factorbound(n) 
+    B, expected_trys, expected_trys2 = determine_factorbound(n)
     max_trys = 10 * expected_trys
     factorbase = []
     factorbase = tuple(p for p in sieve_eratosthenes(B) if gcd(p,n) == 1)  # compute the factorbse
@@ -172,7 +172,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
     if pollard:  # should we speed up trial division with Pollard p-1
         smallprimes_len, pollard_k = determine_trialdivison_bounds(B // 150, factorbase)
     no_sieve_bound = 1  # We do not sieve for primes smaller than this bound (not worth the effort)
-    no_sieve_primes = [ ]  
+    no_sieve_primes = [ ]
     for i in range(factorbase_len):
         if factorbase[i] > no_sieve_bound:
             break
@@ -195,7 +195,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
     #
     # Do the sieving
     #
-    
+
     sn = isqrt(n - 1) + 1 # ceil(sqrt(n))
     d = sn**2 - n
     sn2 = 2 * sn
@@ -203,7 +203,6 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
     for j in range(sieve_bound):
         # we sieve with respect to the quadratic polynomial f_j(x) = (x+sn)*(x+j+sn) - n = x^2 + (2*sn+j)*x + (d+j*sn)
         snj = sn2 + j
-        snj2 = snj**2
         dj = d + j * sn
         max_j = sieve_bound - j
         for i in range(factorbase_len):
@@ -294,5 +293,5 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
                 res = process_relation(relation)
                 if res:
                     return(res)
- 
+
     raise Exception(f"Sorry, Quadratic sieve could not find enough relations! ({n_relations} - {n_relations_redundant} = {n_relations - n_relations_redundant} out of {len_relations}). Try to increase sieve_factor={sieve_factor}")

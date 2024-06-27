@@ -118,10 +118,11 @@ class Matrix:
         if p == inf:
             return max( max(abs(x) for x in row) for row in self.matrix )
         tmp = sum( sum(abs(x)**p for x in row) for row in self.matrix )
-        return(tmp**(1/p))
+        return tmp**(1/p)
 
 
     def dot(self, other) -> int:
+        "Dot product of two vectors."
         if self.rows == 1 and other.rows == 1 and self.cols == other.cols:
             return sum(x * y for x, y in zip(self.matrix[0], other.matrix[0]))
         if self.cols == 1 and other.cols == 1 and self.rows == other.rows:
@@ -129,9 +130,11 @@ class Matrix:
         return NotImplemented
 
     def transpose(self) -> "Matrix":
+        "Transpose of a matrix."
         return Matrix([list(i) for i in zip(*self.matrix)])
 
     def multiply(self, other) -> "Matrix":
+        "Matrix multiplication."
         if not isinstance(other, Matrix):
             return NotImplemented
         if self.cols != other.rows:
@@ -172,7 +175,7 @@ class Matrix:
         R = self[:, :]
         i = 0
         for j in range(n):
-            if not R[i, j]: # search for am nonzero entry in the present column
+            if not R[i, j]: # search for a nonzero entry in the present column
                 for ii in range(i+1,m):
                     if R[ii, j]:
                         R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
@@ -195,12 +198,12 @@ class Matrix:
         "Compute the determinant of a matrix M."
         if self.rows != self.rows:
             raise ValueError("Matrix must be square!")
-        n = self.cols
+        n, m = self.cols, self.rows
         R = self[:, :]
         D = 1
         i = 0
         for j in range(n):
-            if not R[i, j]: # search for am nonzero entry in the present column
+            if not R[i, j]: # search for a nonzero entry in the present column
                 for ii in range(i+1,m):
                     if R[ii, j]:
                         D *= -1
@@ -234,6 +237,7 @@ class Matrix:
         return MM[:,n:]
 
     def zeros(self, m: int = None, n: int = None):
+        "Returns a zero matrix of the same dimension"
         if not m and not n:
             n, m = self.cols, self.rows
         elif not n:
@@ -242,6 +246,7 @@ class Matrix:
         return Matrix([[ zero for j in range(n)] for i in range(m) ])
 
     def eye(self, m: int = None, n: int = None):
+        "Returns an identity matrix of the same dimension"
         def delta(i, j):
             if i == j:
                 return 1
@@ -256,11 +261,13 @@ class Matrix:
 
 
 def zeros(m: int, n: int = None) -> "Matrix":
+    "Returns a zero matrix of the given dimension"
     if not n:
         n = m
     return Matrix([[ 0 for j in range(n)] for i in range(m) ])
 
 def eye(m:int, n: int = None) -> "Matrix":
+    "Returns an identity matrix of the given dimension"
     def delta(i, j):
         if i == j:
             return 1

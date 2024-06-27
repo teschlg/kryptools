@@ -69,7 +69,7 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
             rinv = pow(ri, -1, m)
             relation[i] = 1
             for j in range(i+1, len_relations + 1):
-                    relation[j] = rinv * relation[j] % m
+                relation[j] = rinv * relation[j] % m
             relations[i] = relation
             if verbose > 2:
                 print(n_relations, f"rel found (index={i}) :", relation)

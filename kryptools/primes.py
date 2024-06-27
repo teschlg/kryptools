@@ -4,7 +4,8 @@ Tools for prime numbers:
     isprime(n) test if n is probably prime
     miller_rabin_test(n, b) Miller-Rabin primality test with base b
 """
-from math import isqrt
+from math import isqrt, gcd
+from .nt import jacobi_symbol
 
 # Erathostenes
 
@@ -86,8 +87,6 @@ def _lucas_sequence(n, D, k):
 
 def _is_strong_lucas_prp(n: int) -> bool:
     """Strong Lucas primality test."""
-    from math import gcd
-    from .nt import jacobi_symbol
 
     # remove powers of 2 from n+1 (= k * 2**s)
     k = (n + 1) // 2

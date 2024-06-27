@@ -10,7 +10,6 @@ Number theory tools:
 """
 from math import gcd, prod
 from fractions import Fraction
-from .factor import factorint
 
 # Euclid and friends
 
@@ -115,8 +114,7 @@ def crt(a: list, m: list) -> int:
 def fraction_repr(self):
     if self.denominator == 1:
         return str(self.numerator)
-    else:
-        return str(self.numerator) + "/" + str(self.denominator)
+    return str(self.numerator) + "/" + str(self.denominator)
 
 Fraction.__repr__ = fraction_repr
 
@@ -209,7 +207,7 @@ def sqrt_mod(a: int, p: int) -> list:
 
 # Euler phi and Carmichael function
 
-from math import prod
+from .factor import factorint
 
 
 def euler_phi(n: int) -> int:
@@ -250,22 +248,22 @@ def order(a: int, n: int, factor=False) -> int:
                 factors[p] += k - 1
             else:
                 factors[p] = k - 1
-    order = 1  # compute the group order euler_phi(n) as our current guess
+    order_a = 1  # compute the group order euler_phi(n) as our current guess
     for p, k in factors.items():
-        order *= p**k
+        order_a *= p**k
     if factor:  # we compute the factorization of the order along the way
         factors_order = {}  # factorization of the order
     for p, k in factors.items():
         i = 0
         for _ in range(k):
-            order_try = order // p
+            order_try = order_a // p
             if pow(a, order_try, n) == 1:
-                order = order_try
+                order_a = order_try
                 i += 1
             else:
                 break
         if factor and i < k:
             factors_order[p] = k - i
     if factor:
-        return order, factors_order
-    return order
+        return order_a, factors_order
+    return order_a

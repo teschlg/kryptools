@@ -184,6 +184,7 @@ class Poly:
         return res
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
+        "Polynom division with remainder"
         if isinstance(other, list):
             other = self.__class__(other)
         elif not isinstance(other, self.__class__):
@@ -214,6 +215,7 @@ class Poly:
         )
 
     def mod(self, other: "Poly") -> None:
+        "Remainder of polynom division"
         if isinstance(other, list):
             other = self.__class__(other)
         elif not isinstance(other, self.__class__):

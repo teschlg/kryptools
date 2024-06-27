@@ -5,6 +5,9 @@ Factorization of integers:
 
 from math import isqrt, gcd
 from .primes import sieve_eratosthenes, isprime
+from .factor_pm1 import _pm1_parameters, factor_pm1
+from .factor_ecm import _ecm_parameters, factor_ecm
+#from .factor_qs import factor_qs
 
 
 # Factoring
@@ -27,9 +30,6 @@ def _factor_fermat(n: int, steps: int = 10) -> list:
             return a - b
         a += step
 
-from .factor_pm1 import _pm1_parameters, factor_pm1
-from .factor_ecm import _ecm_parameters, factor_ecm
-#from .factor_qs import factor_qs
 
 def factorint(n: int, verbose: int = 0) -> list:
     "Factor a number."
