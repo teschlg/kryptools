@@ -2,7 +2,7 @@
 Linear algebra
 """
 
-from math import sqrt, prod
+from math import inf, sqrt, prod
 
 class Matrix:
     """
@@ -48,12 +48,18 @@ class Matrix:
             i, j = item
             if isinstance(i, int) and isinstance(j, int):
                 return self.matrix[i][j]
-            rows = range(self.rows)[i]
             if isinstance(i, int):
-                rows = [ rows ]
-            cols = range(self.cols)[j]
+                rows = [ i ]
+            elif isinstance(i, list):
+                rows = i
+            else:
+                rows = range(self.rows)[i]
             if isinstance(j, int):
-                cols = [ cols ]
+                cols = [ j ]
+            elif isinstance(j, list):
+                cols = i
+            else:
+                cols = range(self.cols)[j]
             return Matrix([[self.matrix[i][j] for j in cols] for i in rows])
         i, j = divmod(item, self.cols)
         return self.matrix[i][j]
@@ -64,12 +70,18 @@ class Matrix:
             if isinstance(i, int) and isinstance(j, int):
                 self.matrix[i][j] = value
                 return
-            rows = range(self.rows)[i]
             if isinstance(i, int):
-                rows = [ rows ]
-            cols = range(self.cols)[j]
+                rows = [ i ]
+            elif isinstance(i, list):
+                rows = i
+            else:
+                rows = range(self.rows)[i]
             if isinstance(j, int):
-                cols = [ cols ]
+                cols = [ j ]
+            elif isinstance(j, list):
+                cols = i
+            else:
+                cols = range(self.cols)[j]
             for i, ii in zip(cols,range(len(cols))):
                 for j, jj in zip(rows,range(len(rows))):
                     self.matrix[j][i] = value[jj,ii]
@@ -97,11 +109,20 @@ class Matrix:
         "Squared Frobenius/Euclidean norm."
         return sum( sum(x*x for x in row) for row in self.matrix )
 
-    def norm(self) -> float:
-        "Frobenius/Euclidean norm."
-        return sqrt(self.norm2())
+    def norm(self, p: int = 2) -> float:
+        "p-norm of a matrix regarded as a vector."
+        if p == 2:
+            return sqrt(self.norm2())
+        if p == 1:
+            return sum( sum(abs(x) for x in row) for row in self.matrix )
+        if p == inf:
+            return max( max(abs(x) for x in row) for row in self.matrix )
+        tmp = sum( sum(abs(x)**p for x in row) for row in self.matrix )
+        return tmp**(1/p)
+
 
     def dot(self, other) -> int:
+        "Dot product of two vectors."
         if self.rows == 1 and other.rows == 1 and self.cols == other.cols:
             return sum(x * y for x, y in zip(self.matrix[0], other.matrix[0]))
         if self.cols == 1 and other.cols == 1 and self.rows == other.rows:
@@ -109,17 +130,21 @@ class Matrix:
         return NotImplemented
 
     def transpose(self) -> "Matrix":
+        "Transpose of a matrix."
         return Matrix([list(i) for i in zip(*self.matrix)])
 
     def multiply(self, other) -> "Matrix":
-        if not isinstance(other, Matrix) or self.cols != other.rows:
+        "Matrix multiplication."
+        if not isinstance(other, Matrix):
             return NotImplemented
-        result = [[0 for j in range(other.cols)] for i in range(self.rows)]
+        if self.cols != other.rows:
+            raise NotImplementedError("Matrix dimensions do not match!")
+        result = self.zeros(self.rows, other.cols)
         for i in range(self.rows):
             for j in range(other.cols):
                 for k in range(other.rows):
-                    result[i][j] += self.matrix[i][k] * other.matrix[k][j]
-        return Matrix(result)
+                    result.matrix[i][j] += self.matrix[i][k] * other.matrix[k][j]
+        return result
 
     def __add__(self, other) -> "Matrix":
         if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
@@ -150,7 +175,7 @@ class Matrix:
         R = self[:, :]
         i = 0
         for j in range(n):
-            if not R[i, j]: # search for am nonzero entry in the present column
+            if not R[i, j]: # search for a nonzero entry in the present column
                 for ii in range(i+1,m):
                     if R[ii, j]:
                         R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
@@ -173,12 +198,12 @@ class Matrix:
         "Compute the determinant of a matrix M."
         if self.rows != self.rows:
             raise ValueError("Matrix must be square!")
-        n = self.cols
+        n, m = self.cols, self.rows
         R = self[:, :]
         D = 1
         i = 0
         for j in range(n):
-            if not R[i, j]: # search for am nonzero entry in the present column
+            if not R[i, j]: # search for a nonzero entry in the present column
                 for ii in range(i+1,m):
                     if R[ii, j]:
                         D *= -1
@@ -211,13 +236,42 @@ class Matrix:
             raise ValueError("Matrix is not invertible!")
         return MM[:,n:]
 
+    def zeros(self, m: int = None, n: int = None):
+        "Returns a zero matrix of the same dimension"
+        if not m and not n:
+            n, m = self.cols, self.rows
+        elif not n:
+            n = m
+        zero = 0 * self[0]
+        return Matrix([[ zero for j in range(n)] for i in range(m) ])
 
-def zeros(m:int, n: int) -> "Matrix":
+    def eye(self, m: int = None, n: int = None):
+        "Returns an identity matrix of the same dimension"
+        def delta(i, j):
+            if i == j:
+                return 1
+            return 0
+        if not m and not n:
+            n, m = self.cols, self.rows
+        elif not n:
+            n = m
+        zero = 0 * self[0]
+        one = 1 + zero
+        return Matrix([[ delta(i, j) for j in range(n) ] for i in range(m) ])
+
+
+def zeros(m: int, n: int = None) -> "Matrix":
+    "Returns a zero matrix of the given dimension"
+    if not n:
+        n = m
     return Matrix([[ 0 for j in range(n)] for i in range(m) ])
 
-def eye(m:int, n: int) -> "Matrix":
+def eye(m:int, n: int = None) -> "Matrix":
+    "Returns an identity matrix of the given dimension"
     def delta(i, j):
         if i == j:
             return 1
         return 0
+    if not n:
+        n = m
     return Matrix([[ delta(i, j) for j in range(n) ] for i in range(m) ])

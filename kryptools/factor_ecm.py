@@ -11,6 +11,7 @@ from .primes import sieve_eratosthenes
 
 
 def dbl(P, c2, p):
+    "EC Montgommery point doubling"
     # c2 = c - 2
     t1 = (P[0] + P[1]) % p
     t2 = (P[0] - P[1]) % p
@@ -19,12 +20,14 @@ def dbl(P, c2, p):
 
 
 def add(P1, P2, P3, p):
+    "EC Montgommery point addition"
     t1 = pow(P1[0] * P2[0] - P1[1] * P2[1], 2, p)
     t2 = pow(P1[0] * P2[1] - P2[0] * P1[1], 2, p)
     return P3[1] * t1 % p, P3[0] * t2 % p
 
 
 def mult(k, P, c2, p):
+    "EC Montgommery point multiplication"
     if k == 1:
         return P
     if k == 2:

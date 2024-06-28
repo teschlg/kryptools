@@ -83,7 +83,12 @@ class Poly:
 
     def __add__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot add {self} and {other}.")
+            try:
+                tmp = self.coeff[:]
+                tmp[0] += other
+                return self.__class__(tmp, modulus=self.modulus)
+            except:
+                return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
             scoeff = self.coeff + (lo - ls) * [0]
@@ -98,12 +103,27 @@ class Poly:
             modulus = other.modulus
         return self.__class__([s + o for s, o in zip(scoeff, ocoeff)], modulus=modulus)
 
+    def __radd__(self, other: "Poly") -> "Poly":
+        if not isinstance(other, self.__class__):
+            try:
+                tmp = self.coeff[:]
+                tmp[0] += other
+                return self.__class__(tmp, modulus=self.modulus)
+            except:
+                pass
+        return NotImplemented
+
     def __neg__(self) -> "Poly":
         return Poly([-s for s in self.coeff], modulus=self.modulus)
 
     def __sub__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot subtract {self} and {other}.")
+            try:
+                tmp = self.coeff[:]
+                tmp[0] -= other
+                return self.__class__(tmp, modulus=self.modulus)
+            except:
+                return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
             scoeff = self.coeff + (lo - ls) * [0]
@@ -118,11 +138,22 @@ class Poly:
             modulus = other.modulus
         return self.__class__([s - o for s, o in zip(scoeff, ocoeff)], modulus=modulus)
 
-    def __mul__(self, other: "Poly") -> "Poly":
-        if isinstance(other, int):
-            return Poly([other * s for s in self.coeff])
+    def __rsub__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot multiply {self} and {other}.")
+            try:
+                tmp = self.coeff[:]
+                tmp[0] -= other
+                return self.__class__(tmp, modulus=self.modulus)
+            except:
+                pass
+        return NotImplemented
+
+    def __mul__(self, other: "Poly") -> "Poly":
+        if not isinstance(other, self.__class__):
+            try:
+                return Poly([other * s for s in self.coeff])
+            except:
+                return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
         coeff = [0] * (ls + lo - 1)
         for k in range(ls + lo - 1):
@@ -153,6 +184,7 @@ class Poly:
         return res
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
+        "Polynom division with remainder"
         if isinstance(other, list):
             other = self.__class__(other)
         elif not isinstance(other, self.__class__):
@@ -183,6 +215,7 @@ class Poly:
         )
 
     def mod(self, other: "Poly") -> None:
+        "Remainder of polynom division"
         if isinstance(other, list):
             other = self.__class__(other)
         elif not isinstance(other, self.__class__):

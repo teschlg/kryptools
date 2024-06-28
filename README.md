@@ -12,7 +12,7 @@ The tools contained are:
 * number theory: sqrt modulo primes, crt, continued fractions, etc.
 * primes: Sieve of Erathostenes, primality tests
 * solvers for discrete logarithms (naive, Pollard rho, Shanks baby step/giant step, index calculus, quadratic sieve)
-* integer factorization (Pollard p-1, Lentra's ECM, Dixon, basic quadratic sieve)
+* integer factorization (Fermat, Pollard p-1, Lentra's ECM, Dixon, basic quadratic sieve)
 * linear algebra: Hermite normal form, Gram-Schmidt
 * lattices: Babai rounding/nearest plane, lattice reduction
 

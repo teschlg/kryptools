@@ -26,12 +26,13 @@ class EC_Weierstrass():
     >>> P + Q
     (195, 41)
     """
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, p: int, a: int, b: int, order: int = None):
         if p < 3:
             raise ValueError(f"{p} must be a prime larger than 2.")
         if (4 * pow(a, 3, p) + 27 * pow(b, 2, p) ) % p == 0:
-            raise ValueError(f"Curve is singular!")
+            raise ValueError("Curve is singular!")
         self.p = p
         self.gf = Zmod(p, short = True)
         self.a = self.gf(a % p)
@@ -44,9 +45,9 @@ class EC_Weierstrass():
     def __call__(self, x: int | str | None = None, y: int | None = None, short: bool = False):
         if isinstance(x, str):
             x = x.replace(" ", "")
-            type = x[:2]
+            coordinate_type = x[:2]
             x = x[2:]
-            if type == '02' or type == '03':
+            if coordinate_type in ('02', '03'):
                 short = 1
                 x = int(x, 16)
                 if type == '02':
@@ -70,15 +71,17 @@ class EC_Weierstrass():
         return P.y**2 == P.x**3 + self.a * P.x + self.b
 
     def info(self):
-        format = "Weierstrass curve y^2 = x^3"
+        "Display some basic info on the curve"
+        out = "Weierstrass curve y^2 = x^3"
         if int(self.a):
-            format += f" + {self.a} x"
+            out += f" + {self.a} x"
         if int(self.b):
-            format += f" + {self.b}"
-        format += f" over Z_{self.p}."
-        print(format)
+            out += f" + {self.b}"
+        out += f" over Z_{self.p}."
+        print(out)
 
     def add(self, x1, y1, x2, y2):
+        "Point addition"
         if x1 is None:
             return x2, y2
         if x2 is None:
@@ -93,6 +96,7 @@ class EC_Weierstrass():
         return x3, y3
 
     def dbl(self, x, y):
+        "Point doubling"
         if x is None or not y:
             return None, None
         s = (3 * x**2 + self.a) / (2 * y)
@@ -101,6 +105,7 @@ class EC_Weierstrass():
         return x3, y3
 
     def mult(self, j: int, x, y):  # Addition-subtraction ladder
+        "Point multiplication"
         if j == 0:
             return None, None
         if j < 0:
@@ -126,6 +131,7 @@ class EC_Weierstrass():
         return xx, yy
 
     def random(self):
+        "Return a random point."
         j = -1
         while j == -1:
             x = self.gf(randint(0, self.p - 1))
@@ -134,6 +140,7 @@ class EC_Weierstrass():
         return ECPoint(x, randint(0, 1), self, short = True)
 
     def order(self, order: int = None) -> int:
+        "Return the group order."
         if order:
             self.group_order = order
         elif not self.group_order:
@@ -144,6 +151,7 @@ class EC_Weierstrass():
         return self.group_order
 
     def factor_order(self) -> dict:
+        "Factor the group order."
         if self.group_order_factors:
             return self.group_order_factors
         if not self.group_order:
@@ -152,6 +160,7 @@ class EC_Weierstrass():
         return self.group_order_factors
 
     def order_naive(self) -> int:
+        "Return the order of the group by adding the Legendre symbols."
         a1 = (int(self.a) + 1) % self.p
         y = int(self.b)
         order = self.p + 1 + legendre_symbol(y, self.p)
@@ -161,6 +170,7 @@ class EC_Weierstrass():
         return order
 
     def order_shanks_mestre(self) -> int:
+        "Return the order of the group using the Shanks-Mestre algorithm."
         if self.p < 230:
             return self.order_naive()
         j = 1
@@ -215,7 +225,7 @@ class EC_Weierstrass():
 
 class ECPoint:
     "Point on an elliptic curve"
-    def __init__(self, x: int, y: int, curve: EC_Weierstrass, short:bool = False):
+    def __init__(self, x: int|None, y: int|None, curve: EC_Weierstrass, short:bool = False):
         self.curve = curve
         if x is None:
             self.x = None
@@ -343,7 +353,7 @@ class ECPoint:
     def dlog_naive(Q, P: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC using an exhaustive search."""
         if not Q.curve == P.curve and not isinstance(Q, P.__class__):
-            raise ValueError(f"Points must be on the same curve!")
+            raise ValueError("Points must be on the same curve!")
         j = 0
         xx, yy = None, None
         while xx != Q.x:
@@ -358,7 +368,7 @@ class ECPoint:
     def dlog_bsgs(Q, P: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m using Shanks' baby-step-giant-step algorithm."""
         if not Q.curve == P.curve and not isinstance(P, Q.__class__):
-            raise ValueError(f"Points must be on the same curve!")
+            raise ValueError("Points must be on the same curve!")
         mm = 1 + isqrt(m - 1)
         m2 = mm//2 + mm % 1  # we use the group symmetry to halve the number of steps
         # initialize baby_steps table
@@ -372,7 +382,7 @@ class ECPoint:
         giant_stride = -mm * P
         giant_step = Q
         for l in range(mm+1):
-            if giant_step.x == None:
+            if giant_step.x is None:
                 return l * mm
             if int(giant_step.x) in baby_steps:
                 j = baby_steps[int(giant_step.x)][0]

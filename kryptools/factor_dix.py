@@ -4,9 +4,27 @@ Integer factorization: Dixon's method
 
 from math import isqrt, gcd, sqrt, log, exp, ceil
 from .primes import sieve_eratosthenes
-from .nt import legendre_symbol, sqrt_mod
+from .nt import legendre_symbol
 from .factor_qs import bytexor, byteset, bytetest
 
+def is_smooth(n: int, factorbase: list, lfb: int) -> bytes or None:
+    """Try to factor n with respect to a given factorbase.
+    Upon success a bytestring, whose bits are the exponents with repect to the factorbase mod 2, is returned.
+    Otherwise None."""
+    factors = bytearray(b"\x00") * lfb  # we store the exponents mod 2 as bits
+    if n < 0:
+        byteset(factors, 0)
+        n *= -1
+    for i, p in enumerate(factorbase):
+        k = 0
+        while n % p == 0:  # divide by p as many times as possible
+            k = (k + 1) % 2  # we only need the exponents mod 2
+            n = n // p
+        if k:
+            byteset(factors, i + 1)
+    if n != 1:
+        return None  # the number factors if at the end nothing is left
+    return factors
 
 def factor_dixon(n: int) -> list:
     """Find factors of n using the method of Dixon."""
@@ -19,7 +37,7 @@ def factor_dixon(n: int) -> list:
             2 + 3 * u + 2 * u * log(u)
         )  # Newton iteration
     B = int(exp(log(n) / u))
-    
+
     # B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
     factorbase = []
     for p in sieve_eratosthenes(B):  # compute the factorbase
@@ -44,7 +62,7 @@ def factor_dixon(n: int) -> list:
         index = lf # this will be the index of the first nonzero entry
         # print(f'{j:3}', ' '.join(f'{b:08b}' for b in reversed(relation)))
         for i in range(lf):
-            if bytetest(relation, i) and relations[i] != None:  # make this entry zero if we can (Gauss elimination)
+            if bytetest(relation, i) and relations[i] is not None:  # make this entry zero if we can (Gauss elimination)
                 bytexor(relation, relations[i])
             if bytetest(relation, i) and index == lf:  # is this the index of the first nonzero entry?
                 index = i
@@ -85,6 +103,5 @@ def factor_dixon(n: int) -> list:
             continue
         res = process_relation(j, relation)
         if res:
-            return(res)
+            return res
     return n
-

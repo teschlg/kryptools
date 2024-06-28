@@ -4,7 +4,8 @@ Lattice tools
 
 from math import prod
 from fractions import Fraction
-from .la import Matrix, zeros, eye
+from random import choice, sample
+from .la import Matrix, zeros
 
 def hermite_nf(M: Matrix) -> Matrix:
     "Compute the Hermite normal form of a matrix M."
@@ -51,7 +52,7 @@ def norm2(v: Matrix) -> float:
 
 def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
     "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
-    M = eye(U.cols, U.rows)
+    M = U.eye()
     Us = U[:, :]
     for j in range(1, U.rows):
         tmp = U[:, j]
@@ -105,7 +106,7 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     U = V[:, :]
     Us = U[:, :]
     Us.map(Fraction)
-    M = zeros(U.cols, U.rows)
+    M = U.zeros()
     M.map(Fraction)
     M[0, 0] = norm2(Us[:, 0])  # we store the squared norms on the diagonal
     for l in range(1, U.rows):  # Gram-Schmidt decomposition
@@ -161,11 +162,9 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
             U[:, j] = tmp[j]
     return U
 
-from random import choice, sample
-
-def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = 9) -> Matrix:
+def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = None) -> Matrix:
     "Create a random unimodular matrix of dimension n."
-    W = Matrix.zeros(n, n)
+    W = zeros(n)
     for i in range(n):
         for j in range(i, n):
             W[i, j] = choice([-1, 1])
@@ -173,10 +172,10 @@ def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = 9) -> 
     for _ in range(iterations):
         i, j = sample(range(n), 2)
         tmp = W[i, :] + choice([-1, 1]) * W[j, :]
-        if max([abs(x) for x in tmp]) <= max_val:
+        if not max_val or max([abs(x) for x in tmp]) <= max_val:
             W[i, :] = tmp
         i, j = sample(range(n), 2)
         tmp = W[:, i] + choice([-1, 1]) * W[:, j]
-        if max([abs(x) for x in tmp]) <= max_val:
+        if not max_val or max([abs(x) for x in tmp]) <= max_val:
             W[:, i] = tmp
     return W

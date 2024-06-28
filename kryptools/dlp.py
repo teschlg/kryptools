@@ -28,10 +28,9 @@ def _dlog_switch(a: int, b: int, n: int, m: int) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order m choosing an appropriate method."""
     if m < 1000:
         return dlog_naive(a, b, n, m)
-    elif log(m) - 6 < 2 * sqrt(log(n) * log(log(n))):  # compare the theoreticaly expected running times ob bsgs and ic; the constant 6 is determined experimentally
+    if log(m) - 6 < 2 * sqrt(log(n) * log(log(n))):  # compare the theoreticaly expected running times ob bsgs and ic; the constant 6 is determined experimentally
         return dlog_bsgs(a, b, n, m)
-    else:
-        return dlog_qs(a, b, n, m)
+    return dlog_qs(a, b, n, m)
 
 def _dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order q^k using Pohlig-Hellman reduction."""
