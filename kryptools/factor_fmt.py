@@ -5,26 +5,26 @@ Integer factorization: Fermat's method
 from math import isqrt
 
 
-def factor_fermat(n: int) -> list:
+def factor_fermat2(n: int) -> list:
     """Find factors of n using the method of Fermat."""
     factors = []
-    # Fermat only works if n has two factors which are either both even or both odd
-    while n % 2 == 0:
-        factors.append(2)
-        n //= 2
-    a = isqrt(n - 1) + 1
-    step =2
-    if n % 3 == 2:  # if n % 3 = 2, then a must be a multiple of 3
-        a += 2 - ((a - 1) % 3)
-        step = 3
-    elif (n % 4 == 1) ^ (a & 1):  # if n % 4 = 1,3 then a must be odd, even, respectively
-        a += 1
-    while a <= (n + 9) // 6:
+    parameters = {11: (12, 6), 23: (12, 0),
+                  5: (6, 3), 17: (6, 3),
+                  19: (4, 2), 7: (4, 0),
+                  1: (2, 1), 13: (2, 1)}
+   # Speedup only works if n is neiter a multipl of 2 or 3
+    for p in (2, 3):
+        while n % p == 0:
+            factors.append(p)
+            n //= p
+    start = isqrt(n - 1) + 1
+    step, mod = parameters[n % 24]
+    start += (mod - start) % step
+    for a in range(start, (n + 9) // 6 + 1, step):
         b = isqrt(a * a - n)
         if b * b == a * a - n:
             factors.append(a - b)
             factors.append(a + b)
             return factors
-        a += step
     factors.append(n)
     return factors

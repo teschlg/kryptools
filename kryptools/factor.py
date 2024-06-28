@@ -5,6 +5,9 @@ Factorization of integers:
 
 from math import isqrt, gcd
 from .primes import sieve_eratosthenes, isprime
+from .factor_pm1 import _pm1_parameters, factor_pm1
+from .factor_ecm import _ecm_parameters, factor_ecm
+#from .factor_qs import factor_qs
 
 
 # Factoring
@@ -12,24 +15,18 @@ from .primes import sieve_eratosthenes, isprime
 
 
 def _factor_fermat(n: int, steps: int = 10) -> list:
-    a = isqrt(n - 1) + 1
-    step =2
-    if n % 3 == 2:  # if n % 3 = 2, then a must be a multiple of 3
-        a += 2 - ((a - 1) % 3)
-        step = 3
-    elif (n % 4 == 1) ^ (a & 1):  # if n % 4 = 1,3 then a must be odd, even, respectively
-        a += 1
-    for _ in range(steps):
-        #if a > (n + 9) // 6:
-        #     return
+    "Fermat method"
+    parameters = {11: (12, 6), 23: (12, 0),
+                  5: (6, 3), 17: (6, 3),
+                  19: (4, 2), 7: (4, 0),
+                  1: (2, 1), 13: (2, 1)}
+    start = isqrt(n - 1) + 1
+    step, mod = parameters[n % 24]
+    start += (mod - start) % step
+    for a in range(start, max(start + steps * step,(n + 9) // 6) + 1, step):
         b = isqrt(a * a - n)
         if b * b == a * a - n:
             return a - b
-        a += step
-
-from .factor_pm1 import _pm1_parameters, factor_pm1
-from .factor_ecm import _ecm_parameters, factor_ecm
-#from .factor_qs import factor_qs
 
 def factorint(n: int, verbose: int = 0) -> list:
     "Factor a number."
