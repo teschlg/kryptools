@@ -24,7 +24,7 @@ def _pm1_parameters(B1: int, B2: int = None, primes: tuple = None):
             continue
         if q > B2:
             break
-        stage_two_deltas.append(q - p)
+        stage_two_deltas.append(q - p)  # pylint: disable=W0631
 
     return stage_one, stage_two_deltas
 

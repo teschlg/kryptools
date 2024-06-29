@@ -54,11 +54,11 @@ def factor_qs(n: int) -> list:
     for i, p in enumerate(factorbase):
         r1 = sqrt_mod(n, p)
         assert r1 is not None # only quadratic residues
-        r2 = -r1 % p
+        r2 = -r1 % p # pylint: disable=E1130
         if r1 == r2:
             factorbase_root[i] = [ r1 ]
         else:
-            factorbase_root[i] = [ r1, -r1 % p ]
+            factorbase_root[i] = [ r1, -r1 % p ]  # pylint: disable=E1130
 
     m = isqrt(n - 1) + 1
     d = m**2 - n
@@ -168,7 +168,7 @@ def factor_qs(n: int) -> list:
                     res = process_relation(j, mask)
                     if res:
                         return res
-                del(factors[j])
+                del factors[j]
             else:
-                del(factors[j])  # the number is unlikely to factor
+                del factors[j]  # the number is unlikely to factor
         sieve_bound += sieve_step  # increase the sieve and continue
