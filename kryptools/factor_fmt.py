@@ -5,7 +5,7 @@ Integer factorization: Fermat's method
 from math import isqrt
 
 
-def factor_fermat2(n: int) -> list:
+def factor_fermat(n: int) -> list:
     """Find factors of n using the method of Fermat."""
     factors = []
     parameters = {11: (12, 6), 23: (12, 0),

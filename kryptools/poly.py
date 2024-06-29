@@ -25,8 +25,17 @@ class Poly:
         if modulus:
             self.mod(modulus)
 
+    def __call__(self, x):
+        return sum(c * x**j for j, c in enumerate(self.coeff))
+
     def __getitem__(self, item):
         return self.coeff[item]
+
+    def __setitem__(self, item, value):
+        self.coeff[item] = value
+
+    def __len__(self):
+        return len(self.coeff)
 
     def __repr__(self):
         def prx(i: int):
@@ -37,7 +46,7 @@ class Poly:
             return "x^" + str(i)
 
         if len(self.coeff) == 1:
-            return str(int(self.coeff[0]))
+            return str(self.coeff[0])
         plus = ""
         tmp = ""
         for i in reversed(range(len(self.coeff))):
@@ -76,9 +85,11 @@ class Poly:
         return bool(self.degree()) or bool(self.coeff[0])
 
     def degree(self):
+        "Return the degree."
         return len(self.coeff) - 1
 
     def map(self, func):
+        "Apply a given function to all coefficients."
         self.coeff = list(map(func, self.coeff))
 
     def __add__(self, other: "Poly") -> "Poly":
@@ -184,7 +195,7 @@ class Poly:
         return res
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
-        "Polynom division with remainder"
+        "Polynom division with remainder."
         if isinstance(other, list):
             other = self.__class__(other)
         elif not isinstance(other, self.__class__):
@@ -215,7 +226,7 @@ class Poly:
         )
 
     def mod(self, other: "Poly") -> None:
-        "Remainder of polynom division"
+        "Reduce with respect to a given polynomial."
         if isinstance(other, list):
             other = self.__class__(other)
         elif not isinstance(other, self.__class__):
@@ -241,6 +252,7 @@ class Poly:
             self.coeff.pop(i)
 
     def inv(self, other: "Poly" = None) -> "Poly":
+        "Inverse modulo a given polynomial."
         if not other:
             other = self.modulus
         if isinstance(other, list):

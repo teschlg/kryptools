@@ -249,8 +249,8 @@ class Matrix:
         "Returns an identity matrix of the same dimension"
         def delta(i, j):
             if i == j:
-                return 1
-            return 0
+                return one
+            return zero
         if not m and not n:
             n, m = self.cols, self.rows
         elif not n:

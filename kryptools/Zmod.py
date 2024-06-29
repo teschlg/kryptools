@@ -20,7 +20,7 @@ class Zmod:
     0 (mod 5)
     """
 
-    def __init__(self, n: int, short: bool = False):
+    def __init__(self, n: int, short: bool = True):
         self.n = n
         self.short = short
 
@@ -40,10 +40,7 @@ class ZmodPoint:
     "Represents a point in the ring Zmod."
 
     def __init__(self, x: int, ring: "Zmod"):
-        if isinstance(x, self.__class__) and x.ring.n == ring.n:
-            self.x = int(x)
-        else:
-            self.x = int(x) % ring.n
+        self.x = int(x) % ring.n
         self.ring = ring
 
     def __repr__(self):

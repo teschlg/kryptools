@@ -23,7 +23,7 @@ def _factor_fermat(n: int, steps: int = 10) -> list:
     start = isqrt(n - 1) + 1
     step, mod = parameters[n % 24]
     start += (mod - start) % step
-    for a in range(start, max(start + steps * step,(n + 9) // 6) + 1, step):
+    for a in range(start, min(start + steps * step,(n + 9) // 6) + 1, step):
         b = isqrt(a * a - n)
         if b * b == a * a - n:
             return a - b

@@ -311,17 +311,17 @@ class ECPoint:
                     break
         return order
 
-    def dlog(Q, P: "ECPoint") -> int:
+    def dlog(self, other: "ECPoint") -> int:
         """Compute the discrete log_P(Q) in EC."""
-        m = P.order()
+        m = other.order()
         mf = factorint(m)
-        assert m * Q == P.curve(None, None), "DLP not solvable."
+        assert m * self == other.curve(None, None), "DLP not solvable."
         # We first use Pohlig-Hellman to split m into powers of prime factors
         mm = []
         ll = []
         for pj, kj in mf.items():
-            Pj = (m // pj**kj) * P
-            Qj = (m // pj**kj) * Q
+            Pj = (m // pj**kj) * other
+            Qj = (m // pj**kj) * self
             l = Qj.dlog_ph(Pj, pj, kj)
             if l is None:
                 return None
@@ -329,58 +329,58 @@ class ECPoint:
             ll += [l]
         return crt(ll, mm)
 
-    def dlog_ph(Q, P: "ECPoint", q: int, k: int) -> int:
+    def dlog_ph(self, other: "ECPoint", q: int, k: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order q^k using Pohlig-Hellman reduction."""
         if k == 1 or q**k < 10000:
-            return Q.dlog_switch(P, q**k)
-        Pj = q**(k - 1) * P
+            return self.dlog_switch(other, q**k)
+        Pj = q**(k - 1) * self
         P1 = Pj
-        Qj = q**(k - 1) * Q
+        Qj = q**(k - 1) * other
         xj = Qj.dlog_switch(P1, q)
         for j in range(2, k + 1):
-            Pj = q**(k - j) * P
-            Qj = q**(k - j) * Q - xj * Pj
+            Pj = q**(k - j) * self
+            Qj = q**(k - j) * other - xj * Pj
             yj = Qj.dlog_switch(P1, q)
             xj = xj + q ** (j - 1) * yj % q**j
         return xj
 
-    def dlog_switch(Q, P: "ECPoint", m: int) -> int:
+    def dlog_switch(self, other: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m choosing an appropriate method."""
         if m < 100:
-            return Q.dlog_naive(P, m)
-        return Q.dlog_bsgs(P, m)
+            return self.dlog_naive(other, m)
+        return self.dlog_bsgs(other, m)
 
-    def dlog_naive(Q, P: "ECPoint", m: int) -> int:
+    def dlog_naive(self, other: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC using an exhaustive search."""
-        if not Q.curve == P.curve and not isinstance(Q, P.__class__):
+        if not self.curve == other.curve and not isinstance(self, other.__class__):
             raise ValueError("Points must be on the same curve!")
         j = 0
         xx, yy = None, None
-        while xx != Q.x:
+        while xx != self.x:
             j += 1
-            xx, yy = P.curve.add(xx, yy, P.x, P.y)
+            xx, yy = self.curve.add(xx, yy, other.x, other.y)
             if xx is None:
                 raise ValueError("DLP not solvabel!")
-        if  yy == Q.y:
+        if  yy == self.y:
             return j
         return m - j
 
-    def dlog_bsgs(Q, P: "ECPoint", m: int) -> int:
+    def dlog_bsgs(self, other: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m using Shanks' baby-step-giant-step algorithm."""
-        if not Q.curve == P.curve and not isinstance(P, Q.__class__):
+        if not self.curve == other.curve and not isinstance(other, self.__class__):
             raise ValueError("Points must be on the same curve!")
         mm = 1 + isqrt(m - 1)
         m2 = mm//2 + mm % 1  # we use the group symmetry to halve the number of steps
         # initialize baby_steps table
         baby_steps = {}
-        baby_step = P
+        baby_step = other
         for j in range(1,m2+1):
             baby_steps[int(baby_step.x)] = j, int(baby_step.y)
-            baby_step += P
+            baby_step += other
 
         # now take the giant steps
-        giant_stride = -mm * P
-        giant_step = Q
+        giant_stride = -mm * other
+        giant_step = self
         for l in range(mm+1):
             if giant_step.x is None:
                 return l * mm

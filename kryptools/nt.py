@@ -23,7 +23,7 @@ def lcm(a: int, b: int) -> int:
 
 
 def egcd(a: int, b: int) -> (int, int, int):
-    """Perform the extended Euclidean agorithm. Returns gcd, x, y such that a x + b y = gcd."""
+    """Perform the extended Euclidean agorithm. Returns `gcd`, `x`, `y` such that `a x + b y = gcd`."""
     r0, r1 = a, b
     x0, x1, y0, y1 = 1, 0, 0, 1
     while r1 != 0:
@@ -36,8 +36,8 @@ def egcd(a: int, b: int) -> (int, int, int):
 
 # Chinese remainder theorem
 
-def crt(a: list, m: list) -> int:
-    """Solve given linear congruences x[j] % m[j] == a[j] using the Chinese Remainder Theorem."""
+def crt(a: list[int], m: list[int]) -> int:
+    """Solve given linear congruences x % m[j] == a[j] using the Chinese Remainder Theorem."""
     l = len(a)
     assert len(m) == l, "The lists of numbers and modules must have equal length."
     M = prod(m)
@@ -179,7 +179,7 @@ def jacobi_symbol(a: int, n: int) -> int:
     return 0
 
 def sqrt_mod(a: int, p: int) -> list:
-    "Compute a square root of a modulo p unsing Cipolla's algorithm."
+    "Compute a square root of `a` modulo `p` unsing Cipolla's algorithm."
     a %= p
     if a == 0 or a == 1:
         return a
@@ -211,13 +211,13 @@ from .factor import factorint
 
 
 def euler_phi(n: int) -> int:
-    """Euler's phi function of n."""
+    """Euler's phi function of `n`."""
     k = factorint(n)
     return prod([(p - 1) * p ** (k[p] - 1) for p in k])
 
 
 def carmichael_lambda(n: int) -> int:
-    """Carmichael's lambda function of n."""
+    """Carmichael's lambda function of `n`."""
     k = factorint(n)
     lam_all = []  # values corresponding to the prime factors
     for p in k:
@@ -233,7 +233,7 @@ def carmichael_lambda(n: int) -> int:
 # Order in Z_p^*
 
 def order(a: int, n: int, factor=False) -> int:
-    """Compute the order of a in the group Z_n^*."""
+    """Compute the order of `a` in the group Z_n^*."""
     a %= n
     assert a != 0 and gcd(a, n) == 1, f"{a} and {n} are not coprime!"
     factors = dict()  # We compute euler_phi(n) and its factorization in one pass
