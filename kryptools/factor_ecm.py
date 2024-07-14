@@ -5,6 +5,7 @@ Integer factorization: Lentra's ECM
 from math import gcd, isqrt, log
 from random import randint, seed
 from .primes import sieve_eratosthenes
+seed(0)
 
 # Crandall and Pomerance: Primes (doi=10.1007/0-387-28979-8)
 # Algorithm 7.2.7

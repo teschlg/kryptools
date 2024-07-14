@@ -2,6 +2,10 @@
 Ring of intergers modulo `n`.
 """
 
+from math import gcd
+from .factor import factorint
+
+
 class Zmod:
     """
     Ring of intergers modulo `n`.
@@ -20,9 +24,11 @@ class Zmod:
     0 (mod 5)
     """
 
-    def __init__(self, n: int, short: bool = False):
+    def __init__(self, n: int, short: bool = True):
         self.n = n
         self.short = short
+        self.group_order = 0
+        self.factors = {} # factoring of the group order
 
     def __call__(self, x: int):
         return ZmodPoint(x, self)
@@ -35,15 +41,33 @@ class Zmod:
     def __contains__(self, other: "ZmodPoint") -> bool:
         return isinstance(other, ZmodPoint) and self.n == other.ring.n
 
+    def order(self) -> int:
+        """Compute the order of the group Z_n^*."""
+        if self.group_order:
+            return self.group_order
+        # We compute euler_phi(n) and its factorization in one pass
+        for p, k in factorint(self.n).items():  # first factorize n
+            for pm, km in factorint(p - 1).items():  # factor p-1 and add the factors
+                if pm in self.factors:
+                    self.factors[pm] += km
+                else:
+                    self.factors[pm] = km
+            if k > 1:  # if the multiplicity of of p is >1, then we need to add p**(k-1)
+                if p in self.factors:
+                    self.factors[p] += k - 1
+                else:
+                    self.factors[p] = k - 1
+        self.group_order = 1
+        for p, k in self.factors.items():
+            self.group_order *= p**k
+        return self.group_order
+
 
 class ZmodPoint:
     "Represents a point in the ring Zmod."
 
     def __init__(self, x: int, ring: "Zmod"):
-        if isinstance(x, self.__class__) and x.ring.n == ring.n:
-            self.x = int(x)
-        else:
-            self.x = int(x) % ring.n
+        self.x = int(x) % ring.n
         self.ring = ring
 
     def __repr__(self):
@@ -61,11 +85,6 @@ class ZmodPoint:
 
     def __int__(self):
         return self.x
-
-    def sharp(self):
-        "Returns a symmetric (w.r.t. 0) representative."
-        tmp = (self.ring.n - 1) // 2
-        return (self.x + tmp) % self.ring.n - tmp
 
     def __hash__(self):
         return hash(self.x)
@@ -113,3 +132,26 @@ class ZmodPoint:
 
     def __pow__(self, scalar: int) -> "ZmodPoint":
         return self.__class__(pow(self.x, scalar, self.ring.n), self.ring)
+
+    def sharp(self):
+        "Returns a symmetric (w.r.t. 0) representative."
+        tmp = (self.ring.n - 1) // 2
+        return (self.x + tmp) % self.ring.n - tmp
+
+    def order(self) -> int:
+        """Compute the order of the point in the group Z_n^*."""
+        if self.x == 0 or gcd(self.x, self.ring.n) != 1:
+            raise ValueError(f"{self.x} and {self.ring.n} are not coprime!")
+        order = self.ring.order()  # use euler_phi(n) as our current guess
+        for p, k in self.ring.factors.items():
+            for _ in range(k):
+                order_try = order // p
+                if pow(self.x, order_try, self.ring.n) == 1:
+                    order = order_try
+                else:
+                    break
+        return order
+
+    def is_generator(self):
+        """Test if the point is a generator of the group Z_n^*."""
+        return self.ring.order() == self.order()

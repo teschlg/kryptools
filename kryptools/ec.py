@@ -7,6 +7,7 @@ from random import randint
 from .factor import factorint
 from .nt import legendre_symbol, sqrt_mod, crt
 from .Zmod import Zmod
+from .poly import Poly
 
 class EC_Weierstrass():
     """
@@ -39,6 +40,7 @@ class EC_Weierstrass():
         self.b = self.gf(b % p)
         self.group_order = order
         self.group_order_factors = None
+        self.psi_list = [ Poly([ 0 ], ring = self.gf ) ] # division polynomials
         self.short = False  # display points in short format
         self.hex = False  # display points as hex values in compressed format
 
@@ -138,6 +140,28 @@ class EC_Weierstrass():
             y2 = int(x**3 + self.a * x + self.b)
             j = legendre_symbol(y2, self.p)
         return ECPoint(x, randint(0, 1), self, short = True)
+
+    def psi(self, n: int):
+        """The x-part of the n'th division polynomial."""
+
+        if len(self.psi_list) < 5:
+            self.psi_list = [ Poly([i], ring = self.gf) for i in range(3)]
+            self.psi_list += [ Poly([-self.a * self.a, 12 * self.b, 6 * self.a, 0, 3], ring = self.gf) ]
+            self.psi_list += [ Poly([-4 * self.a**3 - 32 * self.b * self.b, -16 * self.a * self.b, -20 * self.a * self.a, 80 * self.b, 20 * self.a, 0, 4], ring = self.gf) ]
+        if len(self.psi_list) < n + 1:
+            y2 = Poly([self.b, self.a, 0, 1], ring = self.gf)**2
+            ti = 1 / self.gf(2)
+            for m in range(len(self.psi_list), n + 1):
+                if m % 2:  # odd
+                    m = (m - 1) // 2
+                    if m % 2:
+                        self.psi_list += [ self.psi_list[m + 2] * self.psi_list[m]**3 - y2 * self.psi_list[m - 1] * self.psi_list[m + 1]**3]
+                    else:
+                        self.psi_list += [ y2 * self.psi_list[m + 2] * self.psi_list[m]**3 - self.psi_list[m - 1] * self.psi_list[m + 1]**3]
+                else:  # even
+                    m = m // 2
+                    self.psi_list += [ ti * self.psi_list[m] * (self.psi_list[m + 2] * self.psi_list[m - 1]**2 - self.psi_list[m - 2] * self.psi_list[m + 1]**2) ]
+        return self.psi_list[n]
 
     def order(self, order: int = None) -> int:
         "Return the group order."
@@ -311,17 +335,23 @@ class ECPoint:
                     break
         return order
 
-    def dlog(Q, P: "ECPoint") -> int:
+    def psi(self, n: int):
+        """Value of the n'th division polynomial."""
+        if n % 2:
+            return self.curve.psi(n)(self.x)
+        return self.y * self.curve.psi(n)(self.x)
+
+    def dlog(self, other: "ECPoint") -> int:
         """Compute the discrete log_P(Q) in EC."""
-        m = P.order()
+        m = other.order()
         mf = factorint(m)
-        assert m * Q == P.curve(None, None), "DLP not solvable."
+        assert m * self == other.curve(None, None), "DLP not solvable."
         # We first use Pohlig-Hellman to split m into powers of prime factors
         mm = []
         ll = []
         for pj, kj in mf.items():
-            Pj = (m // pj**kj) * P
-            Qj = (m // pj**kj) * Q
+            Pj = (m // pj**kj) * other
+            Qj = (m // pj**kj) * self
             l = Qj.dlog_ph(Pj, pj, kj)
             if l is None:
                 return None
@@ -329,58 +359,58 @@ class ECPoint:
             ll += [l]
         return crt(ll, mm)
 
-    def dlog_ph(Q, P: "ECPoint", q: int, k: int) -> int:
+    def dlog_ph(self, other: "ECPoint", q: int, k: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order q^k using Pohlig-Hellman reduction."""
         if k == 1 or q**k < 10000:
-            return Q.dlog_switch(P, q**k)
-        Pj = q**(k - 1) * P
+            return self.dlog_switch(other, q**k)
+        Pj = q**(k - 1) * self
         P1 = Pj
-        Qj = q**(k - 1) * Q
+        Qj = q**(k - 1) * other
         xj = Qj.dlog_switch(P1, q)
         for j in range(2, k + 1):
-            Pj = q**(k - j) * P
-            Qj = q**(k - j) * Q - xj * Pj
+            Pj = q**(k - j) * self
+            Qj = q**(k - j) * other - xj * Pj
             yj = Qj.dlog_switch(P1, q)
             xj = xj + q ** (j - 1) * yj % q**j
         return xj
 
-    def dlog_switch(Q, P: "ECPoint", m: int) -> int:
+    def dlog_switch(self, other: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m choosing an appropriate method."""
         if m < 100:
-            return Q.dlog_naive(P, m)
-        return Q.dlog_bsgs(P, m)
+            return self.dlog_naive(other, m)
+        return self.dlog_bsgs(other, m)
 
-    def dlog_naive(Q, P: "ECPoint", m: int) -> int:
+    def dlog_naive(self, other: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC using an exhaustive search."""
-        if not Q.curve == P.curve and not isinstance(Q, P.__class__):
+        if not self.curve == other.curve and not isinstance(self, other.__class__):
             raise ValueError("Points must be on the same curve!")
         j = 0
         xx, yy = None, None
-        while xx != Q.x:
+        while xx != self.x:
             j += 1
-            xx, yy = P.curve.add(xx, yy, P.x, P.y)
+            xx, yy = self.curve.add(xx, yy, other.x, other.y)
             if xx is None:
                 raise ValueError("DLP not solvabel!")
-        if  yy == Q.y:
+        if  yy == self.y:
             return j
         return m - j
 
-    def dlog_bsgs(Q, P: "ECPoint", m: int) -> int:
+    def dlog_bsgs(self, other: "ECPoint", m: int) -> int:
         """Compute the discrete log_P(Q) in EC if P has order m using Shanks' baby-step-giant-step algorithm."""
-        if not Q.curve == P.curve and not isinstance(P, Q.__class__):
+        if not self.curve == other.curve and not isinstance(other, self.__class__):
             raise ValueError("Points must be on the same curve!")
         mm = 1 + isqrt(m - 1)
         m2 = mm//2 + mm % 1  # we use the group symmetry to halve the number of steps
         # initialize baby_steps table
         baby_steps = {}
-        baby_step = P
+        baby_step = other
         for j in range(1,m2+1):
             baby_steps[int(baby_step.x)] = j, int(baby_step.y)
-            baby_step += P
+            baby_step += other
 
         # now take the giant steps
-        giant_stride = -mm * P
-        giant_step = Q
+        giant_stride = -mm * other
+        giant_step = self
         for l in range(mm+1):
             if giant_step.x is None:
                 return l * mm

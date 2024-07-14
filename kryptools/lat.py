@@ -104,6 +104,7 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     assert 0 < delta <= 1, f"LLL reqires 0 < delta={delta} <= 1"
     j = 1
     U = V[:, :]
+    U.map(int)
     Us = U[:, :]
     Us.map(Fraction)
     M = U.zeros()

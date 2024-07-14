@@ -61,8 +61,10 @@ class Matrix:
             else:
                 cols = range(self.cols)[j]
             return Matrix([[self.matrix[i][j] for j in cols] for i in rows])
-        i, j = divmod(item, self.cols)
-        return self.matrix[i][j]
+        if isinstance(item, int):
+            i, j = divmod(item, self.cols)
+            return self.matrix[i][j]
+        return Matrix([self.matrix[k // self.cols][k % self.cols] for k in range(self.cols * self.rows)[item]])
 
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
@@ -162,7 +164,7 @@ class Matrix:
     def __mul__(self, other) -> "Matrix":
         if isinstance(other, Matrix):
             return self.multiply(other)
-        return NotImplemented
+        return Matrix([ [item * other for item in row] for row in self.matrix ])
 
     def __rmul__(self, other) -> "Matrix":
         if isinstance(other, Matrix):
@@ -242,20 +244,26 @@ class Matrix:
             n, m = self.cols, self.rows
         elif not n:
             n = m
-        zero = 0 * self[0]
+        try:
+            zero = 0 * self[0]
+        except:
+            zero = 0
         return Matrix([[ zero for j in range(n)] for i in range(m) ])
 
     def eye(self, m: int = None, n: int = None):
         "Returns an identity matrix of the same dimension"
         def delta(i, j):
             if i == j:
-                return 1
-            return 0
+                return one
+            return zero
         if not m and not n:
             n, m = self.cols, self.rows
         elif not n:
             n = m
-        zero = 0 * self[0]
+        try:
+            zero = 0 * self[0]
+        except:
+            zero = 0
         one = 1 + zero
         return Matrix([[ delta(i, j) for j in range(n) ] for i in range(m) ])
 
