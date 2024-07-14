@@ -261,10 +261,10 @@ class Poly:
             raise NotImplementedError(f"Cannot invert {self} modulo {other}.")
         if not other:
             raise NotImplementedError(f"{other} must be nonzero.")
+        zero = 0 * self.coeff[0]
+        one = zero +1
         r0, r1 = other, self
-        y0, y1 = self.__class__([0], modulus=self.modulus), self.__class__(
-            [1], modulus=self.modulus
-        )
+        y0, y1 = self.__class__([zero], modulus=self.modulus), self.__class__([one], modulus=self.modulus)
         while r1:
             q, r = r0.divmod(r1)
             r0, r1 = r1, r
