@@ -272,6 +272,6 @@ class Poly:
         if r0.degree() != 0:
             raise ValueError(f"{self} is not invertible mod {other}.")
         tmp = 1 / r0[0]
-        for i in range(y0.degree()):
+        for i in range(len(y0)):
             y0.coeff[i] *= tmp
         return y0
