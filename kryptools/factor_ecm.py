@@ -84,7 +84,7 @@ def _ecm_parameters(B1: int, B2: int = None, D: int = None, primes: tuple = None
     return D, stage_one, stage_two_deltas
 
 
-def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm_parameters: tuple = None):
+def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm_parameters: tuple|None = None):
     "Factors a number n using Lentsta's ECM method."    
 
     if ecm_parameters:

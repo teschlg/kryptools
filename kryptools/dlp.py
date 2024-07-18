@@ -11,7 +11,7 @@ from .dlp_qs import dlog_qs
 from .factor import factorint
 
 
-def dlog_naive(a: int, b: int, n: int, m: int = None) -> int:
+def dlog_naive(a: int, b: int, n: int, m: int = None) -> int|None:
     """Compute the discrete log_a(b) in Z_n of an element a of order m by exhaustive search."""
     a %= n
     b %= n
@@ -43,14 +43,14 @@ def _dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
     for j in range(2, k + 1):
         aj = pow(a, q ** (k - j), n)
         bj = pow(b, q ** (k - j), n)
-        yj = _dlog_switch(a1, bj * pow(aj, -xj, n) % n, n, q)
+        yj = _dlog_switch(a1, bj * pow(aj, -xj, n) % n, n, q)  # pylint: disable=E1130
         if yj is None:
             return None
         xj = xj + q ** (j - 1) * yj % q**j
     return xj
 
 
-def dlog(a: int, b: int, n: int, m: int = None) -> int:
+def dlog(a: int, b: int, n: int, m: int|None = None) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order m using Pohlig-Hellman reduction."""
     a %= n
     b %= n
@@ -60,7 +60,8 @@ def dlog(a: int, b: int, n: int, m: int = None) -> int:
         mf = factorint(m)
     else:
         m, mf = order(a, n, True)
-    assert pow(b, m, n) == 1, "DLP not solvable."
+    if pow(b, m, n) != 1:
+        raise ValueError("DLP not solvable.")
     # We first use Pohlig-Hellman to split m into powers of prime factors
     mm = []
     ll = []

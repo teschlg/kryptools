@@ -3,6 +3,8 @@ Linear algebra
 """
 
 from math import inf, sqrt, prod
+from numbers import Number
+
 
 class Matrix:
     """
@@ -149,12 +151,16 @@ class Matrix:
         return result
 
     def __add__(self, other) -> "Matrix":
-        if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
+        if isinstance(other, Matrix):
+            if other.cols != self.cols or other.rows != self.rows:
+                raise NotImplementedError("Matrix dimensions do not match!")
             return Matrix([ [ x1 + y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
         return NotImplemented
 
     def __sub__(self, other) -> "Matrix":
-        if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
+        if isinstance(other, Matrix):
+            if other.cols != self.cols or other.rows != self.rows:
+                raise NotImplementedError("Matrix dimensions do not match!")
             return Matrix([ [ x1 - y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
         return NotImplemented
 
@@ -164,12 +170,14 @@ class Matrix:
     def __mul__(self, other) -> "Matrix":
         if isinstance(other, Matrix):
             return self.multiply(other)
-        return Matrix([ [item * other for item in row] for row in self.matrix ])
+        if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
+            return Matrix([ [item * other for item in row] for row in self.matrix ])
+        return NotImplemented
 
     def __rmul__(self, other) -> "Matrix":
-        if isinstance(other, Matrix):
-            return self.multiply(other)
-        return Matrix([ [item * other for item in row] for row in self.matrix ])
+        if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
+             return Matrix([ [item * other for item in row] for row in self.matrix ])
+        return NotImplemented
 
     def rref(self) -> "Matrix":
         "Compute the reduced echelon form of a matrix M."
