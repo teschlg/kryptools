@@ -73,13 +73,13 @@ def hadamard_ratio(M: Matrix) -> float:
     return (gram_det(M) / prod([M[:, i].norm() for i in range(m)])) ** (1 / m)
 
 def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
-    "Babai's rounding algorithm for solving the CVP."
+    "Babai's rounding algorithm for approximately solving the CVP."
     s = U.inv() * x
     k = s.applyfunc(round)
     return U * k
 
 def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
-    "Babai's closest plane algorithm for solving the CVP."
+    "Babai's closest plane algorithm for approximately solving the CVP."
     Us = gram_schmidt(U)[0]
     y = x
     for k in range(U.cols - 1, -1, -1):
@@ -99,7 +99,7 @@ def lagrange_lr(V: Matrix) -> Matrix:
     return Matrix([list(v1), list(v3)]).transpose()
 
 def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
-    "lll algorithm for lattice reduction"
+    "LLL algorithm for lattice reduction."
 
     assert 0 < delta <= 1, f"LLL reqires 0 < delta={delta} <= 1"
     j = 1

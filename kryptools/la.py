@@ -4,7 +4,7 @@ Linear algebra
 
 from math import inf, sqrt, prod
 from numbers import Number
-
+from fractions import Fraction
 
 class Matrix:
     """
@@ -245,6 +245,16 @@ class Matrix:
         if not prod(MM[i, i] for i in range(n)):
             raise ValueError("Matrix is not invertible!")
         return MM[:,n:]
+
+    def is_unimodular(self) -> bool:
+        "Test if the matrix is unimodular."
+        if self.rows != self.rows:
+            return False
+        def is_integer(i):
+            if isinstance(i, int) or (isinstance(i, Fraction) and i.denominator == 1):
+                return True
+            return False
+        return all([is_integer(i) for i in self]) and self.det()**2 == 1
 
     def zeros(self, m: int = None, n: int = None):
         "Returns a zero matrix of the same dimension"
