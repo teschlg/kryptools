@@ -94,10 +94,13 @@ class Poly:
         "Apply a given function to all coefficients."
         self.coeff = list(map(func, self.coeff))
 
+    def _check_type(self, other):
+        return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])
+
     def __add__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            tmp = self.coeff[:]
-            if isinstance(other, int) or type(other) == type(tmp[0]):
+            if self._check_type(other):
+                tmp = self.coeff[:]
                 tmp[0] += other
                 return self.__class__(tmp, modulus=self.modulus)
             return NotImplemented
@@ -117,7 +120,7 @@ class Poly:
 
     def __radd__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            if isinstance(other, Number) or type(other) == type(self.coeff[0]):
+            if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] += other
                 return self.__class__(tmp, modulus=self.modulus)
@@ -128,7 +131,7 @@ class Poly:
 
     def __sub__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            if isinstance(other, int) or type(other) == type(self.coeff[0]):
+            if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] -= other
                 return self.__class__(tmp, modulus=self.modulus)
@@ -149,7 +152,7 @@ class Poly:
 
     def __rsub__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            if isinstance(other, int) or type(other) == type(self.coeff[0]):
+            if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] -= other
                 return self.__class__(tmp, modulus=self.modulus)
@@ -157,7 +160,7 @@ class Poly:
 
     def __mul__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            if isinstance(other, int) or type(other) == type(self.coeff[0]):
+            if self._check_type(other):
                 return Poly([other * s for s in self.coeff], modulus = self.modulus)
             return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
@@ -174,10 +177,24 @@ class Poly:
             modulus = other.modulus
         return self.__class__(coeff, modulus = modulus)
 
-    def __rmul__(self, other: int) -> "Poly":
-        if isinstance(other, int) or type(other) == type(self.coeff[0]):
+    def __rmul__(self, other) -> "Poly":
+        if self._check_type(other):
             return self.__class__([other * s for s in self.coeff], modulus=self.modulus)
         return NotImplemented
+
+    def __truediv__(self, other) -> "Poly":
+        if self._check_type(other):
+            return self.__class__([s / other for s in self.coeff], modulus=self.modulus)
+        if isinstance(other, self.__class__):
+            if not other.modulus:
+                raise NotImplementedError("Cannot invert polynomials without modulus.")
+            return self * other.inv()
+        return NotImplemented
+
+    def __rtruediv__(self, other) -> "Poly":
+        if not self.modulus:
+            raise NotImplementedError("Cannot invert polynomials without modulus.")
+        return other * self.inv()
 
     def __pow__(self, i: int) -> "Poly":
         if not isinstance(i, int):
