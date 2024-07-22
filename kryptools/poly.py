@@ -16,11 +16,11 @@ class Poly:
     """
 
     def __init__(self, coeff: list, ring = None, modulus: list = None):
-        for i in range(len(coeff) - 1, 0, -1):
-            if coeff[i]:
+        self.coeff = list(coeff)
+        for i in range(len(self.coeff) - 1, 0, -1):
+            if self.coeff[i]:
                 break
-            coeff.pop(i)
-        self.coeff = coeff
+            self.coeff.pop(i)
         self.modulus = modulus
         if ring:
             self.map(ring)
