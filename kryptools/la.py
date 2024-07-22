@@ -3,6 +3,8 @@ Linear algebra
 """
 
 from math import inf, sqrt, prod
+from numbers import Number
+from fractions import Fraction
 
 class Matrix:
     """
@@ -146,15 +148,21 @@ class Matrix:
             for j in range(other.cols):
                 for k in range(other.rows):
                     result.matrix[i][j] += self.matrix[i][k] * other.matrix[k][j]
+        if self.rows == 1 and other.cols == 1:
+            return result.matrix[0][0]
         return result
 
     def __add__(self, other) -> "Matrix":
-        if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
+        if isinstance(other, Matrix):
+            if other.cols != self.cols or other.rows != self.rows:
+                raise NotImplementedError("Matrix dimensions do not match!")
             return Matrix([ [ x1 + y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
         return NotImplemented
 
     def __sub__(self, other) -> "Matrix":
-        if isinstance(other, Matrix) and other.cols == self.cols and other.rows == self.rows:
+        if isinstance(other, Matrix):
+            if other.cols != self.cols or other.rows != self.rows:
+                raise NotImplementedError("Matrix dimensions do not match!")
             return Matrix([ [ x1 - y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
         return NotImplemented
 
@@ -164,12 +172,14 @@ class Matrix:
     def __mul__(self, other) -> "Matrix":
         if isinstance(other, Matrix):
             return self.multiply(other)
-        return Matrix([ [item * other for item in row] for row in self.matrix ])
+        if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
+            return Matrix([ [item * other for item in row] for row in self.matrix ])
+        return NotImplemented
 
     def __rmul__(self, other) -> "Matrix":
-        if isinstance(other, Matrix):
-            return self.multiply(other)
-        return Matrix([ [item * other for item in row] for row in self.matrix ])
+        if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
+             return Matrix([ [item * other for item in row] for row in self.matrix ])
+        return NotImplemented
 
     def rref(self) -> "Matrix":
         "Compute the reduced echelon form of a matrix M."
@@ -237,6 +247,16 @@ class Matrix:
         if not prod(MM[i, i] for i in range(n)):
             raise ValueError("Matrix is not invertible!")
         return MM[:,n:]
+
+    def is_unimodular(self) -> bool:
+        "Test if the matrix is unimodular."
+        if self.rows != self.rows:
+            return False
+        def is_integer(i):
+            if isinstance(i, int) or (isinstance(i, Fraction) and i.denominator == 1):
+                return True
+            return False
+        return all([is_integer(i) for i in self]) and self.det()**2 == 1
 
     def zeros(self, m: int = None, n: int = None):
         "Returns a zero matrix of the same dimension"

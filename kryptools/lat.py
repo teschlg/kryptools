@@ -2,7 +2,7 @@
 Lattice tools
 """
 
-from math import prod
+from math import prod, floor
 from fractions import Fraction
 from random import choice, sample
 from .la import Matrix, zeros
@@ -73,18 +73,27 @@ def hadamard_ratio(M: Matrix) -> float:
     return (gram_det(M) / prod([M[:, i].norm() for i in range(m)])) ** (1 / m)
 
 def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
-    "Babai's rounding algorithm for solving the CVP."
+    "Babai's rounding algorithm for approximately solving the CVP."
     s = U.inv() * x
     k = s.applyfunc(round)
     return U * k
 
+def babai_round_bnd(U: Matrix) -> float:
+    "Bound for Babai's rounding algorithm for solving the CVP."
+    return floor(1 / (2 * max([ U.inv()[i,:].norm(1) for i in range(U.rows)])))
+
 def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
-    "Babai's closest plane algorithm for solving the CVP."
+    "Babai's closest plane algorithm for approximately solving the CVP."
     Us = gram_schmidt(U)[0]
     y = x
     for k in range(U.cols - 1, -1, -1):
         y = y - round(y.dot(Us[:, k]) / norm2(Us[:, k])) * U[:, k]
     return (x - y).applyfunc(round)
+
+def babai_plane_bnd(U: Matrix, p = 2) -> float:
+    "Bound for Babai's closest plane algorithm for solving the CVP."
+    Us = gram_schmidt(U)[0]
+    return float(0.5 * min([Us[:, i].norm(p) for i in range(Us.rows)]))
 
 def lagrange_lr(V: Matrix) -> Matrix:
     "Lagrange lattice reduction."
@@ -99,7 +108,7 @@ def lagrange_lr(V: Matrix) -> Matrix:
     return Matrix([list(v1), list(v3)]).transpose()
 
 def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
-    "lll algorithm for lattice reduction"
+    "LLL algorithm for lattice reduction."
 
     assert 0 < delta <= 1, f"LLL reqires 0 < delta={delta} <= 1"
     j = 1

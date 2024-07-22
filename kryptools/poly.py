@@ -2,6 +2,8 @@
 Polynomials
 """
 
+from numbers import Number
+
 class Poly:
     """
     Represents a polynomial as a list of coefficients.
@@ -92,14 +94,16 @@ class Poly:
         "Apply a given function to all coefficients."
         self.coeff = list(map(func, self.coeff))
 
+    def _check_type(self, other):
+        return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])
+
     def __add__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            try:
+            if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] += other
                 return self.__class__(tmp, modulus=self.modulus)
-            except:
-                return NotImplemented
+            return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
             scoeff = self.coeff + (lo - ls) * [0]
@@ -116,12 +120,10 @@ class Poly:
 
     def __radd__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            try:
+            if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] += other
                 return self.__class__(tmp, modulus=self.modulus)
-            except:
-                pass
         return NotImplemented
 
     def __neg__(self) -> "Poly":
@@ -129,12 +131,11 @@ class Poly:
 
     def __sub__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            try:
+            if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] -= other
                 return self.__class__(tmp, modulus=self.modulus)
-            except:
-                return NotImplemented
+            return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
             scoeff = self.coeff + (lo - ls) * [0]
@@ -147,24 +148,21 @@ class Poly:
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
-        return self.__class__([s - o for s, o in zip(scoeff, ocoeff)], modulus=modulus)
+        return self.__class__([s - o for s, o in zip(scoeff, ocoeff)], modulus = modulus)
 
     def __rsub__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            try:
+            if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] -= other
                 return self.__class__(tmp, modulus=self.modulus)
-            except:
-                pass
         return NotImplemented
 
     def __mul__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
-            try:
-                return Poly([other * s for s in self.coeff])
-            except:
-                return NotImplemented
+            if self._check_type(other):
+                return Poly([other * s for s in self.coeff], modulus = self.modulus)
+            return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
         coeff = [0] * (ls + lo - 1)
         for k in range(ls + lo - 1):
@@ -177,22 +175,49 @@ class Poly:
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
-        return self.__class__(coeff, modulus=modulus)
+        return self.__class__(coeff, modulus = modulus)
 
-    def __rmul__(self, other: int) -> "Poly":
-        return self.__class__([other * s for s in self.coeff], modulus=self.modulus)
+    def __rmul__(self, other) -> "Poly":
+        if self._check_type(other):
+            return self.__class__([other * s for s in self.coeff], modulus=self.modulus)
+        return NotImplemented
+
+    def __truediv__(self, other) -> "Poly":
+        if self._check_type(other):
+            return self.__class__([s / other for s in self.coeff], modulus=self.modulus)
+        if isinstance(other, self.__class__):
+            if not other.modulus:
+                raise NotImplementedError("Cannot invert polynomials without modulus.")
+            return self * other.inv()
+        return NotImplemented
+
+    def __rtruediv__(self, other) -> "Poly":
+        if not self.modulus:
+            raise NotImplementedError("Cannot invert polynomials without modulus.")
+        return other * self.inv()
 
     def __pow__(self, i: int) -> "Poly":
-        res = self.__class__([1], modulus=self.modulus)
+        if not isinstance(i, int):
+            return NotImplemented
+        zero = 0 * self.coeff[0]
+        one = zero + 1
+        res = self.__class__([one], modulus=self.modulus)
         if i < 0:
             if not self.modulus:
-                raise NotImplementedError("Cannot divide.")
+                raise NotImplementedError("Cannot divide polynomials without modulus.")
             tmp = self.inv()
+            i *= -1
         else:
             tmp = self
         for _ in range(i):
             res *= tmp
         return res
+
+    def __floordiv__(self, other: "Poly") -> "Poly":
+        return self.divmod(other)[0]
+
+    def __mod__(self, other: "Poly") -> "Poly":
+        return self.divmod(other)[1]
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
         "Polynom division with remainder."
@@ -272,6 +297,6 @@ class Poly:
         if r0.degree() != 0:
             raise ValueError(f"{self} is not invertible mod {other}.")
         tmp = 1 / r0[0]
-        for i in range(y0.degree()):
+        for i in range(len(y0)):
             y0.coeff[i] *= tmp
         return y0

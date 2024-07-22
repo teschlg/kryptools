@@ -90,48 +90,66 @@ class ZmodPoint:
         return hash(self.x)
 
     def __add__(self, other: "ZmodPoint") -> "ZmodPoint":
-        if isinstance(other, self.__class__) and self.ring == other.ring:
+        if isinstance(other, self.__class__):
+            if self.ring != other.ring:
+                raise NotImplementedError("Cannot add elements from different rings.")
             return self.__class__(self.x + other.x, self.ring)
         if isinstance(other, int):
             return self.__class__(self.x + other, self.ring)
         return NotImplemented
 
     def __radd__(self, scalar: int) -> "ZmodPoint":
-        return self.__class__(scalar + self.x, self.ring)
+        if isinstance(scalar, int):
+            return self.__class__(scalar + self.x, self.ring)
+        return NotImplemented
 
     def __neg__(self) -> "ZmodPoint":
         return self.__class__(-self.x, self.ring)
 
     def __sub__(self, other: "ZmodPoint") -> "ZmodPoint":
-        if isinstance(other, self.__class__) and self.ring == other.ring:
+        if isinstance(other, self.__class__):
+            if self.ring != other.ring:
+                raise NotImplementedError("Cannot subtract elements from different rings.")
             return self.__class__(self.x - other.x, self.ring)
         if isinstance(other, int):
             return self.__class__(self.x - other, self.ring)
         return NotImplemented
 
     def __rsub__(self, scalar: int) -> "ZmodPoint":
-        return self.__class__(scalar - self.x, self.ring)
+        if isinstance(scalar, int):
+            return self.__class__(scalar - self.x, self.ring)
+        return NotImplemented
 
     def __mul__(self, other: "ZmodPoint") -> "ZmodPoint":
-        if isinstance(other, self.__class__) and self.ring == other.ring:
+        if isinstance(other, self.__class__):
+            if self.ring != other.ring:
+                raise NotImplementedError("Cannot multiply elements from different rings.")
             return self.__class__(self.x * other.x, self.ring)
         if isinstance(other, int):
             return self.__class__(self.x * other, self.ring)
         return NotImplemented
 
     def __rmul__(self, scalar: int) -> "ZmodPoint":
-        return self.__class__(scalar * self.x, self.ring)
+        if isinstance(scalar, int):
+            return self.__class__(scalar * self.x, self.ring)
+        return NotImplemented
 
     def __truediv__(self, other: "ZmodPoint") -> "ZmodPoint":
-        if not isinstance(other, self.__class__) or self.ring != other.ring:
-            return NotImplemented
-        return self.__class__(self.x * pow(other.x, -1, self.ring.n), self.ring)
+        if isinstance(other, self.__class__):
+            if self.ring != other.ring:
+                raise NotImplementedError("Cannot divide elements from different rings.")
+            return self.__class__(self.x * pow(other.x, -1, self.ring.n), self.ring)
+        return NotImplemented
 
     def __rtruediv__(self, scalar: int) -> "ZmodPoint":
-        return self.__class__(scalar * pow(self.x, -1, self.ring.n), self.ring)
+        if isinstance(scalar, int):
+            return self.__class__(scalar * pow(self.x, -1, self.ring.n), self.ring)
+        return NotImplemented
 
     def __pow__(self, scalar: int) -> "ZmodPoint":
-        return self.__class__(pow(self.x, scalar, self.ring.n), self.ring)
+        if isinstance(scalar, int):
+            return self.__class__(pow(self.x, scalar, self.ring.n), self.ring)
+        return NotImplemented
 
     def sharp(self):
         "Returns a symmetric (w.r.t. 0) representative."

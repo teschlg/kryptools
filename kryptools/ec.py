@@ -320,7 +320,7 @@ class ECPoint:
     def __neg__(self) -> "ECPoint":
         if self.x is None or not self.y:
             return self
-        return ECPoint(self.x, -self.y, self.curve)
+        return ECPoint(self.x, -self.y, self.curve)  # pylint: disable=E1130
 
     def order(self) -> int:
         """Compute the order of an element."""

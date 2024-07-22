@@ -227,7 +227,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
                 if r == 0:
                     roots = [ -(inv2 * aa) % p ]  # one root
                 else:
-                    roots = [ (inv2 * (r - aa)) % p, (inv2 * (-r - aa)) % p ]  # two roots
+                    roots = [ (inv2 * (r - aa)) % p, (inv2 * (-r - aa)) % p ]  # two roots  pylint: disable=E1130
             for r in roots:
                 x = r  # start value for x
                 while x < max_j:
@@ -255,10 +255,10 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
         relation = find_relation(include_b)
         res = process_relation(relation)
         if res:
-            return(res)
+            return res
 
     #
-    # find the B-smooth numbers and add them to the system 
+    # find the B-smooth numbers and add them to the system
     #
 
     for s in range(sieve_bound):

@@ -104,6 +104,7 @@ def crt(a: list[int], m: list[int]) -> int:
 
 
 def fraction_repr(self):
+    "Representation of a fraction."
     if self.denominator == 1:
         return str(self.numerator)
     return str(self.numerator) + "/" + str(self.denominator)
@@ -228,7 +229,7 @@ def order(a: int, n: int, factor=False) -> int:
     """Compute the order of `a` in the group Z_n^*."""
     a %= n
     assert a != 0 and gcd(a, n) == 1, f"{a} and {n} are not coprime!"
-    factors = dict()  # We compute euler_phi(n) and its factorization in one pass
+    factors = {}  # We compute euler_phi(n) and its factorization in one pass
     for p, k in factorint(n).items():  # first factorize n
         for pm, km in factorint(p - 1).items():  # factor p-1 and add the factors
             if pm in factors:
@@ -255,7 +256,7 @@ def order(a: int, n: int, factor=False) -> int:
             else:
                 break
         if factor and i < k:
-            factors_order[p] = k - i
+            factors_order[p] = k - i  # pylint: disable=E0606
     if factor:
         return order_a, factors_order
     return order_a
