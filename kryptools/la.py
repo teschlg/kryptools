@@ -178,7 +178,7 @@ class Matrix:
 
     def __rmul__(self, other) -> "Matrix":
         if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
-             return Matrix([ [item * other for item in row] for row in self.matrix ])
+            return Matrix([ [item * other for item in row] for row in self.matrix ])
         return NotImplemented
 
     def rref(self) -> "Matrix":
