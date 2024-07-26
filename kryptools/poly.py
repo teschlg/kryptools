@@ -86,13 +86,17 @@ class Poly:
     def __bool__(self):
         return bool(self.degree()) or bool(self.coeff[0])
 
-    def degree(self):
+    def degree(self) -> int:
         "Return the degree."
         return len(self.coeff) - 1
 
     def map(self, func):
-        "Apply a given function to all coefficients."
+        "Apply a given function to all coefficients in place."
         self.coeff = list(map(func, self.coeff))
+
+    def applyfunc(self, func) -> "Poly":
+        "Apply a function to all coefficients."
+        return self.__class__(list(map(func, self.coeff)), modulus=self.modulus)
 
     def _check_type(self, other):
         return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])
@@ -128,6 +132,9 @@ class Poly:
 
     def __neg__(self) -> "Poly":
         return Poly([-s for s in self.coeff], modulus=self.modulus)
+
+    def __pos__(self) -> "Poly":
+        return self
 
     def __sub__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
@@ -212,6 +219,14 @@ class Poly:
         for _ in range(i):
             res *= tmp
         return res
+
+    def max(self) -> int:
+        "Maximum of the absolute value of all coefficients."
+        return max([abs(c) for c in self.coeff])
+
+    def sum(self) -> int:
+        "Sum of the absolute value of all coefficients."
+        return sum([abs(c) for c in self.coeff])
 
     def __floordiv__(self, other: "Poly") -> "Poly":
         return self.divmod(other)[0]

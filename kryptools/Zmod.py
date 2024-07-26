@@ -106,6 +106,9 @@ class ZmodPoint:
     def __neg__(self) -> "ZmodPoint":
         return self.__class__(-self.x, self.ring)
 
+    def __pos__(self) -> "ZmodPoint":
+        return self
+
     def __sub__(self, other: "ZmodPoint") -> "ZmodPoint":
         if isinstance(other, self.__class__):
             if self.ring != other.ring:
@@ -150,6 +153,9 @@ class ZmodPoint:
         if isinstance(scalar, int):
             return self.__class__(pow(self.x, scalar, self.ring.n), self.ring)
         return NotImplemented
+
+    def __abs__(self) -> int:
+        return abs(self.sharp())
 
     def sharp(self):
         "Returns a symmetric (w.r.t. 0) representative."

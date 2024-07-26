@@ -99,12 +99,12 @@ class Matrix:
         return self.matrix == other.matrix
 
     def map(self, func):
-        "Apply a function to all elements in place"
+        "Apply a function to all elements in place."
         for row in self.matrix:
             row[:] = map(func, row)
 
     def applyfunc(self, func):
-        "Apply a function to all elements"
+        "Apply a function to all elements."
         tmp = self[:,:]
         tmp.map(func)
         return tmp
