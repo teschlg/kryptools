@@ -268,7 +268,7 @@ class Matrix:
             zero = 0 * self[0]
         except:
             zero = 0
-        return Matrix([[ zero for j in range(n)] for i in range(m) ])
+        return Matrix([[ zero for j in range(n) ] for i in range(m) ])
 
     def eye(self, m: int = None, n: int = None):
         "Returns an identity matrix of the same dimension"
@@ -288,11 +288,11 @@ class Matrix:
         return Matrix([[ delta(i, j) for j in range(n) ] for i in range(m) ])
 
 
-def zeros(m: int, n: int = None) -> "Matrix":
+def zeros(m: int, n: int = None, zero = 0) -> "Matrix":
     "Returns a zero matrix of the given dimension"
     if not n:
         n = m
-    return Matrix([[ 0 for j in range(n)] for i in range(m) ])
+    return Matrix([[ zero for j in range(n) ] for i in range(m) ])
 
 def eye(m:int, n: int = None) -> "Matrix":
     "Returns an identity matrix of the given dimension"

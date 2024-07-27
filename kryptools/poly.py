@@ -10,7 +10,7 @@ class Poly:
     
     Example:
     
-    To define a polynomial as alist of coefficients use
+    To define a polynomial as a list of coefficients use
     >>> Poly([1, 2, 3])
     3 x^2 + 2 x + 1
     """
