@@ -57,7 +57,7 @@ def _ecm_parameters(B1: int, B2: int = None, D: int = None, primes: tuple = None
     else:
         B2 += B2 & 1
     if not D:
-        D = isqrt(B2)
+        D = min(isqrt(B2), B1 // 2 - 1)
     if not primes:
         primes = sieve_eratosthenes(B1 - 1 + ((B2 - B1 + 1) // (2 * D) + 1) * 2 * D)
 
@@ -71,7 +71,7 @@ def _ecm_parameters(B1: int, B2: int = None, D: int = None, primes: tuple = None
     r = B1 - 1
     stage_two_deltas[r] = []
     for p in primes:
-        if p <= r:
+        if p < r:
             continue
         if p <= r + 2 * D:
             stage_two_deltas[r].append((p - r) // 2)
@@ -88,7 +88,7 @@ def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm
     "Factors a number n using Lentsta's ECM method."    
 
     if ecm_parameters:
-        curves, D, stage_one, stage_two_deltas = ecm_parameters
+        B1, B2, curves, D, stage_one, stage_two_deltas = ecm_parameters
     else:
         D, stage_one, stage_two_deltas = _ecm_parameters(B1, B2)
 

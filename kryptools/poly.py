@@ -203,21 +203,26 @@ class Poly:
             raise NotImplementedError("Cannot invert polynomials without modulus.")
         return other * self.inv()
 
-    def __pow__(self, i: int) -> "Poly":
-        if not isinstance(i, int):
+    def __pow__(self, j: int) -> "Poly":
+        if not isinstance(j, int):
             return NotImplemented
         zero = 0 * self.coeff[0]
         one = zero + 1
         res = self.__class__([one], modulus=self.modulus)
-        if i < 0:
+        if j < 0:
             if not self.modulus:
                 raise NotImplementedError("Cannot divide polynomials without modulus.")
             tmp = self.inv()
-            i *= -1
+            j *= -1
         else:
             tmp = self
-        for _ in range(i):
-            res *= tmp
+        while j > 0:
+            # If j is odd, multiply
+            if j & 1:
+                res *= tmp
+            # Now square
+            j = j >> 1  # j= j//2
+            tmp *= tmp
         return res
 
     def max(self) -> int:

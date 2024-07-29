@@ -88,7 +88,7 @@ def factorint(n: int, verbose: int = 0) -> list:
         D = isqrt(B2)
         primes = sieve_eratosthenes(B1 - 1 + ((B2 - B1 + 1) // (2 * D) + 1) * 2 * D)
         pm1_parameters = _pm1_parameters(10 * B1, B2, primes = primes)
-        ecm_parameters = tuple([num_curves] + list(_ecm_parameters(B1, B2, D, primes = primes)))
+        ecm_parameters = tuple([B1, B2, num_curves] + list(_ecm_parameters(B1, B2, D, primes = primes)))
 
         methods = {_factor_fermat: "fm", factor_pm1: "pm1", factor_ecm: "ecm"}  #, factor_qs: "qs"}
         while remaining_factors:
