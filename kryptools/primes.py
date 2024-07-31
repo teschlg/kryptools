@@ -15,8 +15,8 @@ from .nt import jacobi_symbol
 
 # Erathostenes
 
-def sieve_eratosthenes(B: int) -> list:
-    """Returns a list of all primes up to (including) max."""
+def sieve_eratosthenes(B: int) -> tuple:
+    """Returns a tuple of all primes up to (including) B."""
     B1 = (isqrt(B) -1)//2
     B = (B - 1)//2
     isprime = [True] * (B + 1)  # to begin with, all numbers are potentially prime
