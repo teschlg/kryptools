@@ -173,7 +173,7 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     return U
 
 def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = None) -> Matrix:
-    "Create a random unimodular matrix of dimension n."
+    "Create a pseudorandom unimodular matrix of dimension n."
     W = zeros(n)
     for i in range(n):
         for j in range(i, n):

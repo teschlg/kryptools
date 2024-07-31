@@ -3,10 +3,10 @@ Tools for prime numbers:
     sieve_eratosthenes(B) a tuple of all primes up to including B
     is_prime(n) test if n is probably prime
     next_prime(n) find the next prime larger or equal n
-    random_prime(l) find a random prime with bit length at least l
-    random_strongprime(l) find a random strong prime with bit length at least l
+    random_prime(l) find a pseudorandom prime with bit length at least l
+    random_strongprime(l) find a pseudorandom strong prime with bit length at least l
     is_safeprime(n) test if n is a safe prime
-    random_safeprime(n) find a random safe prime with bit length at least l and ord(2)=(p-1)/2
+    random_safeprime(n) find a pseudorandom safe prime with bit length at least l and ord(2)=(p-1)/2
     miller_rabin_test(n, b) Miller-Rabin primality test with base b
 """
 from math import isqrt, gcd
@@ -73,11 +73,11 @@ def next_prime(n: int) -> int:
     return n
 
 def random_prime(l: int) -> int:
-    """Find a random prime with bit length at least l."""
+    """Find a pseudorandom prime with bit length at least l."""
     return next_prime(randint(2 ** (l - 1), 2**l - 1))
 
 def random_strongprime(l: int) -> int:
-    """Find a random strong prime with bit length at least l using Gordon's algorithm."""
+    """Find a pseudorandom strong prime with bit length at least l using Gordon's algorithm."""
     t = random_prime(l)
     s = random_prime(l)
     u = 2 * t
@@ -96,7 +96,7 @@ def is_safeprime(p: int) -> bool:
     return is_prime(p) and is_prime((p - 1) // 2)
 
 def random_safeprime(l: int) -> int:
-    """Find a random safe prime with bit length at least l and ord(2)=(p-1)/2."""
+    """Find a pseudorandom safe prime with bit length at least l and ord(2)=(p-1)/2."""
     p = randint(2 ** (l - 1), 2**l - 1)
     p = p - (p % 24) + 23
     while not is_safeprime(p):
