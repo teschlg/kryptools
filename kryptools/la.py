@@ -169,6 +169,9 @@ class Matrix:
     def __neg__(self) -> "Matrix":
         return -1 * self
 
+    def __pos__(self) -> "Matrix":
+        return self
+
     def __mul__(self, other) -> "Matrix":
         if isinstance(other, Matrix):
             return self.multiply(other)
