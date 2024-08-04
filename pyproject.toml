@@ -1,6 +1,6 @@
 [project]
 name = "kryptools"
-version = "0.8"
+version = "0.9"
 authors = [
   { name="Gerald Teschl", email="gerald.teschl@univie.ac.at" },
 ]

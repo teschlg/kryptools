@@ -15,7 +15,7 @@ from fractions import Fraction
 # extended Euclid
 
 def egcd(a: int, b: int) -> (int, int, int):
-    """Perform the extended Euclidean agorithm. Returns `gcd`, `x`, `y` such that `a x + b y = gcd`."""
+    """Perform the extended Euclidean agorithm. Returns gcd, x, y such that a x + b y = gcd."""
     r0, r1 = a, b
     x0, x1, y0, y1 = 1, 0, 0, 1
     while r1 != 0:
@@ -28,80 +28,50 @@ def egcd(a: int, b: int) -> (int, int, int):
 
 # Chinese remainder theorem
 
-def crt(a: list[int], m: list[int]) -> int:
+def crt(a: list[int], m: list[int], coprime = True) -> int:
     """Solve given linear congruences x % m[j] == a[j] using the Chinese Remainder Theorem."""
-    l = len(a)
-    assert len(m) == l, "The lists of numbers and modules must have equal length."
+    l = len(m)
+    if l != len(a):
+        raise ValueError("The lists of numbers and modules must have equal length.")
+
+    while not coprime:
+        coprime = True  # we assume the moduli are coprime until we find otherwise
+        l = len(m)
+        for i in range(l):
+            if not coprime:
+                break
+            for j in range(i + 1,l):
+                if not coprime:
+                    break
+                g = gcd(m[i], m[j])
+                if g == 1:
+                    continue  # the moduli are coprime; nothing to do
+                coprime = False  # split the two equations into three and start from scratch
+                if (a[i] - a[j]) % g:
+                    raise ValueError("Congruences not solvable!")
+                mm = m[j] // g
+                if mm > 1:
+                    m[j] = mm  # replace the equation with the reduced one
+                    a[j] %= mm
+                else:
+                    del m[j]  # the equation is redundant, delete it
+                    del a[j]
+                mm = m[i] // g
+                if mm > 1:
+                    m.append(g)  # add the equation corresponding to g
+                    a.append(a[i] % g)
+                    m[i] = mm  # replace the equation with the reduced one
+                    a[i] %= mm
+                else:  # the equation is redundant, replace it with the one corresponding to g
+                    m[i] = g
+                    a[i] %= g
+
     M = prod(m)
     Mi = [M // m[i] for i in range(l)]
     MNi = [Mi[i] * pow(Mi[i], -1, m[i]) % M for i in range(l)]
     return sum([a[i] * MNi[i] % M for i in range(l)]) % M
 
 # Continued fractions
-
-# class Fraction:
-#     "Rationl number"
-#
-#     def __init__(self, numerator: int, denominator: int = 1):
-#         assert denominator, "Denominator must be nozero."
-#         tmp = gcd(denominator, numerator)
-#         if tmp != 1:
-#             denominator //= tmp
-#             numerator //= tmp
-#         self.numerator = numerator
-#         self.denominator = denominator
-#
-#     def __repr__(self):
-#         if self.denominator == 1:
-#             return str(self.numerator)
-#         else:
-#             return str(self.numerator) + "/" + str(self.denominator)
-#
-#     def __eq__(self, other):
-#         if not isinstance(other, self.__class__):
-#             return False
-#         return self.denominator == other.denominator and self.numerator == other.numerator
-#
-#     def __bool__(self):
-#         return self.numerator != 0
-#
-#     def __add__(self, other: "Fraction") -> "Fraction":
-#         if isinstance(other, self.__class__):
-#             return Rational(self.numerator * other.denominator + other.numerator * self.denominator, self.denominator * other.denominator)
-#         if isinstance(other, int):
-#             return Rational(self.numerator + other * self.denominator, self.denominator)
-#         raise ValueError(f"Cannot add {self} and {other}.")
-#
-#     def __neg__(self) -> "Fraction":
-#         return Rational(- self.numerator, self.denominator)
-#
-#     def __sub__(self, other: "Fraction") -> "Fraction":
-#         if isinstance(other, self.__class__):
-#             return Rational(self.numerator * other.denominator - other.numerator * self.denominator, self.denominator * other.denominator)
-#         if isinstance(other, int):
-#             return Rational(self.numerator - other * self.denominator, self.denominator)
-#         raise ValueError(f"Cannot subtract {self} and {other}.")
-#
-#     def __mul__(self, other: "Fraction") -> "Fraction":
-#         if isinstance(other, self.__class__):
-#             return Rational(self.numerator * other.numerator, self.denominator * other.denominator)
-#         if isinstance(other, int):
-#             return Rational(self.numerator * other, self.denominator)
-#         raise ValueError(f"Cannot multiply {self} and {other}.")
-#
-#     def __rmul__(self, other: int) -> "Fraction":
-#         return Rational(self.denominator * other, self.numerator)
-#
-#     def __truediv__(self, other: "Fraction") -> "Fraction":
-#         if isinstance(other, self.__class__):
-#             return Rational(self.numerator * other.denominator, self.denominator * other.numerator)
-#         if isinstance(other, int):
-#             return Rational(self.numerator, self.denominator * other)
-#         raise ValueError(f"Cannot divide {self} and {other}.")
-#
-#     def __pow__(self, scalar: int) -> "Fraction":
-#         return Rational(self.numerator**scalar, self.denominator**scalar)
-
 
 def fraction_repr(self):
     "Representation of a fraction."
