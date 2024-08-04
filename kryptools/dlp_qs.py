@@ -292,6 +292,6 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
                     relation[x + j] = 1
                 res = process_relation(relation)
                 if res:
-                    return(res)
+                    return res
 
     raise Exception(f"Sorry, Quadratic sieve could not find enough relations! ({n_relations} - {n_relations_redundant} = {n_relations - n_relations_redundant} out of {len_relations}). Try to increase sieve_factor={sieve_factor}")

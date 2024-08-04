@@ -96,7 +96,8 @@ def factorint(n: int, verbose: int = 0) -> list:
             for method in [ _factor_fermat, factor_pm1, factor_ecm ]:  # , factor_qs ]:
                 factors = list(remaining_factors)
                 for m in factors:
-                    if verbose > 1: print("Factoring: ",m, "method", methods[method])
+                    if verbose > 1:
+                        print("Factoring: ",m, "method", methods[method])
                     if method == factor_pm1:
                         tmp = factor_pm1(m, pm1_parameters = pm1_parameters)
                     elif method == factor_ecm:
