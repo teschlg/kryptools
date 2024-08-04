@@ -34,6 +34,9 @@ def crt(a: list[int], m: list[int], coprime = True) -> int:
     if l != len(a):
         raise ValueError("The lists of numbers and modules must have equal length.")
 
+    if not coprime: # make a copy
+        m = [ mi for mi in m ]
+        a = [ ai for ai in a ]
     while not coprime:
         coprime = True  # we assume the moduli are coprime until we find otherwise
         l = len(m)
@@ -49,22 +52,22 @@ def crt(a: list[int], m: list[int], coprime = True) -> int:
                 coprime = False  # split the two equations into three and start from scratch
                 if (a[i] - a[j]) % g:
                     raise ValueError("Congruences not solvable!")
-                mm = m[j] // g
-                if mm > 1:
-                    m[j] = mm  # replace the equation with the reduced one
-                    a[j] %= mm
-                else:
-                    del m[j]  # the equation is redundant, delete it
+                mi = m[i] // g
+                mj = m[j] // g
+                if mi == 1:  # the equation is redundant, delete it
+                    del m[i]
+                    del a[i]
+                    break
+                if mj == 1:  # the equation is redundant, delete it
+                    del m[j]
                     del a[j]
-                mm = m[i] // g
-                if mm > 1:
-                    m.append(g)  # add the equation corresponding to g
-                    a.append(a[i] % g)
-                    m[i] = mm  # replace the equation with the reduced one
-                    a[i] %= mm
-                else:  # the equation is redundant, replace it with the one corresponding to g
-                    m[i] = g
-                    a[i] %= g
+                    break
+                m[j] = mj  # replace the equation with the reduced one
+                a[j] %= mj
+                m[i] = mi  # replace the equation with the reduced one
+                a[i] %= mi
+                m.append(g)  # add the equation corresponding to g
+                a.append(a[i] % g)
 
     M = prod(m)
     Mi = [M // m[i] for i in range(l)]
