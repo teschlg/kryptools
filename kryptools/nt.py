@@ -37,37 +37,39 @@ def crt(a: list[int], m: list[int], coprime = True) -> int:
     if not coprime: # make a copy
         m = [ mi for mi in m ]
         a = [ ai for ai in a ]
-    while not coprime:
-        coprime = True  # we assume the moduli are coprime until we find otherwise
-        l = len(m)
         for i in range(l):
-            if not coprime:
-                break
             for j in range(i + 1,l):
-                if not coprime:
-                    break
                 g = gcd(m[i], m[j])
                 if g == 1:
                     continue  # the moduli are coprime; nothing to do
-                coprime = False  # split the two equations into three and start from scratch
                 if (a[i] - a[j]) % g:
                     raise ValueError("Congruences not solvable!")
+                # reduce the equations such that the new moduli are coprime
                 mi = m[i] // g
                 mj = m[j] // g
-                if mi == 1:  # the equation is redundant, delete it
-                    del m[i]
-                    del a[i]
-                    break
-                if mj == 1:  # the equation is redundant, delete it
-                    del m[j]
-                    del a[j]
-                    break
-                m[j] = mj  # replace the equation with the reduced one
-                a[j] %= mj
-                m[i] = mi  # replace the equation with the reduced one
-                a[i] %= mi
-                m.append(g)  # add the equation corresponding to g
-                a.append(a[i] % g)
+                gj = gcd(g, mj)
+                if gj == 1:
+                    m[j] = mj
+                    a[j] %= mj
+                    continue
+                m[i] = m[i] // gj
+                a[i] %= m[i]
+                g = g // gj
+                if g == 1:
+                    continue
+                gi = gcd(g, mi)
+                if gi == 1:
+                    m[i] = mi
+                    a[i] %= mi
+                    continue
+                m[j] = m[j] // gi
+                a[j] %= m[j]
+                g = g // gi
+        for i in reversed(range(l)):  # remove redundant equations
+            if m[i] == 1:
+                del m[i]
+                del a[i]
+        l =len(m)
 
     M = prod(m)
     Mi = [M // m[i] for i in range(l)]
