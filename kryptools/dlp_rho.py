@@ -55,7 +55,7 @@ def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
             l = (((alpha_x - alpha_y) // d) * pow((beta_y - beta_x) // d, -1, mm)) % mm
             while pow(a, l, n) != b:
                 if l >= m:
-                    return None
+                    raise ValueError("DLP not solvable.")
                 l += mm
             return l
         trys -= 1

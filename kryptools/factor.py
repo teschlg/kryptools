@@ -28,9 +28,16 @@ def _factor_fermat(n: int, steps: int = 10) -> list:
         if b * b == a * a - n:
             return a - b
 
-def factorint(n: int, verbose: int = 0) -> list:
-    "Factor a number."
+def factorint(n: int, verbose: int = 0) -> dict:
+    "Factor a the ineger `n`."
     prime_factors = {}
+    if not isinstance(n, int):
+        raise ValueError("Number to be factored must be an integer!")
+    if n == 0:
+        return prime_factors
+    if n < 0:
+        n *= -1
+        prime_factors[-1] = 1
 
     def add_factors(m: int, mm: tuple) -> None:
         k = remaining_factors[m]
@@ -132,5 +139,4 @@ def factorint(n: int, verbose: int = 0) -> list:
         if len(remaining_factors) == 0:
             return prime_factors
 
-    print("Incomplete factorization!")
-    return prime_factors, remaining_factors, new_factors
+    raise ValueError("Incomplete factorization:", prime_factors, remaining_factors, new_factors)

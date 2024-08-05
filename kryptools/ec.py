@@ -1,5 +1,6 @@
 """
-Elliptic curves
+Elliptic curves:
+    EC_Weierstrass() constructor for a Weierstrass curve y^2 = x^3 + ax + b mod p
 """
 
 from math import isqrt, floor, sqrt
@@ -11,11 +12,11 @@ from .poly import Poly
 
 class EC_Weierstrass():
     """
-    Elliptic curve in Weierstrass normal form y^2 = x^3 + ax + b mod p.
+    Elliptic curve in Weierstrass normal form `y^2 = x^3 + ax + b mod p`.
     
     Example:
     
-    To define an elliptic curve use
+    To define an elliptic curve y^2 = x^3 + 3x + 1 mod 239 use
     >>> ec = EC_Weierstrass(239, 3, 1)
     
     To declare a point on the elliptic curve use

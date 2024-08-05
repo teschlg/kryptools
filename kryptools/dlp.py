@@ -22,7 +22,7 @@ def dlog_naive(a: int, b: int, n: int, m: int = None) -> int|None:
         aa = (aa * a) % n
         if aa == b:
             return i + 1
-    return None  # no solution
+    raise ValueError("DLP not solvable.")
 
 def _dlog_switch(a: int, b: int, n: int, m: int) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order m choosing an appropriate method."""
@@ -44,14 +44,12 @@ def _dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
         aj = pow(a, q ** (k - j), n)
         bj = pow(b, q ** (k - j), n)
         yj = _dlog_switch(a1, bj * pow(aj, -xj, n) % n, n, q)  # pylint: disable=E1130
-        if yj is None:
-            return None
         xj = xj + q ** (j - 1) * yj % q**j
     return xj
 
 
 def dlog(a: int, b: int, n: int, m: int|None = None) -> int:
-    """Compute the discrete log_a(b) in Z_n of an element a of order m using Pohlig-Hellman reduction."""
+    """Compute the discrete log_a(b) in Z_n of an element `a` of order `m` using Pohlig-Hellman reduction."""
     a %= n
     b %= n
     assert gcd(a, n) == 1, "a and n must be coprime."
@@ -69,8 +67,6 @@ def dlog(a: int, b: int, n: int, m: int|None = None) -> int:
         aj = pow(a, m // pj**kj, n)
         bj = pow(b, m // pj**kj, n)
         l = _dlog_ph(aj, bj, n, pj, kj)
-        if l is None:
-            return None
         mm += [pj**kj]
         ll += [l]
     return crt(ll, mm)

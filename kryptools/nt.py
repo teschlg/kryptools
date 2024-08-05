@@ -1,13 +1,15 @@
 """
 Number theory tools:
     egcd(a,b) extended Euclidean agorithm
-    crt([a1, a2, ...],[m1, m2, ...]) Chinese Remainder Theorem
     cf(Fraction(m,n)) continued fraction expansions
     convergents() convergents of a continued fraction
     legendre_symbol(a, p) compute the Legendre symbol of a with respect to the prime p
     jacobi_symbol(a, n) compute the Jacobi symbol of a with respect to n
     sqrt_mod(n, p) square root of n modulo a prime p
+    euler_phi(n) Euler phi function of n
+    carmichael_lambda(n) Carmichael lambda function of n
     order(a, n) oder of a in the multiplicative group Z_n^*
+    crt([a1, a2, ...],[m1, m2, ...]) Chinese Remainder Theorem
 """
 from math import gcd, lcm, prod
 from fractions import Fraction
@@ -15,7 +17,7 @@ from fractions import Fraction
 # extended Euclid
 
 def egcd(a: int, b: int) -> (int, int, int):
-    """Perform the extended Euclidean agorithm. Returns gcd, x, y such that a x + b y = gcd."""
+    """Perform the extended Euclidean agorithm. Returns `gcd`, `x`, `y` such that `a x + b y = gcd`."""
     r0, r1 = a, b
     x0, x1, y0, y1 = 1, 0, 0, 1
     while r1 != 0:
@@ -25,56 +27,6 @@ def egcd(a: int, b: int) -> (int, int, int):
         y0, y1 = y1, y0 - q * y1
     return r0, x0, y0
 
-
-# Chinese remainder theorem
-
-def crt(a: list[int], m: list[int], coprime = True) -> int:
-    """Solve given linear congruences x % m[j] == a[j] using the Chinese Remainder Theorem."""
-    l = len(m)
-    if l != len(a):
-        raise ValueError("The lists of numbers and modules must have equal length.")
-
-    if not coprime: # make a copy
-        m = [ mi for mi in m ]
-        a = [ ai for ai in a ]
-        for i in range(l):
-            for j in range(i + 1,l):
-                g = gcd(m[i], m[j])
-                if g == 1:
-                    continue  # the moduli are coprime; nothing to do
-                if (a[i] - a[j]) % g:
-                    raise ValueError("Congruences not solvable!")
-                # reduce the equations such that the new moduli are coprime
-                mi = m[i] // g
-                mj = m[j] // g
-                gj = gcd(g, mj)
-                if gj == 1:
-                    m[j] = mj
-                    a[j] %= mj
-                    continue
-                m[i] = m[i] // gj
-                a[i] %= m[i]
-                g = g // gj
-                if g == 1:
-                    continue
-                gi = gcd(g, mi)
-                if gi == 1:
-                    m[i] = mi
-                    a[i] %= mi
-                    continue
-                m[j] = m[j] // gi
-                a[j] %= m[j]
-                g = g // gi
-        for i in reversed(range(l)):  # remove redundant equations
-            if m[i] == 1:
-                del m[i]
-                del a[i]
-        l =len(m)
-
-    M = prod(m)
-    Mi = [M // m[i] for i in range(l)]
-    MNi = [Mi[i] * pow(Mi[i], -1, m[i]) % M for i in range(l)]
-    return sum([a[i] * MNi[i] % M for i in range(l)]) % M
 
 # Continued fractions
 
@@ -88,7 +40,7 @@ Fraction.__repr__ = fraction_repr
 
 
 def cf(x: Fraction) -> list[int]:
-    "Compute the continued fraction expansion of the rational number m/n."
+    "Compute the continued fraction expansion of the rational fraction `x`."
     res = []
     m = x.numerator
     n = x.denominator
@@ -119,7 +71,7 @@ def convergents(cont_frac: list[int]) -> float:
 # Legendre symbol
 
 def legendre_symbol(a: int, p: int) -> int:
-    """Compute the Legendre symbol of a with respect to the prime p."""
+    """Compute the Legendre symbol of `a` with respect to the prime `p`."""
     a = a % p
     if a == 0:
         return 0
@@ -128,7 +80,7 @@ def legendre_symbol(a: int, p: int) -> int:
     return -1
 
 def jacobi_symbol(a: int, n: int) -> int:
-    """Compute the Jacobi symbol of a with respect to the integer n."""
+    """Compute the Jacobi symbol of `a` with respect to the integer `n`."""
     # Crandall/Pomerance Algorithm 2.3.5
     a = a % n
     t = 1
@@ -235,3 +187,40 @@ def order(a: int, n: int, factor=False) -> int:
     if factor:
         return order_a, factors_order
     return order_a
+
+# Chinese remainder theorem
+
+def crt(a: list[int], m: list[int], coprime = True) -> int:
+    """Solve given linear congruences `x % m[j] == a[j]` using the Chinese Remainder Theorem."""
+    l = len(m)
+    if l != len(a):
+        raise ValueError("The lists of numbers and modules must have equal length.")
+
+    if not coprime: # make a copy
+        m = [ mi for mi in m ]
+        a = [ ai for ai in a ]
+        for i in range(l):
+            for j in range(i + 1,l):
+                g = gcd(m[i], m[j])
+                if g == 1: # moduli are coprime, nothing to be done
+                    continue
+                if (a[i] - a[j]) % g:
+                     raise ValueError(f"Congruences not solvable!")
+                for p, k in factorint(g).items():
+                    p = p**k #  remove this factor from one of the equations
+                    if gcd(m[i] // p, p) == 1:
+                        m[i] //= p
+                        a[i] %= m[i]
+                    else:
+                        m[j] //= p
+                        a[j] %= m[j]                            
+    for i in reversed(range(l)):
+        if m[i] == 1:
+            del m[i]
+            del a[i]
+    l =len(m)
+
+    M = prod(m)
+    Mi = [M // m[i] for i in range(l)]
+    MNi = [Mi[i] * pow(Mi[i], -1, m[i]) % M for i in range(l)]
+    return sum([a[i] * MNi[i] % M for i in range(l)]) % M

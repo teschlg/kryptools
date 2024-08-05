@@ -16,7 +16,7 @@ from .nt import jacobi_symbol
 # Erathostenes
 
 def sieve_eratosthenes(B: int) -> tuple:
-    """Returns a tuple of all primes up to (including) B."""
+    """Returns a tuple of all primes up to (including) `B`."""
     B1 = (isqrt(B) -1)//2
     B = (B - 1)//2
     isprime = [True] * (B + 1)  # to begin with, all numbers are potentially prime
@@ -33,7 +33,7 @@ def sieve_eratosthenes(B: int) -> tuple:
 
 
 def miller_rabin_test(n: int, bases: list[int] | int) -> bool:
-    """Run a Miller-Rabin test with given bases on n."""
+    """Run a Miller-Rabin test with given bases on `n`."""
     if n < 2:
         return False
     if n % 2 == 0:
@@ -58,7 +58,7 @@ def miller_rabin_test(n: int, bases: list[int] | int) -> bool:
     return False
 
 def is_prime(n: int) -> bool:
-    """Test if an integer n if probable prime."""
+    """Test if an integer `n` if probable prime."""
     if n < 18446744073709551616:  # https://miller-rabin.appspot.com
         return miller_rabin_test(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
     if n < 3317044064679887385961981:
@@ -66,18 +66,18 @@ def is_prime(n: int) -> bool:
     return miller_rabin_test(n, [2]) and _is_strong_lucas_prp(n)  # Baillie–PSW primality test
 
 def next_prime(n: int) -> int:
-    """Find the next prime larger or equal n."""
+    """Find the next prime larger or equal `n`."""
     n |= 1  # make sure n is odd
     while not is_prime(n):
         n += 2
     return n
 
 def random_prime(l: int) -> int:
-    """Find a pseudorandom prime with bit length at least l."""
+    """Find a pseudorandom prime with bit length at least `l`."""
     return next_prime(randint(2 ** (l - 1), 2**l - 1))
 
 def random_strongprime(l: int) -> int:
-    """Find a pseudorandom strong prime with bit length at least l using Gordon's algorithm."""
+    """Find a pseudorandom strong prime with bit length at least `l` using Gordon's algorithm."""
     t = random_prime(l)
     s = random_prime(l)
     u = 2 * t
@@ -96,7 +96,7 @@ def is_safeprime(p: int) -> bool:
     return is_prime(p) and is_prime((p - 1) // 2)
 
 def random_safeprime(l: int) -> int:
-    """Find a pseudorandom safe prime with bit length at least l and ord(2)=(p-1)/2."""
+    """Find a pseudorandom safe prime with bit length at least `l` and `ord(2)=(p-1)/2`."""
     p = randint(2 ** (l - 1), 2**l - 1)
     p = p - (p % 24) + 23
     while not is_safeprime(p):

@@ -26,4 +26,4 @@ def dlog_bsgs(a: int, b: int, n: int, m: int = None) -> int:
         if giant_step in baby_steps:
             return l * mm + baby_steps[giant_step]
         giant_step = giant_step * giant_stride % n
-    return None  # no solution
+    raise ValueError("DLP not solvable.")
