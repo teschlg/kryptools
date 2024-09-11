@@ -262,7 +262,7 @@ class Matrix:
         return all([is_integer(i) for i in self]) and self.det()**2 == 1
 
     def zeros(self, m: int = None, n: int = None):
-        "Returns a zero matrix of the same dimension"
+        "Returns a zero matrix of the same dimension."
         if not m and not n:
             n, m = self.cols, self.rows
         elif not n:
@@ -274,7 +274,7 @@ class Matrix:
         return Matrix([[ zero for j in range(n) ] for i in range(m) ])
 
     def eye(self, m: int = None, n: int = None):
-        "Returns an identity matrix of the same dimension"
+        "Returns an identity matrix of the same dimension."
         def delta(i, j):
             if i == j:
                 return one
@@ -292,13 +292,13 @@ class Matrix:
 
 
 def zeros(m: int, n: int = None, zero = 0) -> "Matrix":
-    "Returns a zero matrix of the given dimension"
+    "Returns a zero matrix of the given dimension."
     if not n:
         n = m
     return Matrix([[ zero for j in range(n) ] for i in range(m) ])
 
 def eye(m:int, n: int = None) -> "Matrix":
-    "Returns an identity matrix of the given dimension"
+    "Returns an identity matrix of the given dimension."
     def delta(i, j):
         if i == j:
             return 1
