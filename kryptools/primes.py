@@ -3,6 +3,7 @@ Tools for prime numbers:
     sieve_eratosthenes(B) a tuple of all primes up to including B
     is_prime(n) test if n is probably prime
     next_prime(n) find the next prime larger or equal n
+    previous_prime(n) find the previous prime smaller or equal n
     random_prime(l) find a pseudorandom prime with bit length at least l
     random_strongprime(l) find a pseudorandom strong prime with bit length at least l
     is_safeprime(n) test if n is a safe prime
@@ -67,9 +68,20 @@ def is_prime(n: int) -> bool:
 
 def next_prime(n: int) -> int:
     """Find the next prime larger or equal `n`."""
+    if n < 3:
+        return 2
     n |= 1  # make sure n is odd
     while not is_prime(n):
         n += 2
+    return n
+
+def previous_prime(n: int) -> int:
+    """Find the previous prime smaller or equal `n`."""
+    if n < 3:
+        return 2
+    n += (n & 1) - 1  # make sure n is odd
+    while not is_prime(n):
+        n -= 2
     return n
 
 def random_prime(l: int) -> int:
