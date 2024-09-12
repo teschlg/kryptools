@@ -18,14 +18,14 @@ from .nt import jacobi_symbol
 
 def sieve_eratosthenes(B: int) -> tuple:
     """Returns a tuple of all primes up to (including) `B`."""
-    B1 = (isqrt(B) -1)//2
+    B1 = (isqrt(B) - 1)//2
     B = (B - 1)//2
-    isprime = [True] * (B + 1)  # to begin with, all numbers are potentially prime
-    # sieve out the primes p=2*q+1 starting at 3 in steps of 2 (ignoring even numbers)
+    isprime = [True] * (B + 1)  # to begin with, all odd numbers are potentially prime
+    # sieve out the primes p=2*q+1 starting at q = 1
     for q in range(1, B1 + 1):
-        if isprime[q]: # sieve out all multiples; numbers p*q with q<p were already sieved out previously
-            qq = (q << 1) * (q + 1)
-            p = (q << 1) | 1
+        if isprime[q]: # sieve out all multiples; numbers p*r with r<p were already sieved out previously
+            qq = 2 * q * (q + 1)
+            p = 2 * q + 1
             isprime[qq :: p] = [False] * ((B - qq) // p + 1)
 
     return tuple([2] + [2 * q + 1 for q in range(1, B + 1) if isprime[q]])
