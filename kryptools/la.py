@@ -211,7 +211,7 @@ class Matrix:
 
     def det(self) -> int:
         "Compute the determinant of a matrix M."
-        if self.rows != self.rows:
+        if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         n, m = self.cols, self.rows
         R = self[:, :]
@@ -239,7 +239,7 @@ class Matrix:
 
     def inv(self) -> "Matrix":
         "Compute the inverse of a square matrix M."
-        if self.rows != self.rows:
+        if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         n = self.cols
         MM = Matrix([[0 for _ in range(2*n)] for _ in range(n)])
@@ -253,7 +253,7 @@ class Matrix:
 
     def is_unimodular(self) -> bool:
         "Test if the matrix is unimodular."
-        if self.rows != self.rows:
+        if self.rows != self.cols:
             return False
         def is_integer(i):
             if isinstance(i, int) or (isinstance(i, Fraction) and i.denominator == 1):

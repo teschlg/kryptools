@@ -42,6 +42,8 @@ def hermite_nf(M: Matrix) -> Matrix:
             H[:, jj] -= tmp * H[:, j]
         #print(H)
         j -= 1
+        if j < 0:
+            break
     while H.cols> 1 and all(not H[i, 0] for i in range(m)): # remove zero columns
         H = H[:,1:]
     return H
