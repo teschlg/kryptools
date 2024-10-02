@@ -81,7 +81,7 @@ def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
     return U * k
 
 def babai_round_bnd(U: Matrix) -> float:
-    "Bound for Babai's rounding algorithm for solving the CVP."
+    "Bound for Babai's rounding algorithm for solving the CVPwith respect to the sup norm."
     return floor(1 / (2 * max([ U.inv()[i,:].norm(1) for i in range(U.rows)])))
 
 def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
@@ -93,7 +93,7 @@ def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
     return (x - y).applyfunc(round)
 
 def babai_plane_bnd(U: Matrix, p = 2) -> float:
-    "Bound for Babai's closest plane algorithm for solving the CVP."
+    "Bound for Babai's closest plane algorithm for solving the CVP with respect to the Euclidean norm (p=2) or sup norm (p=inf)."
     Us = gram_schmidt(U)[0]
     return float(0.5 * min([Us[:, i].norm(p) for i in range(Us.rows)]))
 
