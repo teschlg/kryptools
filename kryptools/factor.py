@@ -1,9 +1,10 @@
 """
 Factorization of integers:
     factorint(n) factorize the integer n into prime factors
+    divisors(n) unsorted list of all divisors of the integer n
 """
 
-from math import isqrt, gcd
+from math import isqrt, gcd, prod
 from .primes import sieve_eratosthenes, is_prime
 from .factor_pm1 import _pm1_parameters, factor_pm1
 from .factor_ecm import _ecm_parameters, factor_ecm
@@ -11,7 +12,6 @@ from .factor_ecm import _ecm_parameters, factor_ecm
 
 
 # Factoring
-
 
 
 def _factor_fermat(n: int, steps: int = 10) -> list:
@@ -29,12 +29,12 @@ def _factor_fermat(n: int, steps: int = 10) -> list:
             return a - b
 
 def factorint(n: int, verbose: int = 0) -> dict:
-    "Factor a the ineger `n`."
+    "Factor an ineger `n` into prime factors."
     prime_factors = {}
     if not isinstance(n, int):
         raise ValueError("Number to be factored must be an integer!")
     if n == 0:
-        return prime_factors
+        return {0: 1}
     if n < 0:
         n *= -1
         prime_factors[-1] = 1
@@ -140,3 +140,34 @@ def factorint(n: int, verbose: int = 0) -> dict:
             return prime_factors
 
     raise ValueError("Incomplete factorization:", prime_factors, remaining_factors, new_factors)
+
+# Divisors
+
+def divisors(n:int, proper:bool = False) -> int:
+    """Returns an unsorted list of all divisors of an integer `n`."""
+    facctordict= factorint(n)
+    primes = [p for p in facctordict]
+    nprimes = len(primes)
+    multiplicites = [facctordict[p] for p in primes]
+
+    exponents = [0] * nprimes
+    if proper:
+        divisors = []
+    else:
+        divisors = [1]
+    i = 0
+    while True:
+        exponents[i] += 1
+        if exponents[i] > multiplicites[i]:
+            while exponents[i] > multiplicites[i]:
+                exponents[i] = 0
+                i += 1
+                exponents[i] += 1
+            i = 0
+        d = prod(primes[i] ** exponents[i] for i in range(nprimes))
+        if d == n:
+            if proper:
+                return divisors
+            divisors.append(n)
+            return divisors
+        divisors.append(d)

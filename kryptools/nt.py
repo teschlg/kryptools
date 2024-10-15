@@ -8,6 +8,7 @@ Number theory tools:
     sqrt_mod(n, p) square root of n modulo a prime p
     euler_phi(n) Euler phi function of n
     carmichael_lambda(n) Carmichael lambda function of n
+    moebius_mu(n) Moebius function of n
     order(a, n) oder of a in the multiplicative group Z_n^*
     crt([a1, a2, ...],[m1, m2, ...]) Chinese Remainder Theorem
 """
@@ -99,7 +100,7 @@ def jacobi_symbol(a: int, n: int) -> int:
     return 0
 
 def sqrt_mod(a: int, p: int) -> int:
-    "Compute a square root of `a` modulo `p` unsing Cipolla's algorithm."
+    """Compute a square root of `a` modulo `p` unsing Cipolla's algorithm."""
     a %= p
     if a == 0 or a == 1:
         return a
@@ -125,19 +126,23 @@ def sqrt_mod(a: int, p: int) -> int:
         i = i >> 1  # i= i/2
     return y1
 
-# Euler phi and Carmichael function
+# Euler phi, Carmichael function, Moebius function
 
 from .factor import factorint
 
 
 def euler_phi(n: int) -> int:
     """Euler's phi function of `n`."""
+    if not isinstance(n, int) or n < 1:
+        raise ValueError(f"{n} is not a positive integer")
     k = factorint(n)
     return prod([(p - 1) * p ** (k[p] - 1) for p in k])
 
 
 def carmichael_lambda(n: int) -> int:
     """Carmichael's lambda function of `n`."""
+    if not isinstance(n, int) or n < 1:
+        raise ValueError(f"{n} is not a positive integer")
     k = factorint(n)
     lam_all = []  # values corresponding to the prime factors
     for p in k:
@@ -150,12 +155,26 @@ def carmichael_lambda(n: int) -> int:
         lam = lcm(lam, l)
     return lam
 
+def moebius_mu(n: int) -> int:
+    """Moebius' mu function of `n`."""
+    if not isinstance(n, int) or n < 0:
+        raise ValueError(f"{n} is not a nonegative integer")
+    if n == 0:
+        return 0
+    factors = factorint(n)
+    if any(i > 1 for i in factors.values()):
+        return 0
+    if len(factors) % 2 == 1:
+        return -1
+    return 1
+
 # Order in Z_p^*
 
 def order(a: int, n: int, factor=False) -> int:
     """Compute the order of `a` in the group Z_n^*."""
     a %= n
-    assert a != 0 and gcd(a, n) == 1, f"{a} and {n} are not coprime!"
+    if a == 0 or gcd(a, n) != 1:
+        raise ValueError(f"{a} and {n} are not coprime!")
     factors = {}  # We compute euler_phi(n) and its factorization in one pass
     for p, k in factorint(n).items():  # first factorize n
         for pm, km in factorint(p - 1).items():  # factor p-1 and add the factors
