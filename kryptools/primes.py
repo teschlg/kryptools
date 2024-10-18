@@ -1,16 +1,19 @@
 """
 Tools for prime numbers:
     sieve_eratosthenes(B) a tuple of all primes up to including B
+    prime_pi(n) number of primes below or equal n
     is_prime(n) test if n is probably prime
     next_prime(n) find the next prime larger or equal n
     previous_prime(n) find the previous prime smaller or equal n
     random_prime(l) find a pseudorandom prime with bit length at least l
     random_strongprime(l) find a pseudorandom strong prime with bit length at least l
     is_safeprime(n) test if n is a safe prime
-    random_safeprime(n) find a pseudorandom safe prime with bit length at least l and ord(2)=(p-1)/2
+    random_safeprime(l) find a pseudorandom safe prime with bit length at least l and ord(2)=(p-1)/2
+    is_blumprime(n) test if n is a Blum prime
+    random_blumprime(l) find a pseudorandom Blum prime with bit length at least l
     miller_rabin_test(n, b) Miller-Rabin primality test with base b
 """
-from math import isqrt, gcd
+from math import isqrt, gcd, floor
 from random import randint
 from .nt import jacobi_symbol
 
@@ -18,6 +21,11 @@ from .nt import jacobi_symbol
 
 def sieve_eratosthenes(B: int) -> tuple:
     """Returns a tuple of all primes up to (including) `B`."""
+    if B < 2:
+        return ()
+    if B < 3:
+        return [2]
+    B= floor(B)
     B1 = (isqrt(B) - 1)//2
     B = (B - 1)//2
     isprime = [True] * (B + 1)  # to begin with, all odd numbers are potentially prime
@@ -29,6 +37,11 @@ def sieve_eratosthenes(B: int) -> tuple:
             isprime[qq :: p] = [False] * ((B - qq) // p + 1)
 
     return tuple([2] + [2 * q + 1 for q in range(1, B + 1) if isprime[q]])
+
+def prime_pi(x: float) -> int:
+    """Prime-counting function pi(x). Returns the number of primes below or equal `x`."""
+    return len(sieve_eratosthenes(x))
+
 
 # Primality testing
 
@@ -113,6 +126,18 @@ def random_safeprime(l: int) -> int:
     p = p - (p % 24) + 23
     while not is_safeprime(p):
         p += 24
+    return p
+
+def is_blumprime(p: int) -> bool:
+    """Tests if a number is a Blum prime."""
+    return p % 4 == 3 and is_prime(p)
+
+def random_blumprime(l: int) -> int:
+    """Find a pseudorandom Blum prime with bit length at least `l`."""
+    p = randint(2 ** (l - 1), 2**l - 1)
+    p = p - (p % 4) + 3
+    while not is_prime(p):
+        p += 4
     return p
 
 def _lucas_sequence(n, D, k):

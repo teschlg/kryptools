@@ -62,6 +62,26 @@ class Zmod:
             self.group_order *= p**k
         return self.group_order
 
+    def generator(self, all = False) -> int:
+        """Return a generator of the group Z_n^*."""
+        for a in range(2, self.n):
+            if gcd(a, self.n) > 1:
+                continue
+            a = self(a)
+            if a.is_generator():
+                if all:
+                    self.order()
+                    return list( a**j for j in range(1, self.group_order) if gcd(j,self.group_order) == 1 )
+                return a
+
+    def star(self) -> int:
+        """Return a list of all elements of the group Z_n^*."""
+        elements = [ 1 ]
+        for a in range(2, self.n):
+            if gcd(a, self.n) > 1:
+                continue
+            elements.append(self(a))
+        return elements
 
 class ZmodPoint:
     "Represents a point in the ring Zmod."
