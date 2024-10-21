@@ -125,12 +125,15 @@ def iroot(k: int, n: int) -> int:
         return n
     if k == 2:
         return isqrt(n)
-    rr = isqrt(n)
+    r = isqrt(n)
+    while r**k >= n:
+        rr = r
+        r = isqrt(r)
     r =rr + 1
     k1 = k-1
     while rr < r:
         r = rr
-        rr = (k1 * r + n // r ** k1) // k # Newton iteration
+        rr = (k1 * rr + n // rr ** k1) // k # Newton iteration
     return r
 
 def perfect_power(n: int) -> tuple|None:
