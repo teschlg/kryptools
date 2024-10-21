@@ -4,6 +4,14 @@ Polynomials
 
 from numbers import Number
 
+display_reversed = True
+
+def poly_style_reversed(value: bool = True) -> None:
+    "Change the order of the coefficients when displaying polynomials."
+    global display_reversed
+    display_reversed = value
+
+
 class Poly:
     """
     Represents a polynomial as a list of coefficients.
@@ -40,7 +48,7 @@ class Poly:
         return len(self.coeff)
 
     def __repr__(self):
-        def prx(i: int):
+        def prx(i: int) -> str:
             if i == 0:
                 return ""
             if i == 1:
@@ -51,7 +59,10 @@ class Poly:
             return str(self.coeff[0])
         plus = ""
         tmp = ""
-        for i in reversed(range(len(self.coeff))):
+        coef_range = range(len(self.coeff))
+        if display_reversed:
+            coef_range = reversed(coef_range)
+        for i in coef_range:
             s = self.coeff[i]
             if not s:
                 continue
@@ -70,11 +81,15 @@ class Poly:
                 pass
             try:
                 if plus and s < 0:
-                    tmp += " - " + str(-s) + " " + prx(i)
+                    tmp += " - " + str(-s)
+                    if i != 0:
+                        tmp += " " + prx(i)
                     continue
             except:
                 pass
-            tmp += plus + str(s) + " " + prx(i)
+            tmp += plus + str(s)
+            if i != 0:
+                tmp += " " + prx(i)
             plus = " + "
         return tmp.strip()
 
