@@ -46,7 +46,7 @@ def factorint(n: int, verbose: int = 0) -> dict:
         for m in mm:
             if m in prime_factors:
                 prime_factors[m] += k
-            elif is_prime(m):
+            elif is_prime(m, trialdivision = False):
                 prime_factors[m] = k
             else:
                 if m in remaining_factors:
@@ -56,6 +56,8 @@ def factorint(n: int, verbose: int = 0) -> dict:
                 else:
                     new_factors[m] = k
 
+    if verbose:
+        print("Factoring:", n)
     # trial division
     B = 2500
     factorbase = sieve_eratosthenes(B)
@@ -70,13 +72,14 @@ def factorint(n: int, verbose: int = 0) -> dict:
         return prime_factors
     if verbose:
         print("Trial division found:", list(prime_factors))
-    if is_prime(n):
+    if is_prime(n, trialdivision = False):
         prime_factors[n] = 1
         return prime_factors
     remaining_factors = { n: 1 }
 
     # https://gitlab.inria.fr/zimmerma/ecm/
     ECM_PARAMETERS = [
+        [     5000,         130000,    54],
         [    11000,        1900000,    74],
         [    50000,       13000000,   221],
         [   250000,      130000000,   453],
@@ -103,13 +106,17 @@ def factorint(n: int, verbose: int = 0) -> dict:
             for method in [ _factor_fermat, factor_pm1, factor_ecm ]:  # , factor_qs ]:
                 factors = list(remaining_factors)
                 for m in factors:
-                    if verbose > 1:
-                        print("Factoring: ",m, "method", methods[method])
                     if method == factor_pm1:
+                        if verbose > 1:
+                            print("Method: p-1, B1=", 10 * B1)
                         tmp = factor_pm1(m, pm1_parameters = pm1_parameters)
                     elif method == factor_ecm:
+                        if verbose > 1:
+                            print("Method: ecm, B1=", B1)
                         tmp = factor_ecm(m, ecm_parameters = ecm_parameters)
                     else:
+                        if verbose > 1:
+                            print("Method: ", methods[method])
                         tmp = method(m)
                     if tmp:
                         tmp2 = m // tmp

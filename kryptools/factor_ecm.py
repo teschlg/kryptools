@@ -35,19 +35,21 @@ def mult(k, P, c2, p):
         return dbl(P, c2, p)
     Q = dbl(P, c2, p)
     R = P
-    for i in bin(k)[3:]:
+    for i in bin(k)[3:-1]:
         if i == "1":
             R = add(Q, R, P, p)
             Q = dbl(Q, c2, p)
         else:
             Q = add(R, Q, P, p)
             R = dbl(R, c2, p)
-    return R
+    if k % 2:
+        return add(Q, R, P, p)
+    return dbl(R, c2, p)
 
 # Crandall and Pomerance: Primes (doi=10.1007/0-387-28979-8)
 # Algorithm 7.4.4 (Inversionless ECM)
 
-def _ecm_parameters(B1: int, B2: int = None, D: int = None, primes: tuple = None):
+def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tuple|None = None):
     "Precompute parameters for the ECM method."
 
     # Stage-one/two limits must be even
@@ -84,14 +86,17 @@ def _ecm_parameters(B1: int, B2: int = None, D: int = None, primes: tuple = None
     return D, stage_one, stage_two_deltas
 
 
-def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm_parameters: tuple|None = None):
+def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 150, ecm_parameters: tuple|None = None):
     "Factors a number n using Lentsta's ECM method."    
 
     if ecm_parameters:
         B1, B2, curves, D, stage_one, stage_two_deltas = ecm_parameters
     else:
+        if not B1:
+            B1 = max(2, isqrt(n//200))
+        if not B2:
+            B2 = 100 * B1
         D, stage_one, stage_two_deltas = _ecm_parameters(B1, B2)
-
     for _ in range(curves):
         # find a random curve
         sigma = randint(6, n - 1)
@@ -100,9 +105,14 @@ def factor_ecm(n: int, B1: int = 11000, B2: int = 1900000, curves: int = 74, ecm
         try:
             c = (pow(v - u, 3, n) * (3 * u + v) * pow(4 * u**3 * v, -1, n) - 2) % n
         except:
-            m = gcd(4 * u**3 * v, n)
-            return m
-        c2 = c - 2 % n
+            m = gcd(u, n)
+            if m > 1:
+                return m
+            m = gcd(v, n)
+            if m > 1:
+                return m
+            return 2
+        c2 = (c - 2) % n
         # and a point on the curve (or its twist)
         Q = (pow(u, 3, n), pow(v, 3, n))
         # Stage one
