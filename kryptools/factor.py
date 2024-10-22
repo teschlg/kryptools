@@ -91,8 +91,10 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
         [260000000,  3200000000000, 47173],
         [850000000, 16000000000000, 77666]
     ]
+    fermat_steps = 10
 
     for parameters in ECM_PARAMETERS:
+        fermat_steps += 10
         B1, B2, num_curves = parameters
         num_curves *= 2
         D = isqrt(B2)
@@ -100,23 +102,27 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
         pm1_parameters = _pm1_parameters(10 * B1, B2, primes = primes)
         ecm_parameters = tuple([B1, B2, num_curves] + list(_ecm_parameters(B1, B2, D, primes = primes)))
 
-        methods = {_factor_fermat: "fm", factor_pm1: "pm1", factor_ecm: "ecm"}  #, factor_qs: "qs"}
+        methods = {_factor_fermat: "fmt", factor_pm1: "pm1", factor_ecm: "ecm"}  #, factor_qs: "qs"}
         while remaining_factors:
             new_factors = {}
             for method in [ _factor_fermat, factor_pm1, factor_ecm ]:  # , factor_qs ]:
                 factors = list(remaining_factors)
                 for m in factors:
-                    if method == factor_pm1:
+                    if method == _factor_fermat:
                         if verbose > 1:
-                            print("Method: p-1, B1=", 10 * B1)
+                            print(f"Trying to factor (fmt, steps={fermat_steps}): {m}")
+                        tmp = _factor_fermat(m, steps = fermat_steps)
+                    elif method == factor_pm1:
+                        if verbose > 1:
+                            print(f"Trying to factor (pm1, B1={10 * B1}): {m}")
                         tmp = factor_pm1(m, pm1_parameters = pm1_parameters)
                     elif method == factor_ecm:
                         if verbose > 1:
-                            print("Method: ecm, B1=", B1)
+                            print(f"Trying to factor (ecm, B1={B1}): {m}")
                         tmp = factor_ecm(m, ecm_parameters = ecm_parameters)
                     else:
                         if verbose > 1:
-                            print("Method: ", methods[method])
+                            print(f"Trying to factor ({methods[method]}): {m}")
                         tmp = method(m)
                     if tmp:
                         tmp2 = m // tmp
@@ -132,7 +138,7 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
                                     tmp3.append(x)
                         else:
                             tmp3 = [tmp, tmp2]
-                        if verbose > 0: print("Factors found (", methods[method] ,"): ", tmp3)
+                        if verbose > 0: print(f"Factors found ({methods[method]}): ", tmp3)
                         add_factors(m, tmp3)
             if not new_factors:
                 break

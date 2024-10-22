@@ -27,7 +27,7 @@ def _pm1_parameters(B1: int, B2: int|None = None, primes: tuple = None):
     return stage_one, stage_two_deltas
 
 
-def factor_pm1(n: int, B1: int = 10000, B2: int|None = None, x: int = 2, pm1_parameters: tuple = None):
+def factor_pm1(n: int, B1: int = 10000, B2: int|None = None, x: int = 2, pm1_parameters: tuple = None, verbose: int = 0):
     "Factors a number n using Pollard's p-1 method."    
 
     if pm1_parameters:
@@ -35,12 +35,18 @@ def factor_pm1(n: int, B1: int = 10000, B2: int|None = None, x: int = 2, pm1_par
     else:
         stage_one, stage_two_deltas = _pm1_parameters(B1, B2)
 
+
+    if verbose:
+        print(f"Stage 1: B1={B1}")
     x = pow(x, stage_one, n)
     g = gcd(x - 1, n)
     if g == n:
         return None
     if 1 < g:
         return g
+
+    if verbose:
+        print(f"Stage 2: B2={B2}")
     saved = {}
     y = pow(x, stage_two_deltas[0], n)
     D = (y - 1) % n
