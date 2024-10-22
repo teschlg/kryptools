@@ -97,6 +97,7 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
         if not B2:
             B2 = 100 * B1
         D, stage_one, stage_two_deltas = _ecm_parameters(B1, B2)
+
     for _ in range(curves):
         # find a random curve
         sigma = randint(6, n - 1)

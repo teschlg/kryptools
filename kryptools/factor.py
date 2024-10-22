@@ -28,7 +28,7 @@ def _factor_fermat(n: int, steps: int = 10) -> list:
         if b * b == a * a - n:
             return a - b
 
-def factorint(n: int, verbose: int = 0) -> dict:
+def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
     "Factor an ineger `n` into prime factors."
     prime_factors = {}
     if not isinstance(n, int):
@@ -59,7 +59,7 @@ def factorint(n: int, verbose: int = 0) -> dict:
     if verbose:
         print("Factoring:", n)
     # trial division
-    B = 2500
+    B = max(3, trial_bnd)
     factorbase = sieve_eratosthenes(B)
     for p in factorbase:
         k = 0
