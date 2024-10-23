@@ -93,7 +93,7 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
         B1, B2, curves, D, stage_one, stage_two_deltas = ecm_parameters
     else:
         if not B1:
-            B1 = max(2, isqrt(n//200))
+            B1 = min(1000_000, isqrt(n)//200 + 2)
         if not B2:
             B2 = 100 * B1
         D, stage_one, stage_two_deltas = _ecm_parameters(B1, B2)
@@ -159,7 +159,7 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
                     break
             if g == 0:
                 break
-            g =gcd(g,n)
+            g = gcd(g,n)
             if 1 < g:
                 if verbose > 1:
                     print("\nFactor found.")
@@ -171,6 +171,7 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
             if verbose > 1:
                 print("\nFactor found.")
             return g
+
     if verbose > 1:
         print(f"\nNo factor after trying {curves} curves.")
 
