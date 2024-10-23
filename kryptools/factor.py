@@ -14,10 +14,10 @@ from .factor_ecm import _ecm_parameters, factor_ecm
 # Factoring
 
 
-def _factor_fermat(n: int, steps: int = 10, verbose: int = 0) -> list:
+def _factor_fermat(n: int, maxsteps: int = 10, verbose: int = 0) -> list:
     "Fermat method"
     if verbose:
-        print(f"Factoring (Fermat, steps={steps}): {n} ({floor(log10(n)) + 1} digits)")
+        print(f"Factoring (Fermat, steps={maxsteps}): {n} ({floor(log10(n)) + 1} digits)")
     parameters = {11: (12, 6), 23: (12, 0),
                   5: (6, 3), 17: (6, 3),
                   19: (4, 2), 7: (4, 0),
@@ -27,7 +27,10 @@ def _factor_fermat(n: int, steps: int = 10, verbose: int = 0) -> list:
     start += (mod - start) % step
     if verbose > 1:
         print("Working ", end= "")
-    for a in range(start, min(start + steps * step,(n + 9) // 6) + 1, step):
+    maxa = (n + 9) // 6 + 1
+    if maxsteps:
+        maxa = min(maxa, start + maxsteps * step + 1)
+    for a in range(start, maxa, step):
         if verbose > 1:
             print(".", end= "")
         b = isqrt(a * a - n)
@@ -121,7 +124,7 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
                 factors = list(remaining_factors)
                 for m in factors:
                     if method == _factor_fermat:
-                        tmp = _factor_fermat(m, steps = fermat_steps, verbose = max(0, verbose - 1))
+                        tmp = _factor_fermat(m, maxsteps = fermat_steps, verbose = max(0, verbose - 1))
                     elif method == factor_pm1:
                         tmp = factor_pm1(m, pm1_parameters = pm1_parameters, verbose = max(0, verbose - 1))
                     elif method == factor_ecm:
