@@ -2,7 +2,7 @@
 Integer factorization: Lentra's ECM
 """
 
-from math import gcd, isqrt, log
+from math import gcd, isqrt, log, floor, log10
 from random import randint, seed
 from .primes import sieve_eratosthenes
 seed(0)
@@ -86,7 +86,7 @@ def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tu
     return D, stage_one, stage_two_deltas
 
 
-def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 150, ecm_parameters: tuple|None = None):
+def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 150, ecm_parameters: tuple|None = None, verbose: int = 0):
     "Factors a number n using Lentsta's ECM method."    
 
     if ecm_parameters:
@@ -98,14 +98,22 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
             B2 = 100 * B1
         D, stage_one, stage_two_deltas = _ecm_parameters(B1, B2)
 
+    if verbose:
+        print(f"Factoring (ECM, B1={B1}, B2={B2}): {n} ({floor(log10(n)) + 1} digits)")
+    if verbose > 1:
+        print("Working ", end= "")
     for _ in range(curves):
         # find a random curve
+        if verbose > 1:
+            print("C", end= "")  # stage one
         sigma = randint(6, n - 1)
         u = (sigma**2 - 5) % n
         v = (4 * sigma) % n
         try:
             c = (pow(v - u, 3, n) * (3 * u + v) * pow(4 * u**3 * v, -1, n) - 2) % n
         except:
+            if verbose > 1:
+                print("\nFactor found.")
             m = gcd(u, n)
             if m > 1:
                 return m
@@ -117,14 +125,20 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
         # and a point on the curve (or its twist)
         Q = (pow(u, 3, n), pow(v, 3, n))
         # Stage one
+        if verbose > 1:
+            print("1", end= "")
         Q = mult(stage_one, Q, c2, n)
         if Q[1] == 0:
             continue
         g = gcd(Q[1], n)
         if g > 1:
+            if verbose > 1:
+                print("\nFactor found.")
             return g
 
         # Stage two
+        if verbose > 1:
+            print("2", end= "")
         S = [dbl(Q, c2, n)]
         S.append(dbl(S[0], c2, n))
 
@@ -147,9 +161,16 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
                 break
             g =gcd(g,n)
             if 1 < g:
+                if verbose > 1:
+                    print("\nFactor found.")
                 return g
             R, T = add(R, S[D - 1], T, n), R
 
         g = gcd(g, n)
         if 1 < g < n:
+            if verbose > 1:
+                print("\nFactor found.")
             return g
+    if verbose > 1:
+        print(f"\nNo factor after trying {curves} curves.")
+

@@ -2,7 +2,7 @@
 Integer factorization: Quadratic sieve
 """
 
-from math import isqrt, gcd, sqrt, log, exp, ceil
+from math import isqrt, gcd, sqrt, log, exp, ceil, floor, log10
 from .primes import sieve_eratosthenes
 from .nt import legendre_symbol, sqrt_mod
 
@@ -38,12 +38,14 @@ def factor_qs(n: int, verbose: int = 0) -> list:
     # B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
 
     if verbose:
+        print(f"Factoring (QS, B={B}): {n} ({floor(log10(n)) + 1} digits)")
+    if verbose > 1:
         print(f"Setting up factorbase: B={B}", end="")
     factorbase = []
     for p in sieve_eratosthenes(B):  # compute the factorbase
         ls = legendre_symbol(n, p)
         if ls == 0:  # we already found a factor;-)
-            if verbose:
+            if verbose > 1:
                 print("\nFound a small prime factor.")
             if n == p:
                 return n
@@ -53,7 +55,7 @@ def factor_qs(n: int, verbose: int = 0) -> list:
     lf = len(factorbase)  # length of the factorbase (including -1)
     lfb = ceil((lf+1) / 8)  # the number of bytes we need to store a relation
 
-    if verbose:
+    if verbose > 1:
         print(f" len={lf}", end ="")
     factorbase_log = [log(p) for p in factorbase]  # we add these up to test if a number will probably factor
     factorbase_root = [0] * lf # compute the roots of n mod p
@@ -72,7 +74,7 @@ def factor_qs(n: int, verbose: int = 0) -> list:
         return m
     m2 = 2 * m
 
-    if verbose:
+    if verbose > 1:
         print(" done.")
 
     relation_no = -1
@@ -185,7 +187,7 @@ def factor_qs(n: int, verbose: int = 0) -> list:
                     res = process_relation(j, mask)
                     if res:
                         if verbose:
-                            print(f"\nSuccess after {relation_no} relations!")
+                            print(f"\nFactor found after {relation_no} relations.")
                         return res
                 del factors[j]
             else:

@@ -2,7 +2,7 @@
 Integer factorization: Pollard's p-1 method
 """
 
-from math import gcd, log
+from math import gcd, log, floor, log10
 from .primes import sieve_eratosthenes
 
 def _pm1_parameters(B1: int, B2: int|None = None, primes: tuple = None):
@@ -29,15 +29,17 @@ def _pm1_parameters(B1: int, B2: int|None = None, primes: tuple = None):
 
 def factor_pm1(n: int, B1: int = 10000, B2: int|None = None, x: int = 2, pm1_parameters: tuple = None, verbose: int = 0):
     "Factors a number n using Pollard's p-1 method."    
+    if verbose:
+        print(f"Factoring (Pollard p-1, B1={B1}, B2={B2}): {n} ({floor(log10(n)) + 1} digits)")
 
     if pm1_parameters:
         stage_one, stage_two_deltas = pm1_parameters
     else:
         stage_one, stage_two_deltas = _pm1_parameters(B1, B2)
 
-
-    if verbose:
-        print(f"Stage 1: B1={B1}")
+    # stage one
+    if verbose > 1:
+        print("Working 1", end= "")
     x = pow(x, stage_one, n)
     g = gcd(x - 1, n)
     if g == n:
@@ -45,8 +47,8 @@ def factor_pm1(n: int, B1: int = 10000, B2: int|None = None, x: int = 2, pm1_par
     if 1 < g:
         return g
 
-    if verbose:
-        print(f"Stage 2: B2={B2}")
+    if verbose > 1:
+        print("2", end= "")
     saved = {}
     y = pow(x, stage_two_deltas[0], n)
     D = (y - 1) % n
@@ -58,10 +60,18 @@ def factor_pm1(n: int, B1: int = 10000, B2: int|None = None, x: int = 2, pm1_par
         if k % 20 == 0:
             g = gcd(D, n)
             if g == n:
+                if verbose > 1:
+                    print("")
                 return None
             if 1 < g:
+                if verbose > 1:
+                    print("\nFactor found.")
                 return g
     g = gcd(D, n)
     if 1 < g < n:
+        if verbose > 1:
+            print("\nFactor found.")
         return g
+    if verbose > 1:
+        print("")
     return None

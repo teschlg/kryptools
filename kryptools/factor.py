@@ -4,7 +4,7 @@ Factorization of integers:
     divisors(n) unsorted list of all divisors of the integer n
 """
 
-from math import isqrt, gcd, prod
+from math import isqrt, gcd, prod, floor, log10
 from .primes import sieve_eratosthenes, is_prime
 from .factor_pm1 import _pm1_parameters, factor_pm1
 from .factor_ecm import _ecm_parameters, factor_ecm
@@ -14,8 +14,10 @@ from .factor_ecm import _ecm_parameters, factor_ecm
 # Factoring
 
 
-def _factor_fermat(n: int, steps: int = 10) -> list:
+def _factor_fermat(n: int, steps: int = 10, verbose: int = 0) -> list:
     "Fermat method"
+    if verbose:
+        print(f"Factoring (Fermat, steps={steps}): {n} ({floor(log10(n)) + 1} digits)")
     parameters = {11: (12, 6), 23: (12, 0),
                   5: (6, 3), 17: (6, 3),
                   19: (4, 2), 7: (4, 0),
@@ -23,10 +25,18 @@ def _factor_fermat(n: int, steps: int = 10) -> list:
     start = isqrt(n - 1) + 1
     step, mod = parameters[n % 24]
     start += (mod - start) % step
+    if verbose > 1:
+        print("Working ", end= "")
     for a in range(start, min(start + steps * step,(n + 9) // 6) + 1, step):
+        if verbose > 1:
+            print(".", end= "")
         b = isqrt(a * a - n)
         if b * b == a * a - n:
+            if verbose > 1:
+                print("")
             return a - b
+    if verbose > 1:
+        print("")
 
 def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
     "Factor an ineger `n` into prime factors."
@@ -57,7 +67,7 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
                     new_factors[m] = k
 
     if verbose:
-        print("Factoring:", n)
+        print(f"Factoring: {n} ({floor(log10(n)) + 1} digits)")
     # trial division
     B = max(3, trial_bnd)
     factorbase = sieve_eratosthenes(B)
@@ -93,7 +103,9 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
     ]
     fermat_steps = 10
 
-    for parameters in ECM_PARAMETERS:
+    for round, parameters in enumerate(ECM_PARAMETERS):
+        if verbose:
+            print(f"Round {round+1}")
         fermat_steps += 10
         B1, B2, num_curves = parameters
         num_curves *= 2
@@ -109,21 +121,13 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
                 factors = list(remaining_factors)
                 for m in factors:
                     if method == _factor_fermat:
-                        if verbose > 1:
-                            print(f"Trying to factor (fmt, steps={fermat_steps}): {m}")
-                        tmp = _factor_fermat(m, steps = fermat_steps)
+                        tmp = _factor_fermat(m, steps = fermat_steps, verbose = max(0, verbose - 1))
                     elif method == factor_pm1:
-                        if verbose > 1:
-                            print(f"Trying to factor (pm1, B1={10 * B1}): {m}")
-                        tmp = factor_pm1(m, pm1_parameters = pm1_parameters)
+                        tmp = factor_pm1(m, pm1_parameters = pm1_parameters, verbose = max(0, verbose - 1))
                     elif method == factor_ecm:
-                        if verbose > 1:
-                            print(f"Trying to factor (ecm, B1={B1}): {m}")
-                        tmp = factor_ecm(m, ecm_parameters = ecm_parameters)
+                        tmp = factor_ecm(m, ecm_parameters = ecm_parameters, verbose = max(0, verbose - 1))
                     else:
-                        if verbose > 1:
-                            print(f"Trying to factor ({methods[method]}): {m}")
-                        tmp = method(m)
+                        tmp = method(m, verbose = max(0, verbose - 1))
                     if tmp:
                         tmp2 = m // tmp
                         g = gcd(tmp, tmp2)

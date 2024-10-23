@@ -2,11 +2,13 @@
 Integer factorization: Fermat's method
 """
 
-from math import isqrt
+from math import isqrt, log10, floor, log10
 
 
-def factor_fermat(n: int) -> list:
+def factor_fermat(n: int, verbose: int = 0) -> list:
     """Find factors of n using the method of Fermat."""
+    if verbose:
+        print(f"Factoring (Fermat): {n} ({floor(log10(n)) + 1} digits)")
     factors = []
     parameters = {11: (12, 6), 23: (12, 0),
                   5: (6, 3), 17: (6, 3),
@@ -20,11 +22,19 @@ def factor_fermat(n: int) -> list:
     start = isqrt(n - 1) + 1
     step, mod = parameters[n % 24]
     start += (mod - start) % step
+    if verbose > 1:
+        print("Working ", end= "")
     for a in range(start, (n + 9) // 6 + 1, step):
+        if verbose > 1:
+            print(".", end= "")
         b = isqrt(a * a - n)
         if b * b == a * a - n:
             factors.append(a - b)
             factors.append(a + b)
+            if verbose > 1:
+                print("")
             return factors
     factors.append(n)
+    if verbose > 1:
+        print("")
     return factors
