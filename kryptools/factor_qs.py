@@ -24,7 +24,7 @@ def bytetest(a: bytes, i: int) -> bytes:
     return (a[i1] & 2**i0) != 0
 
 
-def factor_qs(n: int) -> list:
+def factor_qs(n: int, verbose: int = 0) -> list:
     """Find factors of n using the quadratic sieve."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
@@ -37,10 +37,14 @@ def factor_qs(n: int) -> list:
     B = int(exp(log(n) / u))
     # B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
 
+    if verbose:
+        print(f"Setting up factorbase: B={B}", end="")
     factorbase = []
     for p in sieve_eratosthenes(B):  # compute the factorbase
         ls = legendre_symbol(n, p)
         if ls == 0:  # we already found a factor;-)
+            if verbose:
+                print("\nFound a small prime factor.")
             if n == p:
                 return n
             return p
@@ -49,6 +53,8 @@ def factor_qs(n: int) -> list:
     lf = len(factorbase)  # length of the factorbase (including -1)
     lfb = ceil((lf+1) / 8)  # the number of bytes we need to store a relation
 
+    if verbose:
+        print(f" len={lf}", end ="")
     factorbase_log = [log(p) for p in factorbase]  # we add these up to test if a number will probably factor
     factorbase_root = [0] * lf # compute the roots of n mod p
     for i, p in enumerate(factorbase):
@@ -66,13 +72,18 @@ def factor_qs(n: int) -> list:
         return m
     m2 = 2 * m
 
+    if verbose:
+        print(" done.")
+
     relation_no = -1
     relations = [None] * (lf + 1)  # here we will store the relations in case we found a B-smooth number
     values = [None] * (lf + 1)  # here we will store the values leading to the B-smooth numbers
 
     # set up the sieve
-    sieve_step = 100
-    sieve_bound = sieve_step
+    expected_trys = int(exp(u*log(u/2)/2))+1 # expected number of trys to find a relation for sieved values
+    sieve_bound = max(100, expected_trys * lf)
+    sieve_step = sieve_bound // 10
+
     # start values for the iterators in the positive/negative direction
     iterator_p = [ [0, 0] for _ in range(lf) ]
     iterator_m = [ [0, 0] for _ in range(lf) ]
@@ -122,10 +133,10 @@ def factor_qs(n: int) -> list:
         # print(f'{j:3}', ' '.join(f'{b:08b}' for b in reversed(relation)))
         if index == lf:  # the new relation is linearly dependent: we have found a linear combination of the 0 vector
             # now we need to determine the factors
-            u = 1  # product over all values m - j such that f(m-j) is B-smooth
-            v = 1  # sqrt of the product over all f(m-j) which are B-smooth
+            u = 1  # product over all values m + j such that f(m+j) is B-smooth
+            v = 1  # sqrt of the product over all f(m+j) which are B-smooth
             w = 1  # save nonsquare terms for the next round
-            for i in range(lf):
+            for i in range(lf + 1):
                 if bytetest(relation, lfb * 8 + i):  # select the relations which sum to the 0 vector
                     ui = m + values[i]
                     u = (u * ui) % n
@@ -137,14 +148,20 @@ def factor_qs(n: int) -> list:
             res = gcd(u - v, n)
             if 1 < res < n:
                 return res
+            if verbose > 1:
+                print("X", end="")
             relation_no -= 1  # this one did not work, try again
         else:
             relations[index] = relation
+            if verbose > 1:
+                print(".", end="")
         return None
 
-    while True:
+    for _ in range(expected_trys * lf * 100):
         factors = {} # store the index of the primes dividing j
 
+        if verbose > 1:
+            print("S", end="")
         do_sieve()
 
         for j in sorted(factors.keys(),key=abs):
@@ -157,7 +174,7 @@ def factor_qs(n: int) -> list:
                     v *= -1
                 for i in primes:
                     p = factorbase[i]
-                    k = 1  # per our sieve we already know that p devides v
+                    k = 1  # per our sieve we already know that p divides v
                     v //= p
                     while v % p == 0:  # divide by p as many times as possible
                         k = (k + 1) % 2  # we only want to know if the exponent is even or odd
@@ -167,8 +184,14 @@ def factor_qs(n: int) -> list:
                 if v == 1:
                     res = process_relation(j, mask)
                     if res:
+                        if verbose:
+                            print(f"\nSuccess after {relation_no} relations!")
                         return res
                 del factors[j]
             else:
                 del factors[j]  # the number is unlikely to factor
         sieve_bound += sieve_step  # increase the sieve and continue
+    if verbose > 1:
+        print("")
+    if verbose:
+        print("QS failed.")
