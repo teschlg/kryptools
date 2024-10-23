@@ -7,7 +7,7 @@ from .primes import sieve_eratosthenes
 from .nt import legendre_symbol
 from .factor_qs import bytexor, byteset, bytetest
 
-def is_smooth(n: int, factorbase: list, lfb: int) -> bytes or None:
+def is_smooth(n: int, factorbase: list, lfb: int) -> bytes|None:
     """Try to factor n with respect to a given factorbase.
     Upon success a bytestring, whose bits are the exponents with repect to the factorbase mod 2, is returned.
     Otherwise None."""
@@ -26,7 +26,7 @@ def is_smooth(n: int, factorbase: list, lfb: int) -> bytes or None:
         return None  # the number factors if at the end nothing is left
     return factors
 
-def factor_dixon(n: int) -> list:
+def factor_dixon(n: int) -> int|None:
     """Find factors of n using the method of Dixon."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence

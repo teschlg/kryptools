@@ -49,7 +49,7 @@ def mult(k, P, c2, p):
 # Crandall and Pomerance: Primes (doi=10.1007/0-387-28979-8)
 # Algorithm 7.4.4 (Inversionless ECM)
 
-def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tuple|None = None):
+def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tuple|None = None) -> tuple:
     "Precompute parameters for the ECM method."
 
     # Stage-one/two limits must be even
@@ -87,7 +87,7 @@ def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tu
     return D, stage_one, stage_two_deltas
 
 
-def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 150, ecm_parameters: tuple|None = None, verbose: int = 0):
+def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 150, ecm_parameters: tuple|None = None, verbose: int = 0) -> int|None:
     "Factors a number n using Lentsta's ECM method."    
 
     if ecm_parameters:

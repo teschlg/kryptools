@@ -24,7 +24,7 @@ def bytetest(a: bytes, i: int) -> bytes:
     return (a[i1] & 2**i0) != 0
 
 
-def factor_qs(n: int, verbose: int = 0) -> list:
+def factor_qs(n: int, verbose: int = 0) -> int|None:
     """Find factors of n using the quadratic sieve."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
