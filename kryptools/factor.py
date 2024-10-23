@@ -111,7 +111,9 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
         B1, B2, num_curves = parameters
         p_max = isqrt(max(remaining_factors))+1
         B1 = min(B1, p_max//50)
+        B1 += B1 & 1
         B2 = min(B2, p_max)
+        B2 += B2 & 1
         num_curves *= 2
         D = isqrt(B2)
         

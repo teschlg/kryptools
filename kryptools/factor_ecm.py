@@ -53,11 +53,12 @@ def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tu
     "Precompute parameters for the ECM method."
 
     # Stage-one/two limits must be even
-    B1 += B1 & 1
+    if B1 % 2:
+        raise ValueError("B1 must be even.")
     if not B2:
         B2 = 100 * B1
-    else:
-        B2 += B2 & 1
+    if B2 % 2:
+        raise ValueError("B2 must be even.")
     if not D:
         D = min(isqrt(B2), B1 // 2 - 1)
     if not primes:
@@ -94,6 +95,8 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
     else:
         if not B1:
             B1 = min(1000_000, isqrt(n)//200 + 2)
+        # Stage-one/two limits must be even
+        B1 += B1 & 1
         if not B2:
             B2 = 100 * B1
         D, stage_one, stage_two_deltas = _ecm_parameters(B1, B2)
