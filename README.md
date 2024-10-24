@@ -14,7 +14,7 @@ The tools contained are:
 * number theory: sqrt modulo primes, Jacobi/Legendre symbol, Chinese Remainder Theorem, continued fractions, etc.
 * primes: Sieve of Erathostenes, primality tests, generation of random safe/strong primes
 * solvers for discrete logarithms (naive, Pollard rho, Shanks baby step/giant step, index calculus, quadratic sieve)
-* integer factorization (Fermat, Pollard p-1, Lenstra's ECM, Dixon, basic quadratic sieve)
+* integer factorization (Fermat, Pollard p-1, Pollard rho, Lenstra's ECM, Dixon, basic quadratic sieve)
 * elliptic curves (Weierstrass form), group operations, order, discrete logarithms
 * linear algebra: Hermite normal form, Gram-Schmidt
 * lattices: Hadamard ratio, Babai rounding/nearest plane algorithm, lattice reduction (Lenstra-Lenstra-Lovaz)
