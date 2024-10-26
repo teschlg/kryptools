@@ -55,6 +55,11 @@ class Poly:
                 return "x"
             return "x^" + str(i)
 
+        zero = 0 * self.coeff[0]
+        try:
+            one = type(zero)(1)
+        except:
+            one = zero + 1
         if len(self.coeff) == 1:
             return str(self.coeff[0])
         plus = ""
@@ -66,12 +71,12 @@ class Poly:
             s = self.coeff[i]
             if not s:
                 continue
-            if not s - 1 and i != 0:
+            if not s - one and i != 0:
                 tmp += plus + prx(i)
                 plus = " + "
                 continue
             try:
-                if s == -1 and i != 0:
+                if s == -one and i != 0:
                     if plus:
                         plus = " "
                     tmp += plus + "- " + prx(i)
@@ -117,6 +122,7 @@ class Poly:
         return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])
 
     def __add__(self, other: "Poly") -> "Poly":
+        zero = 0 * self.coeff[0]
         if not isinstance(other, self.__class__):
             if self._check_type(other):
                 tmp = self.coeff[:]
@@ -125,11 +131,11 @@ class Poly:
             return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
-            scoeff = self.coeff + (lo - ls) * [0]
+            scoeff = self.coeff + (lo - ls) * [zero]
         else:
             scoeff = self.coeff
         if ls > lo:
-            ocoeff = other.coeff + (ls - lo) * [0]
+            ocoeff = other.coeff + (ls - lo) * [zero]
         else:
             ocoeff = other.coeff
         modulus = self.modulus
@@ -185,15 +191,16 @@ class Poly:
             if self._check_type(other):
                 return Poly([other * s for s in self.coeff], modulus = self.modulus)
             return NotImplemented
+        zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
-        coeff = [0] * (ls + lo - 1)
+        coeff = [None] * (ls + lo - 1)
         for k in range(ls + lo - 1):
             coeff[k] = sum(
                 [
                     self.coeff[j] * other.coeff[k - j]
                     for j in range(max(0, k - lo + 1), min(ls, k + 1))
                 ]
-            )
+            , start = zero)
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
@@ -222,7 +229,10 @@ class Poly:
         if not isinstance(j, int):
             return NotImplemented
         zero = 0 * self.coeff[0]
-        one = zero + 1
+        try:
+            one = type(zero)(1)
+        except:
+            one = zero + 1
         res = self.__class__([one], modulus=self.modulus)
         if j < 0:
             if not self.modulus:
@@ -256,8 +266,15 @@ class Poly:
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
         "Polynom division with remainder."
+        zero = 0 * self.coeff[0]
+        try:
+            ring = type(zero)
+            one = ring(1)
+        except:
+            ring = None
+            one = zero + 1
         if isinstance(other, list):
-            other = self.__class__(other)
+            other = self.__class__(other , ring = ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot divide {self} and {other}.")
         if not other:
@@ -267,8 +284,8 @@ class Poly:
             return self.__class__([0]), self
         div = [0] * (sd - od + 1)
         lco = other.coeff[-1]
-        if bool(lco - 1):
-            tmp = 1 / lco
+        if bool(lco - one):
+            tmp = one / lco
             oth = [c * tmp for c in other.coeff]
             rem = [c * tmp for c in self.coeff]
         else:
@@ -279,7 +296,7 @@ class Poly:
             div[sd - od - i] = tmp
             for j in range(od + 1):
                 rem[sd - i - j] -= tmp * oth[od - j]
-        if bool(lco - 1):
+        if bool(lco - one):
             rem = [c * lco for c in rem]
         return self.__class__(div, modulus=self.modulus), self.__class__(
             rem, modulus=self.modulus
@@ -287,8 +304,15 @@ class Poly:
 
     def mod(self, other: "Poly") -> None:
         "Reduce with respect to a given polynomial."
+        zero = 0 * self.coeff[0]
+        try:
+            ring = type(zero)
+            one = ring(1)
+        except:
+            ring = None
+            one = zero + 1
         if isinstance(other, list):
-            other = self.__class__(other)
+            other = self.__class__(other , ring = ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot divide {self} and {other}.")
         if not other:
@@ -297,8 +321,8 @@ class Poly:
         if sd < od:
             return self
         lco = other.coeff[-1]
-        if bool(lco - 1):
-            tmp = 1 / lco
+        if bool(lco - one):
+            tmp = one / lco
             oth = [c * tmp for c in other.coeff]
         else:
             oth = other.coeff
@@ -315,14 +339,19 @@ class Poly:
         "Inverse modulo a given polynomial."
         if not other:
             other = self.modulus
+        zero = 0 * self.coeff[0]
+        try:
+            ring = type(zero)
+            one = ring(1)
+        except:
+            ring = None
+            one = zero + 1
         if isinstance(other, list):
-            other = self.__class__(other)
+            other = self.__class__(other , ring = ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot invert {self} modulo {other}.")
         if not other:
             raise NotImplementedError(f"{other} must be nonzero.")
-        zero = 0 * self.coeff[0]
-        one = zero +1
         r0, r1 = other, self
         y0, y1 = self.__class__([zero], modulus=self.modulus), self.__class__([one], modulus=self.modulus)
         while r1:
@@ -331,7 +360,7 @@ class Poly:
             y0, y1 = y1, y0 - q * y1
         if r0.degree() != 0:
             raise ValueError(f"{self} is not invertible mod {other}.")
-        tmp = 1 / r0[0]
+        tmp = one / r0[0]
         for i in range(len(y0)):
             y0.coeff[i] *= tmp
         return y0
