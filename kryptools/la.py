@@ -62,11 +62,11 @@ class Matrix:
                 cols = i
             else:
                 cols = range(self.cols)[j]
-            return Matrix([[self.matrix[i][j] for j in cols] for i in rows])
+            return self.__class__([[self.matrix[i][j] for j in cols] for i in rows])
         if isinstance(item, int):
             i, j = divmod(item, self.cols)
             return self.matrix[i][j]
-        return Matrix([self.matrix[k // self.cols][k % self.cols] for k in range(self.cols * self.rows)[item]])
+        return self.__class__([self.matrix[k // self.cols][k % self.cols] for k in range(self.cols * self.rows)[item]])
 
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
@@ -89,9 +89,13 @@ class Matrix:
             for i, ii in zip(cols,range(len(cols))):
                 for j, jj in zip(rows,range(len(rows))):
                     self.matrix[j][i] = value[jj,ii]
-            return
-        i, j = divmod(item, self.cols)
-        self.matrix[i][j] = value
+        elif isinstance(item, int):
+            i, j = divmod(item, self.cols)
+            self.matrix[i][j] = value
+        else:
+            for k in range(self.cols * self.rows)[item]:
+                i, j = divmod(k, self.cols)
+                self.matrix[i][j] = value[k]
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -156,14 +160,14 @@ class Matrix:
         if isinstance(other, Matrix):
             if other.cols != self.cols or other.rows != self.rows:
                 raise NotImplementedError("Matrix dimensions do not match!")
-            return Matrix([ [ x1 + y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
+            return self.__class__([ [ x1 + y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
         return NotImplemented
 
     def __sub__(self, other) -> "Matrix":
         if isinstance(other, Matrix):
             if other.cols != self.cols or other.rows != self.rows:
                 raise NotImplementedError("Matrix dimensions do not match!")
-            return Matrix([ [ x1 - y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
+            return self.__class__([ [ x1 - y1 for x1, y1 in zip(x,y)] for x, y in zip(self.matrix, other.matrix)])
         return NotImplemented
 
     def __neg__(self) -> "Matrix":
@@ -176,12 +180,12 @@ class Matrix:
         if isinstance(other, Matrix):
             return self.multiply(other)
         if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
-            return Matrix([ [item * other for item in row] for row in self.matrix ])
+            return self.__class__([ [item * other for item in row] for row in self.matrix ])
         return NotImplemented
 
     def __rmul__(self, other) -> "Matrix":
         if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
-            return Matrix([ [item * other for item in row] for row in self.matrix ])
+            return self.__class__([ [item * other for item in row] for row in self.matrix ])
         return NotImplemented
 
     def rref(self) -> "Matrix":
@@ -242,7 +246,7 @@ class Matrix:
         if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         n = self.cols
-        MM = Matrix([[0 for _ in range(2*n)] for _ in range(n)])
+        MM = self.__class__([[0 for _ in range(2*n)] for _ in range(n)])
         for i in range(n):
             MM[i,n+i] = 1
         MM[:,0:n] = self
@@ -271,7 +275,7 @@ class Matrix:
             zero = 0 * self[0]
         except:
             zero = 0
-        return Matrix([[ zero for j in range(n) ] for i in range(m) ])
+        return self.__class__([[ zero for j in range(n) ] for i in range(m) ])
 
     def eye(self, m: int = None, n: int = None):
         "Returns an identity matrix of the same dimension."
@@ -288,7 +292,7 @@ class Matrix:
         except:
             zero = 0
         one = 1 + zero
-        return Matrix([[ delta(i, j) for j in range(n) ] for i in range(m) ])
+        return self.__class__([[ delta(i, j) for j in range(n) ] for i in range(m) ])
 
 
 def zeros(m: int, n: int = None, zero = 0) -> "Matrix":
