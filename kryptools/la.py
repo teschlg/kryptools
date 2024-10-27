@@ -23,6 +23,9 @@ class Matrix:
         self.matrix = matrix
         self.cols = len(matrix[0])
         self.rows = len(matrix)
+        for i in range(1, self.rows):
+            if len(matrix[i]) != self.cols:
+                raise ValueError("All matrix rows must have equal length!")
         if ring:
             self.map(ring)
 
@@ -100,8 +103,13 @@ class Matrix:
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return self.matrix == other.matrix
+        if self.rows != other.rows or self.cols != other.cols:
+            return False
+        return any([ self[i] == other[i] for i in range(self.rows * self.cols) ])
 
+    def __bool__(self):
+        return any([ bool(self[i]) for i in range(self.rows * self.cols) ])
+    
     def map(self, func):
         "Apply a function to all elements in place."
         for row in self.matrix:
