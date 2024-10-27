@@ -55,13 +55,7 @@ class Poly:
                 return "x"
             return "x^" + str(i)
 
-        zero = 0 * self.coeff[0]
-        try:
-            one = type(zero)(1)
-        except:
-            one = zero + 1
-        if len(self.coeff) == 1:
-            return str(self.coeff[0])
+        one = self.coeff[0]**0
         plus = ""
         tmp = ""
         coef_range = range(len(self.coeff))
@@ -76,7 +70,7 @@ class Poly:
                 plus = " + "
                 continue
             try:
-                if s == -one and i != 0:
+                if not s + one and i != 0:
                     if plus:
                         plus = " "
                     tmp += plus + "- " + prx(i)
@@ -120,6 +114,16 @@ class Poly:
 
     def _check_type(self, other):
         return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])
+
+    def _guess_ring(self):
+        zero = 0 * self.coeff[0]
+        try:
+            ring = type(zero)
+            one = ring(1)
+        except:
+            ring = None
+            one = zero**0  # zero + 1
+        return zero, one, ring
 
     def __add__(self, other: "Poly") -> "Poly":
         zero = 0 * self.coeff[0]
@@ -228,11 +232,7 @@ class Poly:
     def __pow__(self, j: int) -> "Poly":
         if not isinstance(j, int):
             return NotImplemented
-        zero = 0 * self.coeff[0]
-        try:
-            one = type(zero)(1)
-        except:
-            one = zero + 1
+        one = self.coeff[0]**0
         res = self.__class__([one], modulus=self.modulus)
         if j < 0:
             if not self.modulus:
@@ -266,13 +266,7 @@ class Poly:
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
         "Polynom division with remainder."
-        zero = 0 * self.coeff[0]
-        try:
-            ring = type(zero)
-            one = ring(1)
-        except:
-            ring = None
-            one = zero + 1
+        one, ring = self._guess_ring()[1:]
         if isinstance(other, list):
             other = self.__class__(other , ring = ring)
         elif not isinstance(other, self.__class__):
@@ -304,13 +298,7 @@ class Poly:
 
     def mod(self, other: "Poly") -> None:
         "Reduce with respect to a given polynomial."
-        zero = 0 * self.coeff[0]
-        try:
-            ring = type(zero)
-            one = ring(1)
-        except:
-            ring = None
-            one = zero + 1
+        one, ring = self._guess_ring()[1:]
         if isinstance(other, list):
             other = self.__class__(other , ring = ring)
         elif not isinstance(other, self.__class__):
@@ -339,13 +327,7 @@ class Poly:
         "Inverse modulo a given polynomial."
         if not other:
             other = self.modulus
-        zero = 0 * self.coeff[0]
-        try:
-            ring = type(zero)
-            one = ring(1)
-        except:
-            ring = None
-            one = zero + 1
+        zero, one, ring = self._guess_ring()
         if isinstance(other, list):
             other = self.__class__(other , ring = ring)
         elif not isinstance(other, self.__class__):
