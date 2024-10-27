@@ -95,7 +95,7 @@ class Poly:
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return self.coeff == other.coeff
+        return not bool(self - other)
 
     def __bool__(self):
         return bool(self.degree()) or bool(self.coeff[0])
@@ -168,13 +168,14 @@ class Poly:
                 tmp[0] -= other
                 return self.__class__(tmp, modulus=self.modulus)
             return NotImplemented
+        zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
-            scoeff = self.coeff + (lo - ls) * [0]
+            scoeff = self.coeff + (lo - ls) * [zero]
         else:
             scoeff = self.coeff
         if ls > lo:
-            ocoeff = other.coeff + (ls - lo) * [0]
+            ocoeff = other.coeff + (ls - lo) * [zero]
         else:
             ocoeff = other.coeff
         modulus = self.modulus
@@ -266,7 +267,7 @@ class Poly:
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
         "Polynom division with remainder."
-        one, ring = self._guess_ring()[1:]
+        zero, one, ring = self._guess_ring()
         if isinstance(other, list):
             other = self.__class__(other , ring = ring)
         elif not isinstance(other, self.__class__):
@@ -275,8 +276,8 @@ class Poly:
             raise ValueError(f"{other} must be nonzero.")
         sd, od = self.degree(), other.degree()
         if sd < od:
-            return self.__class__([0]), self
-        div = [0] * (sd - od + 1)
+            return self.__class__([zero]), self
+        div = [zero] * (sd - od + 1)
         lco = other.coeff[-1]
         if bool(lco - one):
             tmp = one / lco
