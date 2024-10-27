@@ -291,7 +291,10 @@ class Matrix:
             zero = 0 * self[0]
         except:
             zero = 0
-        one = 1 + zero
+        try:
+            one = zero**0
+        except:
+            one = 1
         return self.__class__([[ delta(i, j) for j in range(n) ] for i in range(m) ])
 
 
