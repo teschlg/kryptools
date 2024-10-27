@@ -5,7 +5,7 @@ Implemenation of same basic algorithms used in cryptography.
 __author__ = "Gerald Teschl"
 __copyright__ = "Copyright 2024, Gerald Teschl"
 __license__ = "MIT License"
-__version__ = "0.9.7"
+__version__ = "0.9.8"
 __email__ = "Gerald.Teschl@univie.ac.at"
 
 from .nt import egcd, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, euler_phi, carmichael_lambda, moebius_mu, order, crt
