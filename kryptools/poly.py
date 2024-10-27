@@ -55,6 +55,8 @@ class Poly:
                 return "x"
             return "x^" + str(i)
 
+        if not self:
+            return str(self.coeff[0])
         one = self.coeff[0]**0
         plus = ""
         tmp = ""
@@ -293,9 +295,7 @@ class Poly:
                 rem[sd - i - j] -= tmp * oth[od - j]
         if bool(lco - one):
             rem = [c * lco for c in rem]
-        return self.__class__(div, modulus=self.modulus), self.__class__(
-            rem, modulus=self.modulus
-        )
+        return self.__class__(div, modulus=self.modulus), self.__class__(rem, modulus=self.modulus)
 
     def mod(self, other: "Poly") -> None:
         "Reduce with respect to a given polynomial."
