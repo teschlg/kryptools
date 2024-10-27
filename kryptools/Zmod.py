@@ -119,9 +119,7 @@ class ZmodPoint:
         return NotImplemented
 
     def __radd__(self, scalar: int) -> "ZmodPoint":
-        if isinstance(scalar, int):
-            return self.__class__(scalar + self.x, self.ring)
-        return NotImplemented
+        return self + scalar
 
     def __neg__(self) -> "ZmodPoint":
         return self.__class__(-self.x, self.ring)
@@ -139,9 +137,7 @@ class ZmodPoint:
         return NotImplemented
 
     def __rsub__(self, scalar: int) -> "ZmodPoint":
-        if isinstance(scalar, int):
-            return self.__class__(scalar - self.x, self.ring)
-        return NotImplemented
+        return (- self) + scalar
 
     def __mul__(self, other: "ZmodPoint") -> "ZmodPoint":
         if isinstance(other, self.__class__):
@@ -153,9 +149,7 @@ class ZmodPoint:
         return NotImplemented
 
     def __rmul__(self, scalar: int) -> "ZmodPoint":
-        if isinstance(scalar, int):
-            return self.__class__(scalar * self.x, self.ring)
-        return NotImplemented
+        return self * scalar
 
     def __truediv__(self, other: "ZmodPoint") -> "ZmodPoint":
         if isinstance(other, self.__class__):

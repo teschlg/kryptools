@@ -150,12 +150,7 @@ class Poly:
         return self.__class__([s + o for s, o in zip(scoeff, ocoeff)], modulus=modulus)
 
     def __radd__(self, other: "Poly") -> "Poly":
-        if not isinstance(other, self.__class__):
-            if self._check_type(other):
-                tmp = self.coeff[:]
-                tmp[0] += other
-                return self.__class__(tmp, modulus=self.modulus)
-        return NotImplemented
+        return self + other
 
     def __neg__(self) -> "Poly":
         return Poly([-s for s in self.coeff], modulus=self.modulus)
@@ -164,34 +159,10 @@ class Poly:
         return self
 
     def __sub__(self, other: "Poly") -> "Poly":
-        if not isinstance(other, self.__class__):
-            if self._check_type(other):
-                tmp = self.coeff[:]
-                tmp[0] -= other
-                return self.__class__(tmp, modulus=self.modulus)
-            return NotImplemented
-        zero = 0 * self.coeff[0]
-        ls, lo = len(self.coeff), len(other.coeff)
-        if ls < lo:
-            scoeff = self.coeff + (lo - ls) * [zero]
-        else:
-            scoeff = self.coeff
-        if ls > lo:
-            ocoeff = other.coeff + (ls - lo) * [zero]
-        else:
-            ocoeff = other.coeff
-        modulus = self.modulus
-        if not modulus and other.modulus:
-            modulus = other.modulus
-        return self.__class__([s - o for s, o in zip(scoeff, ocoeff)], modulus = modulus)
+        return self + (- other)
 
     def __rsub__(self, other: "Poly") -> "Poly":
-        if not isinstance(other, self.__class__):
-            if self._check_type(other):
-                tmp = self.coeff[:]
-                tmp[0] -= other
-                return self.__class__(tmp, modulus=self.modulus)
-        return NotImplemented
+        return (- self) + other
 
     def __mul__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
@@ -214,9 +185,7 @@ class Poly:
         return self.__class__(coeff, modulus = modulus)
 
     def __rmul__(self, other) -> "Poly":
-        if self._check_type(other):
-            return self.__class__([other * s for s in self.coeff], modulus=self.modulus)
-        return NotImplemented
+        return self * other
 
     def __truediv__(self, other) -> "Poly":
         if self._check_type(other):
@@ -287,9 +256,9 @@ class Poly:
             rem = [c * tmp for c in self.coeff]
         else:
             oth = other.coeff
-            rem = [c for c in self.coeff]
+            rem = [c * one for c in self.coeff] # "* 1" is here to make sure we get a copy
         for i in range(sd - od + 1):
-            tmp = rem[sd - i]
+            tmp = rem[sd - i] * one # "* 1" is here to make sure we get a copy
             div[sd - od - i] = tmp
             for j in range(od + 1):
                 rem[sd - i - j] -= tmp * oth[od - j]
@@ -316,7 +285,7 @@ class Poly:
         else:
             oth = other.coeff
         for i in range(sd - od + 1):
-            tmp = self.coeff[sd - i]
+            tmp = self.coeff[sd - i] * one # "* 1" is here to make sure we get a copy
             for j in range(od + 1):
                 self.coeff[sd - i - j] -= tmp * oth[od - j]
         for i in range(len(self.coeff) - 1, 0, -1):
