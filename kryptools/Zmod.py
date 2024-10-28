@@ -30,7 +30,11 @@ class Zmod:
         self.group_order = 0
         self.factors = {} # factoring of the group order
 
-    def __call__(self, x: int):
+    def __call__(self, x: int|list|tuple):
+        if isinstance(x, list):
+            return [ZmodPoint(xx, self) for xx in x]
+        elif isinstance(x, tuple):
+            return (ZmodPoint(xx, self) for xx in x)
         return ZmodPoint(x, self)
 
     def __eq__(self, other):
@@ -76,7 +80,7 @@ class Zmod:
 
     def star(self) -> int:
         """Return a list of all elements of the group Z_n^*."""
-        elements = [ 1 ]
+        elements = [ self(1) ]
         for a in range(2, self.n):
             if gcd(a, self.n) > 1:
                 continue
