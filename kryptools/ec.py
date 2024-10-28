@@ -71,6 +71,10 @@ class EC_Weierstrass():
         return False
 
     def __contains__(self, P: "ECPoint") -> bool:
+        if not isinstance(P, ECPoint) or P.curve != self:
+            return False
+        if P.x == None and P.y == None:
+            return True
         return P.y**2 == P.x**3 + self.a * P.x + self.b
 
     def info(self):

@@ -143,6 +143,8 @@ def carmichael_lambda(n: int) -> int:
     """Carmichael's lambda function of `n`."""
     if not isinstance(n, int) or n < 1:
         raise ValueError(f"{n} is not a positive integer")
+    if n == 1:
+        return 1
     k = factorint(n)
     lam_all = []  # values corresponding to the prime factors
     for p in k:
