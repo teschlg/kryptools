@@ -116,7 +116,7 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
         B2 += B2 & 1
         num_curves *= 2
         D = isqrt(B2)
-        
+
         if verbose:
             print(f"Round {round+1} (B1={B1})")
 

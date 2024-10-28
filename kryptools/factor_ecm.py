@@ -177,4 +177,3 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
 
     if verbose > 1:
         print(f"\nNo factor after trying {curves} curves.")
-

@@ -55,4 +55,3 @@ def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent
         x = randint(1, n - 1)  # new x_0
     if verbose > 1:
         print("")
-

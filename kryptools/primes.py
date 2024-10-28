@@ -72,7 +72,7 @@ def miller_rabin_test(n: int, bases: list[int] | int) -> bool:
         if a == 0:
             continue
         b = pow(a, m, n)
-        if b == 1 or b == n - 1:
+        if b in (1, n - 1):
             continue
         for _ in range(1, k):
             b = pow(b, 2, n)
@@ -154,7 +154,7 @@ def lucas_test(n: int) -> bool:
         return n == 2
     if perfect_square(n) is not None:  # the search for D will not succeed in this case
         return False
-    
+
     # write n = k 2^s - 1
     k = (n + 1) // 2
     s = 1
@@ -163,7 +163,7 @@ def lucas_test(n: int) -> bool:
         s += 1
 
     # Selfridge method for choosing D
-    
+
     D = 5
     while True:
         g = gcd(abs(D), n)
