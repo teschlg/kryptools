@@ -1,5 +1,39 @@
 import pytest
-from kryptools import carmichael_lambda, euler_phi, moebius_mu
+from random import randint, seed
+from math import prod
+from fractions import Fraction
+from kryptools import sieve_eratosthenes, is_prime
+from kryptools import crt, cf, convergents, legendre_symbol, jacobi_symbol, carmichael_lambda, euler_phi, moebius_mu
+seed(0)
+
+def test_crt():
+	primes = sieve_eratosthenes(10)
+	n = prod(primes)
+	for _ in range(3):
+		x = randint(0, n-1)
+		assert x == crt([x % p for p in primes], primes)
+
+def test_cf():
+	for x in (Fraction(21,11), Fraction(11,21), Fraction(1,3)):
+		assert convergents(cf(x))[-1] == x
+
+jacobi_data = (
+	(1, 1), (0, 1, -1, 0), (0, 1, -1, -1, 1, 0), (0, 1, 1, -1, 1, -1, -1, 0),
+	(0, 1, 1, 0, 1, 1, 0, 1, 1, 0), (0, 1, -1, 1, 1, 1, -1, -1, -1, 1, -1, 0),
+	(0, 1, -1, 1, 1, -1, -1, -1, -1, 1, 1, -1, 1, 0),
+	(0, 1, 1, 0, 1, 0, 0, -1, 1, 0, 0, -1, 0, -1, -1, 0),
+	(0, 1, 1, -1, 1, -1, -1, -1, 1, 1, -1, -1, -1, 1, -1, 1, 1, 0) )
+
+def test_jacobi_symbol():
+	for i in range(len(jacobi_data)):
+		n = 2 * i + 1
+		if is_prime(n):
+			for x in range(n+1):
+				assert jacobi_symbol(x, n) == jacobi_data[i][x]
+				assert jacobi_symbol(x, n) == legendre_symbol(x, n)
+		else:
+			for x in range(n+1):
+				assert jacobi_symbol(x, n) == jacobi_data[i][x]
 
 #https://oeis.org/A000010
 OEIS_A000010 = [

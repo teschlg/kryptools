@@ -73,6 +73,8 @@ def convergents(cont_frac: list[int]) -> float:
 
 def legendre_symbol(a: int, p: int) -> int:
     """Compute the Legendre symbol of `a` with respect to the prime `p`."""
+    if not isinstance(p, int) or p < 2:
+        raise ValueError(f"{p} must be a prime.")
     a = a % p
     if a == 0:
         return 0
@@ -81,7 +83,9 @@ def legendre_symbol(a: int, p: int) -> int:
     return -1
 
 def jacobi_symbol(a: int, n: int) -> int:
-    """Compute the Jacobi symbol of `a` with respect to the integer `n`."""
+    """Compute the Jacobi symbol of `a` with respect to the odd integer `n`."""
+    if not isinstance(n, int) or n < 1 or not n % 2:
+        raise ValueError(f"{n} must be a positive odd integer.")
     # Crandall/Pomerance Algorithm 2.3.5
     a = a % n
     t = 1
