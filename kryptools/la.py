@@ -187,12 +187,12 @@ class Matrix:
     def __mul__(self, other) -> "Matrix":
         if isinstance(other, Matrix):
             return self.multiply(other)
-        if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
+        if isinstance(other, Number) or type(other) is type(self.matrix[0][0]):
             return self.__class__([ [item * other for item in row] for row in self.matrix ])
         return NotImplemented
 
     def __rmul__(self, other) -> "Matrix":
-        if isinstance(other, Number) or type(other) == type(self.matrix[0][0]):
+        if isinstance(other, Number) or type(other) is type(self.matrix[0][0]):
             return self.__class__([ [item * other for item in row] for row in self.matrix ])
         return NotImplemented
 

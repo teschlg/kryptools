@@ -226,7 +226,7 @@ def crt(a: list[int], m: list[int], coprime = True) -> int:
                 if g == 1: # moduli are coprime, nothing to be done
                     continue
                 if (a[i] - a[j]) % g:
-                     raise ValueError(f"Congruences not solvable!")
+                     raise ValueError("Congruences not solvable!")
                 for p, k in factorint(g).items():
                     p = p**k #  remove this factor from one of the equations
                     if gcd(m[i] // p, p) == 1:

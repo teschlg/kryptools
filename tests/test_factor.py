@@ -1,5 +1,4 @@
 import pytest
-from math import gcd
 from kryptools import factorint, is_prime
 
 def myprod(factors: dict) -> int:

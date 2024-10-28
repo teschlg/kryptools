@@ -1,5 +1,4 @@
 import pytest
-from math import gcd
 from kryptools import carmichael_lambda, euler_phi, moebius_mu
 
 #https://oeis.org/A000010

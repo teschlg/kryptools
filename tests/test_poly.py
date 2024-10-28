@@ -1,5 +1,4 @@
 import pytest
-from fractions import Fraction
 from kryptools import Poly, Zmod
 
 

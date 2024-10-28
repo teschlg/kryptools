@@ -2,7 +2,7 @@
 Integer factorization: Fermat's method
 """
 
-from math import isqrt, log10, floor, log10
+from math import isqrt, floor, log10
 
 
 def factor_fermat(n: int, maxsteps: int|None = None, verbose: int = 0) -> list:

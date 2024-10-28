@@ -59,7 +59,7 @@ def factor_pm1(n: int, B1: int|None = None, B2: int|None = None, x: int = 2, pm1
     y = pow(x, stage_two_deltas[0], n)
     D = (y - 1) % n
     for k, d in enumerate(stage_two_deltas[1:]):
-        if not d in saved:
+        if d not in saved:
             saved[d] = pow(x, d, n)
         y = y * saved[d] % n
         D = D * (y - 1) % n

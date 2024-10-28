@@ -1,5 +1,4 @@
 import pytest
-from math import gcd
 from kryptools import sieve_eratosthenes, prime_pi, next_prime, previous_prime
 
 
