@@ -13,9 +13,6 @@ Tools for prime numbers:
     random_blumprime(l) find a pseudorandom Blum prime with bit length at least l
     miller_rabin_test(n, b) Miller-Rabin primality test with base b
     lucas_test(n) strong Lucas test
-    perfect_square(n) test if a number is a perfect square
-    perfect_power(n) test if a number is a perfect power
-    iroot(k, n) integer k'th root of n
 """
 from math import isqrt, gcd, floor, ceil
 from random import randint
@@ -110,40 +107,6 @@ def _lucas_sequence(n, D, k):
         Qk %= n
     return U % n, V % n, Qk
 
-
-def perfect_square(n: int) -> int|None:
-    """Returns the root if `n` is a perfect square and None else."""
-    s = isqrt(n)
-    if s*s == n:
-        return s
-
-def iroot(k: int, n: int) -> int:
-    """Compute the integer k'th root of n."""
-    if not isinstance(k, int) or n < 1:
-        raise ValueError(f"{k} is not a positive integer")
-    if k == 1:
-        return n
-    if k == 2:
-        return isqrt(n)
-    r = isqrt(n)
-    while r**k >= n:
-        rr = r
-        r = isqrt(r)
-    r =rr + 1
-    k1 = k-1
-    while rr < r:
-        r = rr
-        rr = (k1 * rr + n // rr ** k1) // k # Newton iteration
-    return r
-
-def perfect_power(n: int) -> tuple|None:
-    """Returns integers `(m, p)` with `m**p == n` if `n` is a perfect power and None else."""
-    for p in sieve_eratosthenes(n.bit_length() - 1):
-        m = iroot(p, n)
-        if pow(m, p) == n:
-            return (m, p)
-
-
 # https://en.wikipedia.org/wiki/Lucas_pseudoprime#Implementing_a_Lucas_probable_prime_test
 
 def lucas_test(n: int) -> bool:
@@ -152,7 +115,8 @@ def lucas_test(n: int) -> bool:
         return False
     if n % 2 == 0:
         return n == 2
-    if perfect_square(n) is not None:  # the search for D will not succeed in this case
+    s = isqrt(n)
+    if s * s == n:  # the search for D will not succeed in this case
         return False
 
     # write n = k 2^s - 1
@@ -189,6 +153,8 @@ def lucas_test(n: int) -> bool:
 
 def is_prime(n: int, trialdivision: bool = True) -> bool:
     """Test if an integer `n` if probable prime."""
+    if not isinstance(n, int) or n < 2:
+        return False
     # Test small primes
     if trialdivision:
         for p in (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,

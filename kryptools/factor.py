@@ -172,16 +172,21 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
 
 def divisors(n:int, proper:bool = False) -> int:
     """Returns an unsorted list of all divisors of an integer `n`."""
+    if not isinstance(n, int):
+        raise ValueError("Number must be an integer!")
+    n = abs(n)
+    if proper:
+        divisors = []
+    else:
+        divisors = [1]
+    if n <= 1:
+        return divisors
     facctordict= factorint(n)
     primes = [p for p in facctordict]
     nprimes = len(primes)
     multiplicites = [facctordict[p] for p in primes]
 
     exponents = [0] * nprimes
-    if proper:
-        divisors = []
-    else:
-        divisors = [1]
     i = 0
     while True:
         exponents[i] += 1
