@@ -9,6 +9,7 @@ Number theory tools:
     euler_phi(n) Euler phi function of n
     carmichael_lambda(n) Carmichael lambda function of n
     moebius_mu(n) Moebius function of n
+    is_carmichael_number(n) tests if a number is a Carmichael number
     order(a, n) oder of a in the multiplicative group Z_n^*
     crt([a1, a2, ...],[m1, m2, ...]) Chinese Remainder Theorem
 """
@@ -173,6 +174,15 @@ def moebius_mu(n: int) -> int:
     if len(factors) % 2 == 1:
         return -1
     return 1
+
+def is_carmichael_number(n: int) -> bool:
+    """Tests if a number is a Carmichael number using Korselt's criterion."""
+    if n < 561:
+        return False
+    factors = factorint(n)
+    if len(factors) == 1:  # prime
+        return False
+    return max(factors.values()) == 1 and not any((n-1) % (p-1) for p in factors)
 
 # Order in Z_p^*
 

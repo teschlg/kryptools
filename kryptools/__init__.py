@@ -8,7 +8,7 @@ __license__ = "MIT License"
 __version__ = "0.9.10"
 __email__ = "Gerald.Teschl@univie.ac.at"
 
-from .nt import egcd, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, euler_phi, carmichael_lambda, moebius_mu, order, crt
+from .nt import egcd, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, euler_phi, carmichael_lambda, moebius_mu, is_carmichael_number, order, crt
 from .primes import sieve_eratosthenes, prime_pi, is_prime, next_prime, previous_prime, random_prime, random_strongprime, is_safeprime, random_safeprime, is_blumprime, random_blumprime, miller_rabin_test, lucas_test
 from .intfuncs import iroot, ilog, perfect_square, perfect_power, prime_power
 from .factor import factorint, divisors

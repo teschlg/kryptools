@@ -3,7 +3,7 @@ from random import randint, seed
 from math import prod
 from fractions import Fraction
 from kryptools import sieve_eratosthenes, is_prime
-from kryptools import crt, cf, convergents, legendre_symbol, jacobi_symbol, carmichael_lambda, euler_phi, moebius_mu
+from kryptools import crt, cf, convergents, legendre_symbol, jacobi_symbol, carmichael_lambda, euler_phi, moebius_mu, is_carmichael_number
 seed(0)
 
 def test_crt():
@@ -68,5 +68,14 @@ def test_moebius_mu():
 	for n in range(1, len(OEIS_A008683)+1):
 		assert moebius_mu(n) == OEIS_A008683[n - 1]
 
+OEIS_A002997 = [ 561, 1105, 1729, 2465, 2821, 6601, 8911, 10585, 15841, 29341, 41041,
+	46657, 52633, 62745, 63973, 75361, 101101, 115921, 126217, 162401, 172081, 188461,
+	252601, 278545, 294409, 314821, 334153, 340561, 399001, 410041, 449065, 488881,
+	512461, 530881, 552721 ]
 
+def test_is_carmichael_number():
+	for n in range(OEIS_A002997[4]+2):
+		assert is_carmichael_number(n) == (n in OEIS_A002997)
+	for n in OEIS_A002997:
+		assert is_carmichael_number(n) == True
 
