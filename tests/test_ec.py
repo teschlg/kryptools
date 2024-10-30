@@ -14,6 +14,8 @@ def test_EC():
 	assert Q in ec
 	assert P + O == P
 	assert O + P == P
+	assert P - P == O
+	assert P + P == 2 * P
 	R = O
 	for i in range(5):
 		assert i * P == R
