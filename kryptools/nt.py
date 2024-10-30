@@ -231,7 +231,12 @@ def crt(a: list[int], m: list[int], coprime = True) -> int:
     if l != len(a):
         raise ValueError("The lists of numbers and modules must have equal length.")
 
-    if not coprime: # make a copy
+    if not coprime:
+        if not all( (isinstance(mi, int) and mi > 1) for mi in m):
+            raise ValueError("Moduli must be positive integers larger than one.")
+        if not all( isinstance(ai, int) for ai in a):
+            raise ValueError("Residues must be integers.")
+        # make a copy
         m = [ mi for mi in m ]
         a = [ ai for ai in a ]
         for i in range(l):

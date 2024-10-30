@@ -60,23 +60,32 @@ def ilog(b: int, n:int) -> int:
 
 def perfect_square(n: int) -> int|None:
     """Returns the root if `n` is a perfect square and None else."""
+    if not isinstance(n, int) or n < 2:
+        return None
     s = isqrt(n)
     if s*s == n:
         return s
 
 def perfect_power(n: int) -> tuple|None:
     """Returns integers `(m, p)` with `m**p == n` if `n` is a perfect power and None else."""
-    if n == 0:
-        return 0, 1
-    if n == 1:
-        return 1, 1
+    if not isinstance(n, int) or abs(n) < 2:
+        return None
+    sign = 1
+    if n < 0:
+        sign = -1
+        n = abs(n)
     for p in sieve_eratosthenes(n.bit_length() - 1):
         m = iroot(p, n)
         if pow(m, p) == n:
-            return m, p
+            if sign == 1:
+                return m, p
+            if p > 2:
+                return -m, p
 
 def prime_power(n: int) -> tuple|None:
     """Returns integers `(p, k)` with `p**k == n` if `n` is a prime power and None else."""
+    if not isinstance(n, int) or n < 2:
+        return None    
     if is_prime(n):
         return (n, 1)
     r = n
@@ -91,7 +100,7 @@ def prime_power(n: int) -> tuple|None:
         while n % p == 0:
             k += 1
             n //= p
-        if k > 1:
+        if k >= 1:
             if n == 1:
                 return (p, k)
             return None

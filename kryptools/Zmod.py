@@ -4,7 +4,7 @@ Ring of intergers modulo `n`.
 
 from math import gcd
 from .factor import factorint
-
+from .intfuncs import prime_power
 
 class Zmod:
     """
@@ -68,8 +68,25 @@ class Zmod:
             self.group_order *= p**k
         return self.group_order
 
-    def generator(self, all = False) -> int:
+    def is_cyclic(self) -> bool:
+        """Test if the group Z_n^* is cyclic."""
+        n = self.n
+        if n < 8:
+            return True
+        if not n % 2:
+            n //= 2
+        if not n % 2:
+            return False
+        if prime_power(n):
+            return True
+        return False
+
+    def generator(self, all = False) -> int|None:
         """Return a generator of the group Z_n^*."""
+        if not self.is_cyclic():
+            if all:
+                return []
+            return None
         for a in range(2, self.n):
             if gcd(a, self.n) > 1:
                 continue

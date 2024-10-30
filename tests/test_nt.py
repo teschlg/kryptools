@@ -1,17 +1,32 @@
 import pytest
 from random import randint, seed
-from math import prod
+from math import prod, lcm
 from fractions import Fraction
 from kryptools import sieve_eratosthenes, is_prime
-from kryptools import crt, cf, convergents, legendre_symbol, jacobi_symbol, carmichael_lambda, euler_phi, moebius_mu, is_carmichael_number
+from kryptools import egcd, crt, cf, convergents, legendre_symbol, jacobi_symbol, carmichael_lambda, euler_phi, moebius_mu, is_carmichael_number
 seed(0)
 
+
+def test_egcd():
+	for a in range(100):
+		for b in range(100):
+			g, x, y = egcd(a, b)
+			assert x * a + y * b == g
+
 def test_crt():
-	primes = sieve_eratosthenes(10)
+	maxsize = 1000
+	numtests = 100
+	primes = sieve_eratosthenes(11)
 	n = prod(primes)
-	for _ in range(3):
+	for _ in range(numtests):
 		x = randint(0, n-1)
 		assert x == crt([x % p for p in primes], primes)
+	for _ in range(numtests):
+		m = []
+		for _ in range(10):
+			m.append(randint(2, maxsize))
+		M = lcm(*m)
+		x = randint(0, M-1)
 
 def test_cf():
 	for x in (Fraction(21,11), Fraction(11,21), Fraction(1,3)):
