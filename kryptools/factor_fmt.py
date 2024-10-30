@@ -7,6 +7,8 @@ from math import isqrt, floor, log10
 
 def factor_fermat(n: int, maxsteps: int|None = None, verbose: int = 0) -> list:
     """Find factors of n using the method of Fermat."""
+    if not isinstance(n, int) or n < 1:
+        raise ValueError("Number to be factored must be a positive integer!")
     if verbose:
         print(f"Factoring (Fermat): {n} ({floor(log10(n)) + 1} digits)")
     factors = []
@@ -19,6 +21,8 @@ def factor_fermat(n: int, maxsteps: int|None = None, verbose: int = 0) -> list:
         while n % p == 0:
             factors.append(p)
             n //= p
+    if n == 1:
+        return factors
     start = isqrt(n - 1) + 1
     step, mod = parameters[n % 24]
     start += (mod - start) % step
