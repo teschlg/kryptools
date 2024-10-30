@@ -25,6 +25,8 @@ class Zmod:
     """
 
     def __init__(self, n: int, short: bool = True):
+        if not isinstance(n, int) or n < 1:
+            raise ValueError(f"{n} is not a positive integer.")
         self.n = n
         self.short = short
         self.group_order = 0

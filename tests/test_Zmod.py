@@ -1,9 +1,9 @@
 import pytest
 from math import gcd
-from kryptools import Zmod
+from kryptools import Zmod, euler_phi
 
-def test_Zmod():
-	for n in [5, 6]:
+def test_Zmod_ops():
+	for n in range(2, 10):
 		Z_n = Zmod(n)
 		for a in range(n):
 			aa = Z_n(a)
@@ -28,6 +28,7 @@ def test_Zmod():
 				if gcd(b, n) == 1:
 					assert aa / bb == Z_n( a * pow(b, -1, n) )
 
+def test_Zmod_methods():
 	Z_5 = Zmod(5)
 	assert Z_5(3).order() == 4
 	assert Z_5(1).is_generator() == False
@@ -49,3 +50,8 @@ def test_Zmod():
 	assert Z_6.generator(all = True) == Z_6([5])
 	assert Z_6.star() == Z_6([1, 5])
 	assert str(Z_6(3)) == "3"
+
+def test_Zmod_order():
+	for n in range(2,10):
+		Z_n = Zmod(n)
+		assert Z_n.order() == euler_phi(n)
