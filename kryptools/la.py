@@ -69,7 +69,7 @@ class Matrix:
         if isinstance(item, int):
             i, j = divmod(item, self.cols)
             return self.matrix[i][j]
-        return self.__class__([self.matrix[k // self.cols][k % self.cols] for k in range(self.cols * self.rows)[item]])
+        return [self.matrix[k // self.cols][k % self.cols] for k in range(self.cols * self.rows)[item]]
 
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
