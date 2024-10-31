@@ -8,8 +8,9 @@ seed(0)
 
 
 def test_egcd():
-	for a in range(100):
-		for b in range(100):
+	maxsize = 100
+	for a in range(maxsize):
+		for b in range(maxsize):
 			g, x, y = egcd(a, b)
 			assert x * a + y * b == g
 
