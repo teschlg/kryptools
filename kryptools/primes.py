@@ -77,7 +77,7 @@ def miller_rabin_test(n: int, bases: list[int] | int) -> bool:
                 return False
             if b == 1:  # 1 before -1
                 return False
-            if b == n - 1:
+            if b == n - 1:  # -1 found
                 break
         else: # no -1 found
             return False
