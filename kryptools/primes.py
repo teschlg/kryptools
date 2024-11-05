@@ -217,10 +217,16 @@ def previous_prime(n: int) -> int:
 
 def random_prime(l: int) -> int:
     """Find a pseudorandom prime with bit length at least `l`."""
-    return next_prime(randint(2 ** (l - 1), 2**l - 1))
+    l = max(2, int(l))
+    while True:
+        r = randint(2 ** (l - 1), 2**l - 1)
+        r |= 1  # make sure r is odd
+        if is_prime(r):
+            return r
 
 def random_strongprime(l: int) -> int:
     """Find a pseudorandom strong prime with bit length at least `l` using Gordon's algorithm."""
+    l = max(2, int(l))
     t = random_prime(l)
     s = random_prime(l)
     u = 2 * t
@@ -236,16 +242,18 @@ def random_strongprime(l: int) -> int:
 
 def random_safeprime(l: int) -> int:
     """Find a pseudorandom safe prime with bit length at least `l` and `ord(2)=(p-1)/2`."""
-    p = randint(2 ** (l - 1), 2**l - 1)
-    p = p - (p % 24) + 23  # make sure p % 24 = 23
-    while not is_safeprime(p):
-        p += 24
-    return p
+    l = max(2, int(l))
+    while True:
+        r = randint(2 ** (l - 1), 2**l - 1)
+        r = r - (r % 24) + 23  # make sure p % 24 = 23
+        if is_safeprime(r):
+            return r
 
 def random_blumprime(l: int) -> int:
     """Find a pseudorandom Blum prime with bit length at least `l`."""
-    p = randint(2 ** (l - 1), 2**l - 1)
-    p = p - (p % 4) + 3  # make sure p % 4 = 3
-    while not is_prime(p):
-        p += 4
-    return p
+    l = max(2, int(l))
+    while True:
+        r = randint(2 ** (l - 1), 2**l - 1)
+        r = r - (r % 4) + 3  # make sure p % 4 = 3
+        if is_prime(r):
+            return r

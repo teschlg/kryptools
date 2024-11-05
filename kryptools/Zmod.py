@@ -13,15 +13,15 @@ class Zmod:
     Example:
     
     To define a finite Galois field modulo the prime 5 use
-    >>> gf=Zmod(5)
+    >>> Z_5=Zmod(5)
     
     To declare 3 as an element of our Galois filed use
-    >>> gf(3)
-    3 (mod 5)
+    >>> Z_5(3)
+    3
 
     The usual arithmetic operations are supported.
-    >>> gf(2) + gf(3)
-    0 (mod 5)
+    >>> Z_5(2) + Z_5(3)
+    0
     """
 
     def __init__(self, n: int, short: bool = True):

@@ -17,6 +17,9 @@ class Matrix:
     [1, 2]
     [3, 4]
     """
+    print_pre = "[ "
+    print_post= " ]"
+    print_sep = ", "
     def __init__(self, matrix, ring = None):
         if not isinstance(matrix[0], list|tuple):
             matrix = [ [x] for x in matrix ]
@@ -30,7 +33,7 @@ class Matrix:
             self.map(ring)
 
     def __repr__(self) -> str:
-        out = ["[ "] * self.rows
+        out = [self.__class__.print_pre] * self.rows
         for j in range(self.cols):
             tmp = [ "" ] * self.rows
             max_len = 0
@@ -40,9 +43,9 @@ class Matrix:
             for i in range(self.rows):
                 out[i] += " " * (max_len - len(tmp[i])) + tmp[i]
                 if j < self.cols - 1:
-                    out[i] += ", "
+                    out[i] += self.__class__.print_sep
         for i in range(self.rows):
-            out[i] += " ]"
+            out[i] += self.__class__.print_post
         return '\n'.join(out)
 
     def __len__(self):

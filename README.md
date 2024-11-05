@@ -7,6 +7,9 @@ you are welcome to read (and modify) the source. Any suggestions on how to make 
 code more readable or make it better are welcome. However, my main goal is to keep
 it simple and readability will be preferred over small speed improvements.
 
+> **Warning**
+> These tools are intended for experimenting with cryptographic algorithms. They are not intended for use in real applications.
+
 It does not require any external libraries.
 
 The tools contained are:

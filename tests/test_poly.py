@@ -1,5 +1,5 @@
 import pytest
-from kryptools import Poly, Zmod
+from kryptools import Poly, Zmod, GF2
 
 
 def test_Poly():
@@ -13,3 +13,8 @@ def test_Poly():
 	q.map(Z_5)
 	d, m = q.divmod(p)
 	assert d * p + m == q
+	
+	gf = GF2(8)
+	p = Poly([2, 1, 1, 3], modulus = [1, 0, 0, 0, 1], ring=gf)
+	q = p.inv()
+	assert p * q == Poly([1], modulus = [1, 0, 0, 0, 1], ring=gf)
