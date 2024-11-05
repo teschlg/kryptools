@@ -22,6 +22,6 @@ def test_EC():
 		R += P
 	assert P + Q == Q + P
 	assert Q.order() * Q == O
-	k = randint(1, ec.order())
+	k = randint(1, Q.order())
 	R = k * Q
 	assert R.dlog(Q) == k
