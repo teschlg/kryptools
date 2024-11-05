@@ -11,8 +11,8 @@ seed(0)
 def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int = 0) -> int:
     """Compute the discrete log_a(b) in Z_p of an element a of prime order m using Index Calculus."""
 
-    # assert isprime(m), "The order of a must be prime."
-    # assert n_order(a, n) == m, "The order of a is incorrect."
+    # assert is_prime(m), "The order of a must be prime."
+    # assert order(a, n) == m, "The order of a is incorrect."
     # assert pow(b, m, n) == 1, "The DLP is not solvable."
 
     def find_relation(include_b: bool) -> None or list:

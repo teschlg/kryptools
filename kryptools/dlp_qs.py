@@ -24,7 +24,7 @@ def determine_factorbound(n: int) -> (int, int):
     return B, expected_trys, expected_trys2
 
 def determine_trialdivison_bounds(B: int, factorbase: list) -> (int, int):
-    """Determine the parameters for speeing up trial division."""
+    """Determine the parameters for speeding up trial division."""
     if B < 12:
         return len(factorbase), None
     pollard_k = 1  # guess for the order to be used in the Pollard p-1 test
@@ -67,8 +67,8 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
     Compute the discrete log_a(b) in Z_p of an element a of prime order m using Index Calculus with a quadratic sieve.
     The problem is assumed solvable.
     """
-    # assert isprime(m), "The order of a must be prime."
-    # assert n_order(a, n) == m, "The order of a is incorrect."
+    # assert is_prime(m), "The order of a must be prime."
+    # assert order(a, n) == m, "The order of a is incorrect."
     # assert pow(b, m, n) == 1, "The DLP is not solvable."
 
     def find_relation(include_b: bool) -> None or list:
