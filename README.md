@@ -25,6 +25,7 @@ The tools contained are:
 * Matrix: a class for Matrices (inverse, det, reduced echelon form, etc.)
 * Poly: a class for polynomials (division, modulo)
 * Zmod: a class for the ring of integers modulo an integer
+* GF2: a class for Galois fields GF(2^n)
 
 Documentation can be found in the jupyter notebook
 (mostly done, but might not contain everything: use the force, read the source).
