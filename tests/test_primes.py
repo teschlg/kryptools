@@ -1,7 +1,7 @@
 import pytest
 from math import isqrt
 from random import randint, seed
-from kryptools import sieve_eratosthenes, prime_pi, next_prime, previous_prime, is_prime, is_safeprime, is_blumprime
+from kryptools import sieve_eratosthenes, prime_pi, next_prime, previous_prime, next_safeprime, previous_safeprime, is_prime, is_safeprime, is_blumprime
 from kryptools import miller_rabin_test, lucas_test, random_prime, random_safeprime, random_blumprime, random_strongprime
 seed(0)
 
@@ -46,6 +46,8 @@ assert [ p for p in range(OEIS_A000010[-1]+1) if prime_test[p] ] == OEIS_A000010
 def test_sieve_eratosthenes():
 	for i, p in enumerate(sieve_eratosthenes(OEIS_A000010[-1])):
 		assert p == OEIS_A000010[i]
+		assert previous_prime(p) == p
+		assert next_prime(p) == p
 		if i > 0:
 			assert previous_prime(p-1) == OEIS_A000010[i-1]
 		if i < len(OEIS_A000010) - 1:
@@ -74,8 +76,14 @@ OEIS_A005385 = [ 5, 7, 11, 23, 47, 59, 83, 107, 167, 179, 227, 263, 347, 359, 38
 def test_is_safeprime():
 	for n in range(OEIS_A005385[-1]+1):
 		assert is_safeprime(n) == (n in OEIS_A005385)
-	for n in OEIS_A005385:
-		assert is_safeprime(n) == True
+	for i, p in enumerate(OEIS_A005385):
+		assert is_safeprime(p) == True
+		assert previous_safeprime(p) == p
+		assert next_safeprime(p) == p
+		if i > 0:
+			assert previous_safeprime(p-1) == OEIS_A005385[i-1]
+		if i < len(OEIS_A005385) - 1:
+			assert next_safeprime(p+1) == OEIS_A005385[i+1]
 
 #https://oeis.org/A014233
 OEIS_A014233 = [ 2047, 1373653, 25326001, 3215031751, 2152302898747, 3474749660383,

@@ -5,6 +5,8 @@ Tools for prime numbers:
     is_prime(n) test if n is probably prime
     next_prime(n) find the next prime larger or equal n
     previous_prime(n) find the previous prime smaller or equal n
+    next_safeprime(n) find the next safe prime larger or equal n
+    previous_safeprime(n) find the previous safe prime smaller or equal n
     random_bitlength(l) return a random number with bit lenght l
     random_prime(l) return a random prime with bit length l
     random_strongprime(l) return a random strong prime with factors of bit length l
@@ -188,7 +190,9 @@ def is_prime(n: int, trialdivision: bool = True) -> bool:
 
 def is_safeprime(p: int) -> bool:
     """Tests if a number is a safe prime."""
-    return is_prime(p) and is_prime((p - 1) // 2)
+    if p < 107:
+        return p in (5, 7, 11, 23, 47, 59, 83)
+    return p % 12 == 11 and is_prime(p) and is_prime((p - 1) // 2)
 
 def is_blumprime(p: int) -> bool:
     """Tests if a number is a Blum prime."""
@@ -216,6 +220,30 @@ def previous_prime(n: int) -> int:
     n += (n & 1) - 1  # make sure n is odd
     while not is_prime(n):
         n -= 2
+    return n
+
+def next_safeprime(n: int) -> int:
+    """Find the next safe prime larger or equal `n`."""
+    if n < 6:
+        return 5
+    if n < 8:
+        return 7
+    n = n - (n % 12) + 11  # make sure p % 12 = 11
+    while not is_safeprime(n):
+        n += 12
+    return n
+
+def previous_safeprime(n: int) -> int:
+    """Find the previous safe prime smaller or equal `n`."""
+    if n < 7:
+        return 5
+    if n < 11:
+        return 7
+    tmp = (n % 12) + 1
+    if tmp != 12:
+        n = n - tmp  # make sure p % 12 = 11
+    while not is_safeprime(n):
+        n -= 12
     return n
 
 def random_bitlength(l: int) -> int:
