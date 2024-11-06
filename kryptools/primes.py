@@ -5,18 +5,21 @@ Tools for prime numbers:
     is_prime(n) test if n is probably prime
     next_prime(n) find the next prime larger or equal n
     previous_prime(n) find the previous prime smaller or equal n
-    random_prime(l) find a pseudorandom prime with bit length at least l
-    random_strongprime(l) find a pseudorandom strong prime with bit length at least l
+    random_bitlength(l) return a random number with bit lenght l
+    random_prime(l) return a random prime with bit length l
+    random_strongprime(l) return a random strong prime with factors of bit length l
     is_safeprime(n) test if n is a safe prime
-    random_safeprime(l) find a pseudorandom safe prime with bit length at least l and ord(2)=(p-1)/2
+    random_safeprime(l) return a random safe prime with bit length l and ord(2)=(p-1)/2
     is_blumprime(n) test if n is a Blum prime
-    random_blumprime(l) find a pseudorandom Blum prime with bit length at least l
+    random_blumprime(l) return a random Blum prime with bit length l
     miller_rabin_test(n, b) Miller-Rabin primality test with base b
     lucas_test(n) strong Lucas test
 """
 from math import isqrt, gcd, floor, ceil
-from random import randint
+#from random import getrandbits as randbits
+from secrets import randbits
 from .nt import jacobi_symbol
+
 
 # Erathostenes
 
@@ -215,45 +218,50 @@ def previous_prime(n: int) -> int:
         n -= 2
     return n
 
+def random_bitlength(l: int) -> int:
+    "Return a random number with bit lenght `l`."
+    l = max(2, l)
+    return randbits(l-1) | (1 << l-1)
+
 def random_prime(l: int) -> int:
-    """Find a pseudorandom prime with bit length at least `l`."""
+    """Find a random prime with bit length `l`."""
     l = max(2, int(l))
     while True:
-        r = randint(2 ** (l - 1), 2**l - 1)
+        r = random_bitlength(l)
         r |= 1  # make sure r is odd
         if is_prime(r):
             return r
 
 def random_strongprime(l: int) -> int:
-    """Find a pseudorandom strong prime with bit length at least `l` using Gordon's algorithm."""
+    """Find a random strong prime with factors of bit length `l` using Gordon's algorithm."""
     l = max(2, int(l))
     t = random_prime(l)
     s = random_prime(l)
     u = 2 * t
-    uu = u * randint(1, 100)
+    uu = u
     while not is_prime(uu + 1):
         uu += u
     r = uu + 1
     u = 2 * r * s
-    uu = u * randint(1, 100) + 2 * s * pow(s, r - 2, r) - 1
+    uu = u + 2 * s * pow(s, r - 2, r) - 1
     while not is_prime(uu):
         uu += u
     return t, s, r, uu
 
 def random_safeprime(l: int) -> int:
-    """Find a pseudorandom safe prime with bit length at least `l` and `ord(2)=(p-1)/2`."""
+    """Find a random safe prime with bit length `l` and `ord(2)=(p-1)/2`."""
     l = max(2, int(l))
     while True:
-        r = randint(2 ** (l - 1), 2**l - 1)
+        r = random_bitlength(l)
         r = r - (r % 24) + 23  # make sure p % 24 = 23
         if is_safeprime(r):
             return r
 
 def random_blumprime(l: int) -> int:
-    """Find a pseudorandom Blum prime with bit length at least `l`."""
+    """Find a random Blum prime with bit length `l`."""
     l = max(2, int(l))
     while True:
-        r = randint(2 ** (l - 1), 2**l - 1)
+        r = random_bitlength(l)
         r = r - (r % 4) + 3  # make sure p % 4 = 3
         if is_prime(r):
             return r
