@@ -1,7 +1,8 @@
 import pytest
 from math import isqrt
 from random import randint, seed
-from kryptools import sieve_eratosthenes, prime_pi, next_prime, previous_prime, is_prime, is_safeprime, miller_rabin_test, lucas_test
+from kryptools import sieve_eratosthenes, prime_pi, next_prime, previous_prime, is_prime, is_safeprime, is_blumprime
+from kryptools import miller_rabin_test, lucas_test, random_prime, random_safeprime, random_blumprime, random_strongprime
 seed(0)
 
 def sieve(max: int) -> list:
@@ -111,3 +112,31 @@ def test_lucas():
 	for m in range(2, OEIS_A217255[30]+1):
 		if not (lucas_test(m) == prime_test[m]):
 			assert m in OEIS_A217255
+
+def test_random_prime():
+	bitlen = 256
+	for _ in range(100):
+		p = random_prime(bitlen)
+		assert is_prime(p)
+		assert p.bit_length() == bitlen
+
+bitlen = 256
+
+def test_random_safeprime():
+	for _ in range(10):
+		p = random_safeprime(bitlen)
+		assert is_safeprime(p)
+		assert p.bit_length() == bitlen
+
+def test_random_blumprime():
+	for _ in range(10):
+		p = random_safeprime(bitlen)
+		assert is_blumprime(p)
+		assert p.bit_length() == bitlen
+
+def test_random_strongprime():
+	for _ in range(10):
+		t, s, r, p = random_strongprime(bitlen)
+	assert is_prime(p) and is_prime(t) and is_prime(s) and is_prime(r)
+	assert (p + 1) % s == 0 and (p - 1) % r == 0 and (r - 1) % t == 0
+	assert p.bit_length() >= bitlen
