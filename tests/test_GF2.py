@@ -26,7 +26,7 @@ def PolyAES(c: list) -> "Poly":
 
 
 def test_GF2_ops():
-	gf = GF2(8)
+	gf = GF2(8, poly = 0b100011011)
 	for _ in range(100):
 		a = randint(0, gf.order)
 		b = randint(0, gf.order)

@@ -4,13 +4,6 @@ Polynomials
 
 from numbers import Number
 
-display_reversed = True
-
-def poly_style_reversed(value: bool = True) -> None:
-    "Change the order of the coefficients when displaying polynomials."
-    global display_reversed
-    display_reversed = value
-
 
 class Poly:
     """
@@ -22,6 +15,8 @@ class Poly:
     >>> Poly([1, 2, 3])
     3 x^2 + 2 x + 1
     """
+
+    print_reversed = True
 
     def __init__(self, coeff: list, ring = None, modulus: list = None):
         self.coeff = list(coeff)
@@ -61,7 +56,7 @@ class Poly:
         plus = ""
         tmp = ""
         coef_range = range(len(self.coeff))
-        if display_reversed:
+        if self.__class__.print_reversed:
             coef_range = reversed(coef_range)
         for i in coef_range:
             s = self.coeff[i]

@@ -17,9 +17,11 @@ class Matrix:
     [1, 2]
     [3, 4]
     """
+
     print_pre = "[ "
     print_post= " ]"
     print_sep = ", "
+
     def __init__(self, matrix, ring = None):
         if not isinstance(matrix[0], list|tuple):
             matrix = [ [x] for x in matrix ]

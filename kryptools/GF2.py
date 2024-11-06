@@ -3,20 +3,26 @@ Galois field GF(2^n).
 """
 
 from types import new_class
+from .conway_polynomials import conway_polynomials2
 
 class GF_2:
     "Represents a point in the Galois field GF(2^n)."
     poly = 0
     power = 0
     order = 0
-    hex = True
+    print_hex = True
     bitreversed = False
 
     def __init__(self, x: int):
+        if isinstance(x, bytes|bytearray):
+            x = int.from_bytes(x, byteorder="big")
         self.x = int(x) % self.__class__.order
 
     def __repr__(self):
-        return format(self.x, "0"+str(self.__class__.power // 4)+"x")
+        if self.__class__.print_hex:
+            return format(self.x, "0"+str(self.__class__.power // 4)+"x")
+        else:
+            return self.x
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.x == other.x
@@ -93,7 +99,10 @@ class GF_2:
             return NotImplemented
         if not(self.x) and j < 0:
             raise ValueError("Division by zero.")
-        res = self.__class__(1)
+        if self.__class__.bitreversed:
+            res = self.__class__(self.__class__.order >> 1)
+        else:
+            res = self.__class__(1)
         x = self.__class__(self.x)
         j %= self.__class__.order - 1
         while j > 0:
@@ -145,14 +154,9 @@ def GF2(n: int, poly: int|None = None):
     15
 
     """
-    polys = {
-        8: 0b100011011,  # 1 + x + x^3 + x^4 + x^8 = AES
-        64: 0b1111111111 << 54,  # 1 + x + x^3 + x^4 + x^5 + x^6 + x^7 + x^8 + x^9 (+ x^64)
-        128: 0b11100001 << 120  # 1 + x + x^2 + x^7 (+ x^128) = Ghash
-    }
     if not poly:
         try:
-            poly = polys[n]
+            poly = conway_polynomials2[n]
         except:
             raise ValueError("Unknown power. Please specify a polynomial.")
 
