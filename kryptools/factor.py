@@ -177,11 +177,11 @@ def divisors(n:int, proper:bool = False) -> int:
         raise ValueError("Number must be an integer!")
     n = abs(n)
     if proper:
-        divisors = []
+        divisor_list = []
     else:
-        divisors = [1]
+        divisor_list = [1]
     if n <= 1:
-        return divisors
+        return divisor_list
     facctordict= factorint(n)
     primes = [p for p in facctordict]
     nprimes = len(primes)
@@ -200,7 +200,7 @@ def divisors(n:int, proper:bool = False) -> int:
         d = prod(primes[i] ** exponents[i] for i in range(nprimes))
         if d == n:
             if proper:
-                return divisors
-            divisors.append(n)
-            return divisors
-        divisors.append(d)
+                return divisor_list
+            divisor_list.append(n)
+            return divisor_list
+        divisor_list.append(d)

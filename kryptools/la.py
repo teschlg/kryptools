@@ -111,10 +111,10 @@ class Matrix:
             return False
         if self.rows != other.rows or self.cols != other.cols:
             return False
-        return any([self[i] == other[i] for i in range(self.rows * self.cols)])
+        return any(self[i] == other[i] for i in range(self.rows * self.cols))
 
     def __bool__(self):
-        return any([bool(self[i]) for i in range(self.rows * self.cols)])
+        return any(bool(self[i]) for i in range(self.rows * self.cols))
 
     def map(self, func):
         "Apply a function to all elements in place."
@@ -277,7 +277,7 @@ class Matrix:
             if isinstance(i, int) or (isinstance(i, Fraction) and i.denominator == 1):
                 return True
             return False
-        return all([is_integer(i) for i in self]) and self.det()**2 == 1
+        return all(is_integer(i) for i in self) and self.det()**2 == 1
 
     def zeros(self, m: int = None, n: int = None):
         "Returns a zero matrix of the same dimension."

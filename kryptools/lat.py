@@ -89,7 +89,7 @@ def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
 
 def babai_round_bnd(U: Matrix) -> float:
     "Bound for Babai's rounding algorithm for solving the CVPwith respect to the sup norm."
-    return floor(1 / (2 * max([U.inv()[i, :].norm(1) for i in range(U.rows)])))
+    return floor(1 / (2 * max(U.inv()[i, :].norm(1) for i in range(U.rows))))
 
 
 def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
@@ -104,7 +104,7 @@ def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
 def babai_plane_bnd(U: Matrix, p=2) -> float:
     "Bound for Babai's closest plane algorithm for solving the CVP with respect to the Euclidean norm (p=2) or sup norm (p=inf)."
     Us = gram_schmidt(U)[0]
-    return float(0.5 * min([Us[:, i].norm(p) for i in range(Us.rows)]))
+    return float(0.5 * min(Us[:, i].norm(p) for i in range(Us.rows)))
 
 
 def lagrange_lr(V: Matrix) -> Matrix:
@@ -196,10 +196,10 @@ def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = None) 
     for _ in range(iterations):
         i, j = sample(range(n), 2)
         tmp = W[i, :] + choice([-1, 1]) * W[j, :]
-        if not max_val or max([abs(x) for x in tmp]) <= max_val:
+        if not max_val or max(abs(x) for x in tmp) <= max_val:
             W[i, :] = tmp
         i, j = sample(range(n), 2)
         tmp = W[:, i] + choice([-1, 1]) * W[:, j]
-        if not max_val or max([abs(x) for x in tmp]) <= max_val:
+        if not max_val or max(abs(x) for x in tmp) <= max_val:
             W[:, i] = tmp
     return W

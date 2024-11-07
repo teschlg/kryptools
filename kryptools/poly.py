@@ -168,11 +168,7 @@ class Poly:
         ls, lo = len(self.coeff), len(other.coeff)
         coeff = [None] * (ls + lo - 1)
         for k in range(ls + lo - 1):
-            coeff[k] = sum(
-                [
-                    self.coeff[j] * other.coeff[k - j]
-                    for j in range(max(0, k - lo + 1), min(ls, k + 1))
-                ], start=zero)
+            coeff[k] = sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0, k - lo + 1), min(ls, k + 1))), start=zero)
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
@@ -218,11 +214,11 @@ class Poly:
 
     def max(self) -> int:
         "Maximum of the absolute value of all coefficients."
-        return max([abs(c) for c in self.coeff])
+        return max(abs(c) for c in self.coeff)
 
     def sum(self) -> int:
         "Sum of the absolute value of all coefficients."
-        return sum([abs(c) for c in self.coeff])
+        return sum(abs(c) for c in self.coeff)
 
     def __floordiv__(self, other: "Poly") -> "Poly":
         return self.divmod(other)[0]

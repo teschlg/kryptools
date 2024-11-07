@@ -36,7 +36,7 @@ class Zmod:
     def __call__(self, x: int | list | tuple):
         if isinstance(x, list):
             return [ZmodPoint(xx, self) for xx in x]
-        elif isinstance(x, tuple):
+        if isinstance(x, tuple):
             return (ZmodPoint(xx, self) for xx in x)
         return ZmodPoint(x, self)
 

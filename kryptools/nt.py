@@ -97,7 +97,7 @@ def jacobi_symbol(a: int, n: int) -> int:
         while a % 2 == 0:
             a //= 2
             tmp = n % 8
-            if tmp == 3 or tmp == 5:
+            if tmp in (3, 5):
                 t *= -1
         a, n = n, a
         if a % 4 == 3 and n % 4 == 3:
@@ -111,7 +111,7 @@ def jacobi_symbol(a: int, n: int) -> int:
 def sqrt_mod(a: int, p: int) -> int:
     """Compute a square root of `a` modulo `p` unsing Cipolla's algorithm."""
     a %= p
-    if a == 0 or a == 1:
+    if a in (0, 1):
         return a
     if pow(a, (p - 1) // 2, p) != 1:  # Legendre symbol must be equal one
         return None
