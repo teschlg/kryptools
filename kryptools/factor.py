@@ -26,13 +26,13 @@ def _factor_fermat(n: int, maxsteps: int = 10, verbose: int = 0) -> list:
     step, mod = parameters[n % 24]
     start += (mod - start) % step
     if verbose > 1:
-        print("Working ", end= "")
+        print("Working ", end="")
     maxa = (n + 9) // 6 + 1
     if maxsteps:
         maxa = min(maxa, start + maxsteps * step + 1)
     for a in range(start, maxa, step):
         if verbose > 1:
-            print(".", end= "")
+            print(".", end="")
         b = isqrt(a * a - n)
         if b * b == a * a - n:
             if verbose > 1:
@@ -40,6 +40,7 @@ def _factor_fermat(n: int, maxsteps: int = 10, verbose: int = 0) -> list:
             return a - b
     if verbose > 1:
         print("")
+
 
 def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
     "Factor an ineger `n` into prime factors."
@@ -59,7 +60,7 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
         for m in mm:
             if m in prime_factors:
                 prime_factors[m] += k
-            elif is_prime(m, trialdivision = False):
+            elif is_prime(m, trialdivision=False):
                 prime_factors[m] = k
             else:
                 if m in remaining_factors:
@@ -85,10 +86,10 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
         return prime_factors
     if verbose:
         print("Trial division found:", list(prime_factors))
-    if is_prime(n, trialdivision = False):
+    if is_prime(n, trialdivision=False):
         prime_factors[n] = 1
         return prime_factors
-    remaining_factors = { n: 1 }
+    remaining_factors = {n: 1}
 
     # https://gitlab.inria.fr/zimmerma/ecm/
     ECM_PARAMETERS = [
@@ -121,8 +122,8 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
             print(f"Round {round+1} (B1={B1})")
 
         primes = sieve_eratosthenes(B1 - 1 + ((B2 - B1 + 1) // (2 * D) + 1) * 2 * D)
-        pm1_parameters = tuple([10 * B1, B2] + list(_pm1_parameters(10 * B1, B2, primes = primes)))
-        ecm_parameters = tuple([B1, B2, num_curves] + list(_ecm_parameters(B1, B2, D, primes = primes)))
+        pm1_parameters = tuple([10 * B1, B2] + list(_pm1_parameters(10 * B1, B2, primes=primes)))
+        ecm_parameters = tuple([B1, B2, num_curves] + list(_ecm_parameters(B1, B2, D, primes=primes)))
 
         methods = {_factor_fermat: "fmt", factor_pm1: "pm1", factor_ecm: "ecm"}  #, factor_qs: "qs"}
         while remaining_factors:
@@ -131,18 +132,18 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
                 factors = list(remaining_factors)
                 for m in factors:
                     if method == _factor_fermat:
-                        tmp = _factor_fermat(m, maxsteps = fermat_steps, verbose = max(0, verbose - 1))
+                        tmp = _factor_fermat(m, maxsteps=fermat_steps, verbose=max(0, verbose - 1))
                     elif method == factor_pm1:
-                        tmp = factor_pm1(m, pm1_parameters = pm1_parameters, verbose = max(0, verbose - 1))
+                        tmp = factor_pm1(m, pm1_parameters=pm1_parameters, verbose=max(0, verbose - 1))
                     elif method == factor_ecm:
-                        tmp = factor_ecm(m, ecm_parameters = ecm_parameters, verbose = max(0, verbose - 1))
+                        tmp = factor_ecm(m, ecm_parameters=ecm_parameters, verbose=max(0, verbose - 1))
                     else:
-                        tmp = method(m, verbose = max(0, verbose - 1))
+                        tmp = method(m, verbose=max(0, verbose - 1))
                     if tmp:
                         tmp2 = m // tmp
                         g = gcd(tmp, tmp2)
                         if g > 1:
-                            tmp3 = [ g, g ]
+                            tmp3 = [g, g]
                             for x in (tmp, tmp2):
                                 x //= g
                                 while x % g == 0:

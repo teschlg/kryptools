@@ -7,6 +7,7 @@ from fractions import Fraction
 from random import choice, sample
 from .la import Matrix, zeros
 
+
 def hermite_nf(M: Matrix) -> Matrix:
     "Compute the Hermite normal form of a matrix M."
     n, m = M.cols, M.rows
@@ -44,13 +45,15 @@ def hermite_nf(M: Matrix) -> Matrix:
         j -= 1
         if j < 0:
             break
-    while H.cols> 1 and all(not H[i, 0] for i in range(m)): # remove zero columns
-        H = H[:,1:]
+    while H.cols > 1 and all(not H[i, 0] for i in range(m)):  # remove zero columns
+        H = H[:, 1:]
     return H
+
 
 def norm2(v: Matrix) -> float:
     "Square of the Euclidean norm of a vector v."
     return sum(map(lambda x: x * x, v))
+
 
 def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
     "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
@@ -64,15 +67,18 @@ def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
         Us[:, j] = tmp
     return Us, M
 
+
 def gram_det(U: Matrix) -> float:
     "Compute the Gram determinant of a matrix."
     Us = gram_schmidt(U)[0]
     return prod([Us[:, i].norm() for i in range(U.rows)])
 
+
 def hadamard_ratio(M: Matrix) -> float:
     "Compute the Hadamard ratio of a matrix."
     m = M.rows
     return (gram_det(M) / prod([M[:, i].norm() for i in range(m)])) ** (1 / m)
+
 
 def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
     "Babai's rounding algorithm for approximately solving the CVP."
@@ -80,9 +86,11 @@ def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
     k = s.applyfunc(round)
     return U * k
 
+
 def babai_round_bnd(U: Matrix) -> float:
     "Bound for Babai's rounding algorithm for solving the CVPwith respect to the sup norm."
-    return floor(1 / (2 * max([ U.inv()[i,:].norm(1) for i in range(U.rows)])))
+    return floor(1 / (2 * max([U.inv()[i, :].norm(1) for i in range(U.rows)])))
+
 
 def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
     "Babai's closest plane algorithm for approximately solving the CVP."
@@ -92,10 +100,12 @@ def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
         y = y - round(y.dot(Us[:, k]) / norm2(Us[:, k])) * U[:, k]
     return (x - y).applyfunc(round)
 
-def babai_plane_bnd(U: Matrix, p = 2) -> float:
+
+def babai_plane_bnd(U: Matrix, p=2) -> float:
     "Bound for Babai's closest plane algorithm for solving the CVP with respect to the Euclidean norm (p=2) or sup norm (p=inf)."
     Us = gram_schmidt(U)[0]
     return float(0.5 * min([Us[:, i].norm(p) for i in range(Us.rows)]))
+
 
 def lagrange_lr(V: Matrix) -> Matrix:
     "Lagrange lattice reduction."
@@ -108,6 +118,7 @@ def lagrange_lr(V: Matrix) -> Matrix:
         v2, v1 = v1, v3
         v3 = v2 - round(v1.dot(v2) / norm2(v1)) * v1
     return Matrix([list(v1), list(v3)]).transpose()
+
 
 def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     "LLL algorithm for lattice reduction."
@@ -173,6 +184,7 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
         for j in range(U.rows):
             U[:, j] = tmp[j]
     return U
+
 
 def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = None) -> Matrix:
     "Create a pseudorandom unimodular matrix of dimension n."

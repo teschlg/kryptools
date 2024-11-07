@@ -5,7 +5,8 @@ Integer factorization: Pollard's p-1 method
 from math import gcd, log, isqrt, floor, log10
 from .primes import sieve_eratosthenes
 
-def _pm1_parameters(B1: int, B2: int|None = None, primes: tuple = None) -> tuple:
+
+def _pm1_parameters(B1: int, B2: int | None = None, primes: tuple = None) -> tuple:
     "Precompute parameters for the p-1 method."
     if not B2:
         B2 = 100 * B1
@@ -27,7 +28,7 @@ def _pm1_parameters(B1: int, B2: int|None = None, primes: tuple = None) -> tuple
     return stage_one, stage_two_deltas
 
 
-def factor_pm1(n: int, B1: int|None = None, B2: int|None = None, x: int = 2, pm1_parameters: tuple = None, verbose: int = 0) -> int|None:
+def factor_pm1(n: int, B1: int | None = None, B2: int | None = None, x: int = 2, pm1_parameters: tuple = None, verbose: int = 0) -> int | None:
     "Factors a number n using Pollard's p-1 method."
     if pm1_parameters:
         B1, B2, stage_one, stage_two_deltas = pm1_parameters
@@ -41,7 +42,7 @@ def factor_pm1(n: int, B1: int|None = None, B2: int|None = None, x: int = 2, pm1
 
     # stage one
     if verbose > 1:
-        print("Working 1", end= "")
+        print("Working 1", end="")
     x = pow(x, stage_one, n)
     g = gcd(x - 1, n)
     if g == n:
@@ -54,7 +55,7 @@ def factor_pm1(n: int, B1: int|None = None, B2: int|None = None, x: int = 2, pm1
         return g
 
     if verbose > 1:
-        print("2", end= "")
+        print("2", end="")
     saved = {}
     y = pow(x, stage_two_deltas[0], n)
     D = (y - 1) % n

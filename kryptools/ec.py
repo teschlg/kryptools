@@ -10,19 +10,20 @@ from .nt import legendre_symbol, sqrt_mod, crt
 from .Zmod import Zmod
 from .poly import Poly
 
+
 class EC_Weierstrass():
     """
     Elliptic curve in Weierstrass normal form `y^2 = x^3 + ax + b mod p`.
-    
+
     Example:
-    
+
     To define an elliptic curve y^2 = x^3 + 3x + 1 mod 239 use
     >>> ec = EC_Weierstrass(239, 3, 1)
-    
+
     To declare a point on the elliptic curve use
     >>> P = ec(43, 222)
     >>> Q = ec(148, 218))
-    
+
 
     The usual arithmetic operations are supported.
     >>> P + Q
@@ -33,15 +34,15 @@ class EC_Weierstrass():
     def __init__(self, p: int, a: int, b: int, order: int = None):
         if p < 3:
             raise ValueError(f"{p} must be a prime larger than 2.")
-        if (4 * pow(a, 3, p) + 27 * pow(b, 2, p) ) % p == 0:
+        if (4 * pow(a, 3, p) + 27 * pow(b, 2, p)) % p == 0:
             raise ValueError("Curve is singular!")
         self.p = p
-        self.gf = Zmod(p, short = True)
+        self.gf = Zmod(p, short=True)
         self.a = self.gf(a % p)
         self.b = self.gf(b % p)
         self.group_order = order
         self.group_order_factors = None
-        self.psi_list = [ Poly([ 0 ], ring = self.gf ) ] # division polynomials
+        self.psi_list = [Poly([0], ring=self.gf)]  # division polynomials
         self.short = False  # display points in short format
         self.hex = False  # display points as hex values in compressed format
 
@@ -155,17 +156,17 @@ class EC_Weierstrass():
             x = self.gf(randint(0, self.p - 1))
             y2 = int(x**3 + self.a * x + self.b)
             j = legendre_symbol(y2, self.p)
-        return ECPoint(x, randint(0, 1), self, short = True)
+        return ECPoint(x, randint(0, 1), self, short=True)
 
     def psi(self, n: int):
         """The x-part of the n'th division polynomial."""
 
         if len(self.psi_list) < 5:
-            self.psi_list = [ Poly([i], ring = self.gf) for i in range(3)]
-            self.psi_list += [ Poly([-self.a * self.a, 12 * self.b, 6 * self.a, 0, 3], ring = self.gf) ]
-            self.psi_list += [ Poly([-4 * self.a**3 - 32 * self.b * self.b, -16 * self.a * self.b, -20 * self.a * self.a, 80 * self.b, 20 * self.a, 0, 4], ring = self.gf) ]
+            self.psi_list = [ Poly([i], ring=self.gf) for i in range(3)]
+            self.psi_list += [ Poly([-self.a * self.a, 12 * self.b, 6 * self.a, 0, 3], ring=self.gf) ]
+            self.psi_list += [ Poly([-4 * self.a**3 - 32 * self.b * self.b, -16 * self.a * self.b, -20 * self.a * self.a, 80 * self.b, 20 * self.a, 0, 4], ring=self.gf) ]
         if len(self.psi_list) < n + 1:
-            y2 = Poly([self.b, self.a, 0, 1], ring = self.gf)**2
+            y2 = Poly([self.b, self.a, 0, 1], ring=self.gf)**2
             ti = 1 / self.gf(2)
             for m in range(len(self.psi_list), n + 1):
                 if m % 2:  # odd
@@ -263,9 +264,11 @@ class EC_Weierstrass():
 
         return self.p + 1 + sigma * t
 
+
 class ECPoint:
     "Point on an elliptic curve"
-    def __init__(self, x: int|None, y: int|None, curve: EC_Weierstrass, short:bool = False):
+
+    def __init__(self, x: int | None, y: int | None, curve: EC_Weierstrass, short: bool = False):
         self.curve = curve
         if x is None:
             self.x = None
@@ -407,7 +410,7 @@ class ECPoint:
             xx, yy = self.curve.add(xx, yy, other.x, other.y)
             if xx is None:
                 raise ValueError("DLP not solvabel!")
-        if  yy == self.y:
+        if yy == self.y:
             return j
         return m - j
 
@@ -420,7 +423,7 @@ class ECPoint:
         # initialize baby_steps table
         baby_steps = {}
         baby_step = other
-        for j in range(1,m2+1):
+        for j in range(1, m2+1):
             baby_steps[int(baby_step.x)] = j, int(baby_step.y)
             baby_step += other
 

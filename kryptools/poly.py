@@ -8,9 +8,9 @@ from numbers import Number
 class Poly:
     """
     Represents a polynomial as a list of coefficients.
-    
+
     Example:
-    
+
     To define a polynomial as a list of coefficients use
     >>> Poly([1, 2, 3])
     3 x^2 + 2 x + 1
@@ -18,7 +18,7 @@ class Poly:
 
     print_reversed = True  # print the terms in reversed order
 
-    def __init__(self, coeff: list, ring = None, modulus: list = None):
+    def __init__(self, coeff: list, ring=None, modulus: list = None):
         self.coeff = list(coeff)
         for i in range(len(self.coeff) - 1, 0, -1):
             if self.coeff[i]:
@@ -162,7 +162,7 @@ class Poly:
     def __mul__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
             if self._check_type(other):
-                return Poly([other * s for s in self.coeff], modulus = self.modulus)
+                return Poly([other * s for s in self.coeff], modulus=self.modulus)
             return NotImplemented
         zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
@@ -172,12 +172,11 @@ class Poly:
                 [
                     self.coeff[j] * other.coeff[k - j]
                     for j in range(max(0, k - lo + 1), min(ls, k + 1))
-                ]
-            , start = zero)
+                ], start=zero)
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
-        return self.__class__(coeff, modulus = modulus)
+        return self.__class__(coeff, modulus=modulus)
 
     def __rmul__(self, other) -> "Poly":
         return self * other
@@ -235,7 +234,7 @@ class Poly:
         "Polynom division with remainder."
         zero, one, ring = self._guess_ring()
         if isinstance(other, list):
-            other = self.__class__(other , ring = ring)
+            other = self.__class__(other, ring=ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot divide {self} and {other}.")
         if not other:
@@ -253,7 +252,7 @@ class Poly:
             oth = other.coeff
             rem = [c * one for c in self.coeff] # "* 1" is here to make sure we get a copy
         for i in range(sd - od + 1):
-            tmp = rem[sd - i] * one # "* 1" is here to make sure we get a copy
+            tmp = rem[sd - i] * one  # "* 1" is here to make sure we get a copy
             div[sd - od - i] = tmp
             for j in range(od + 1):
                 rem[sd - i - j] -= tmp * oth[od - j]
@@ -265,7 +264,7 @@ class Poly:
         "Reduce with respect to a given polynomial."
         one, ring = self._guess_ring()[1:]
         if isinstance(other, list):
-            other = self.__class__(other , ring = ring)
+            other = self.__class__(other, ring=ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot divide {self} and {other}.")
         if not other:
@@ -294,7 +293,7 @@ class Poly:
             other = self.modulus
         zero, one, ring = self._guess_ring()
         if isinstance(other, list):
-            other = self.__class__(other , ring = ring)
+            other = self.__class__(other, ring=ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot invert {self} modulo {other}.")
         if not other:

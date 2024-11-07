@@ -5,6 +5,7 @@ Galois field GF(2^n).
 from types import new_class
 from .conway_polynomials import conway_polynomials2
 
+
 class GF_2:
     "Represents a point in the Galois field GF(2^n)."
     poly: int = 0  # integer whose biniary digits are the coefficients of the irreducible polynomial
@@ -15,8 +16,8 @@ class GF_2:
     byteorder: str = "big"  # big|little
 
     def __init__(self, x: int):
-        if isinstance(x, bytes|bytearray):
-            x = int.from_bytes(x, byteorder = self.__class__.byteorder)
+        if isinstance(x, bytes | bytearray):
+            x = int.from_bytes(x, byteorder=self.__class__.byteorder)
         self.x = int(x) % self.__class__.order
 
     def __iter__(self):
@@ -95,14 +96,14 @@ class GF_2:
     def __truediv__(self, other: "GF_2") -> "GF_2":
         if not isinstance(other, self.__class__):
             return NotImplemented
-        if not(other.x):
+        if not (other.x):
             raise ValueError("Division by zero.")
-        return self * other**(self.order -2)
+        return self * other**(self.order - 2)
 
     def __pow__(self, j: int) -> "GF_2":
         if not isinstance(j, int):
             return NotImplemented
-        if not(self.x) and j < 0:
+        if not (self.x) and j < 0:
             raise ValueError("Division by zero.")
         if self.__class__.bitreversed:
             res = self.__class__(self.__class__.order >> 1)
@@ -123,16 +124,16 @@ class GF_2:
         "Cyclic rotation to the left."
         x = self.x << i
         x = (x % self.order) + (x // self.order)
-        return(self.__class__(x))
+        return (self.__class__(x))
 
     def __rshift__(self, i: int) -> "GF_2":
         "Cyclic rotation to the right."
         x = self.x >> i
         x += (self.order >> i) * (self.x % 2**i)
-        return(self.__class__(x))
+        return (self.__class__(x))
 
 
-def GF2(n: int, poly: int|None = None):
+def GF2(n: int, poly: int | None = None):
     """
     Create a Galois field GF(2^n).
 
@@ -146,10 +147,10 @@ def GF2(n: int, poly: int|None = None):
     explicitely.
 
     Example:
-    
+
     To define the Galois field GF(2^8) use
     >>> gf=GF(8)
-    
+
     To declare 3 as an element of our Galois field use (elements are displayed as hex numbers)
     >>> gf(3)
     03
@@ -168,8 +169,8 @@ def GF2(n: int, poly: int|None = None):
     name = 'GF2^'+str(n)
     gf = new_class(
         name,
-        bases = (GF_2,),
-        kwds = {},
+        bases=(GF_2,),
+        kwds={},
     )
     if poly & 2**n == 2**n:
         gf.bitreversed = False

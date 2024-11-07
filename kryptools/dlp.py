@@ -11,7 +11,7 @@ from .dlp_qs import dlog_qs
 from .factor import factorint
 
 
-def dlog_naive(a: int, b: int, n: int, m: int = None) -> int|None:
+def dlog_naive(a: int, b: int, n: int, m: int = None) -> int | None:
     """Compute the discrete log_a(b) in Z_n of an element a of order m by exhaustive search."""
     a %= n
     b %= n
@@ -24,13 +24,16 @@ def dlog_naive(a: int, b: int, n: int, m: int = None) -> int|None:
             return i + 1
     raise ValueError("DLP not solvable.")
 
+
 def _dlog_switch(a: int, b: int, n: int, m: int) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order m choosing an appropriate method."""
     if m < 1000:
         return dlog_naive(a, b, n, m)
-    if log(m) - 6 < 2 * sqrt(log(n) * log(log(n))):  # compare the theoreticaly expected running times ob bsgs and ic; the constant 6 is determined experimentally
+    # compare the theoreticaly expected running times ob bsgs and ic; the constant 6 is determined experimentally
+    if log(m) - 6 < 2 * sqrt(log(n) * log(log(n))):
         return dlog_bsgs(a, b, n, m)
     return dlog_qs(a, b, n, m)
+
 
 def _dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
     """Compute the discrete log_a(b) in Z_n of an element a of order q^k using Pohlig-Hellman reduction."""
@@ -48,7 +51,7 @@ def _dlog_ph(a: int, b: int, n: int, q: int, k: int) -> int:
     return xj
 
 
-def dlog(a: int, b: int, n: int, m: int|None = None) -> int:
+def dlog(a: int, b: int, n: int, m: int | None = None) -> int:
     """Compute the discrete log_a(b) in Z_n of an element `a` of order `m` using Pohlig-Hellman reduction."""
     a %= n
     b %= n

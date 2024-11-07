@@ -5,7 +5,7 @@ Integer factorization: Fermat's method
 from math import isqrt, floor, log10
 
 
-def factor_fermat(n: int, maxsteps: int|None = None, verbose: int = 0) -> list:
+def factor_fermat(n: int, maxsteps: int | None = None, verbose: int = 0) -> list:
     """Find factors of n using the method of Fermat."""
     if not isinstance(n, int) or n < 1:
         raise ValueError("Number to be factored must be a positive integer!")
@@ -27,14 +27,14 @@ def factor_fermat(n: int, maxsteps: int|None = None, verbose: int = 0) -> list:
     step, mod = parameters[n % 24]
     start += (mod - start) % step
     if verbose > 1:
-        print("Working ", end= "")
+        print("Working ", end="")
     maxa = (n + 9) // 6 + 1
     if maxsteps:
         maxsteps = max(1, maxsteps)
         maxa = min(maxa, start + maxsteps * step + 1)
     for a in range(start, maxa, step):
         if verbose > 1:
-            print(".", end= "")
+            print(".", end="")
         b = isqrt(a * a - n)
         if b * b == a * a - n:
             factors.append(a - b)

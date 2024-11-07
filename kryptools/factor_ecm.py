@@ -49,7 +49,8 @@ def mult(k, P, c2, p):
 # Crandall and Pomerance: Primes (doi=10.1007/0-387-28979-8)
 # Algorithm 7.4.4 (Inversionless ECM)
 
-def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tuple|None = None) -> tuple:
+
+def _ecm_parameters(B1: int, B2: int | None = None, D: int | None = None, primes: tuple | None = None) -> tuple:
     "Precompute parameters for the ECM method."
 
     # Stage-one/two limits must be even
@@ -87,8 +88,8 @@ def _ecm_parameters(B1: int, B2: int|None = None, D: int|None = None, primes: tu
     return D, stage_one, stage_two_deltas
 
 
-def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 150, ecm_parameters: tuple|None = None, verbose: int = 0) -> int|None:
-    "Factors a number n using Lentsta's ECM method."    
+def factor_ecm(n: int, B1: int | None = None, B2: int | None = None, curves: int = 150, ecm_parameters: tuple | None = None, verbose: int = 0) -> int | None:
+    "Factors a number n using Lentsta's ECM method."
 
     if ecm_parameters:
         B1, B2, curves, D, stage_one, stage_two_deltas = ecm_parameters
@@ -104,11 +105,11 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
     if verbose:
         print(f"Factoring (ECM, B1={B1}, B2={B2}): {n} ({floor(log10(n)) + 1} digits)")
     if verbose > 1:
-        print("Working ", end= "")
+        print("Working ", end="")
     for _ in range(curves):
         # find a random curve
         if verbose > 1:
-            print("C", end= "")  # stage one
+            print("C", end="")  # stage one
         sigma = randint(6, n - 1)
         u = (sigma**2 - 5) % n
         v = (4 * sigma) % n
@@ -129,7 +130,7 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
         Q = (pow(u, 3, n), pow(v, 3, n))
         # Stage one
         if verbose > 1:
-            print("1", end= "")
+            print("1", end="")
         Q = mult(stage_one, Q, c2, n)
         if Q[1] == 0:
             continue
@@ -141,7 +142,7 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
 
         # Stage two
         if verbose > 1:
-            print("2", end= "")
+            print("2", end="")
         S = [dbl(Q, c2, n)]
         S.append(dbl(S[0], c2, n))
 
@@ -162,7 +163,7 @@ def factor_ecm(n: int, B1: int|None = None, B2: int|None = None, curves: int = 1
                     break
             if g == 0:
                 break
-            g = gcd(g,n)
+            g = gcd(g, n)
             if 1 < g:
                 if verbose > 1:
                     print("\nFactor found.")

@@ -6,15 +6,16 @@ from math import gcd
 from .factor import factorint
 from .intfuncs import prime_power
 
+
 class Zmod:
     """
     Ring of intergers modulo `n`.
 
     Example:
-    
+
     To define a finite Galois field modulo the prime 5 use
     >>> Z_5=Zmod(5)
-    
+
     To declare 3 as an element of our Galois filed use
     >>> Z_5(3)
     3
@@ -30,9 +31,9 @@ class Zmod:
         self.n = n
         self.short = short
         self.group_order = 0
-        self.factors = {} # factoring of the group order
+        self.factors = {}  # factoring of the group order
 
-    def __call__(self, x: int|list|tuple):
+    def __call__(self, x: int | list | tuple):
         if isinstance(x, list):
             return [ZmodPoint(xx, self) for xx in x]
         elif isinstance(x, tuple):
@@ -57,12 +58,14 @@ class Zmod:
             return self.group_order
         # We compute euler_phi(n) and its factorization in one pass
         for p, k in factorint(self.n).items():  # first factorize n
-            for pm, km in factorint(p - 1).items():  # factor p-1 and add the factors
+            # factor p-1 and add the factors
+            for pm, km in factorint(p - 1).items():
                 if pm in self.factors:
                     self.factors[pm] += km
                 else:
                     self.factors[pm] = km
-            if k > 1:  # if the multiplicity of of p is >1, then we need to add p**(k-1)
+            # if the multiplicity of of p is >1, then we need to add p**(k-1)
+            if k > 1:
                 if p in self.factors:
                     self.factors[p] += k - 1
                 else:
@@ -85,7 +88,7 @@ class Zmod:
             return True
         return False
 
-    def generator(self) -> int|None:
+    def generator(self) -> int | None:
         """Return a generator of the group Z_n^*."""
         if not self.is_cyclic():
             return None
@@ -96,7 +99,7 @@ class Zmod:
             if a.is_generator():
                 return a
 
-    def generators(self) -> list|None:
+    def generators(self) -> list | None:
         """Return a generator for all generators of the group Z_n^*."""
         a = self.generator()
         if a is not None:
@@ -104,13 +107,14 @@ class Zmod:
             for j in range(1, self.group_order):
                 if gcd(j, self.group_order) == 1:
                     yield a**j
-    
+
     def star(self) -> list:
         """Return a generator for all elements of the group Z_n^*."""
         yield self(1)
         for a in range(2, self.n):
             if gcd(a, self.n) == 1:
                 yield self(a)
+
 
 class ZmodPoint:
     "Represents a point in the ring Zmod."

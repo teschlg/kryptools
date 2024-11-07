@@ -8,6 +8,7 @@ from .nt import sqrt_mod
 from .primes import sieve_eratosthenes
 seed(0)
 
+
 def determine_factorbound(n: int) -> (int, int):
     """Determines the optimal factor bound and the expected number of trys until a for a given n."""
     # Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us the expected running time |factorbase|^2 u^u = u^(u+2) n^(2/u)/log(n).
@@ -18,10 +19,13 @@ def determine_factorbound(n: int) -> (int, int):
             2 + 3 * u + 2 * u * log(u)
         )  # Newton iteration
     B = int(exp(log(n) / u))
-    #B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
-    expected_trys = int(exp(u*log(u)))+1 # expected number of trys to find a relation for random values
-    expected_trys2 = int(exp(u*log(u/2)/2))+1 # expected number of trys to find a relation for sieved values
+    # B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
+    # expected number of trys to find a relation for random values
+    expected_trys = int(exp(u*log(u)))+1
+    # expected number of trys to find a relation for sieved values
+    expected_trys2 = int(exp(u*log(u/2)/2))+1
     return B, expected_trys, expected_trys2
+
 
 def determine_trialdivison_bounds(B: int, factorbase: list) -> (int, int):
     """Determine the parameters for speeding up trial division."""
@@ -41,6 +45,7 @@ def determine_trialdivison_bounds(B: int, factorbase: list) -> (int, int):
         smallprimes_len += 1
     return smallprimes_len, pollard_k
 
+
 def is_smooth(n: int, factorbase: list, factorbase_len: int, smallprimes_len: int, pollard_k: int = None) -> list or None:
     """Try to factor n with respect to a a given factorbase. Upon success a list of exponents with repect to the factorbase is returned. Otherwise None."""
     # factorbase_len = len(factorbase)
@@ -51,7 +56,7 @@ def is_smooth(n: int, factorbase: list, factorbase_len: int, smallprimes_len: in
             factors[i] += 1
             n = n // p
     if pollard_k:
-        if gcd(pow(2, pollard_k, n)-1, n) == 1: # Pollard p-1 test
+        if gcd(pow(2, pollard_k, n)-1, n) == 1:  # Pollard p-1 test
             return None  # most likely not smooth, give up
         for i in range(smallprimes_len, factorbase_len):
             p = factorbase[i]
@@ -61,6 +66,7 @@ def is_smooth(n: int, factorbase: list, factorbase_len: int, smallprimes_len: in
     if n != 1:
         return None  # the number factors if at the end nothing is left
     return factors
+
 
 def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: float = None, verbose: int = 0) -> int:
     """
@@ -83,9 +89,9 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
         while trys < max_trys:  # first find a relation involving b
             x = randint(x_min, x_max)
             if include_b:
-                bax = b * pow(a ,x, n) % n
+                bax = b * pow(a, x, n) % n
             else:
-                bax = pow(a ,x, n)
+                bax = pow(a, x, n)
             relation = is_smooth(bax, factorbase, factorbase_len, smallprimes_len, pollard_k)
             if relation:
                 break
@@ -99,7 +105,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
                 print(f"rel found: a^{x}=", pow(a, x, n), relation)
         relation.reverse()  # the linear algebra is slightly faster if we take the large primes first
         if include_b:
-            relation += [ 1, x ]
+            relation += [1, x]
         else:
             relation += [ 0, x ]
         relation = [0] * sieve_bound + relation # sieve values + primes + b + x
@@ -135,7 +141,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
             break  # we don't need a reduced echelon form
         else:  # the relation contains no new information
             if verbose > 1:
-                print(n_relations,"redundant rel found")
+                print(n_relations, "redundant rel found")
             return None
         #for i in range(index):  # reduced echelon form
         #    if relations[i] != None:
@@ -196,7 +202,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
     # Do the sieving
     #
 
-    sn = isqrt(n - 1) + 1 # ceil(sqrt(n))
+    sn = isqrt(n - 1) + 1  # ceil(sqrt(n))
     d = sn**2 - n
     sn2 = 2 * sn
 
@@ -214,9 +220,9 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
             # determine the roots of f_j(x) mod p
             if p == 2:
                 if aa == 0:
-                    roots = [ bb ]
+                    roots = [bb]
                 elif bb == 0:
-                    roots = [ 0, 1 ]
+                    roots = [0, 1]
                 else:
                     continue  # no root
             else:
@@ -225,7 +231,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
                     continue
                 inv2 = pow(2, -1, p)
                 if r == 0:
-                    roots = [ -(inv2 * aa) % p ]  # one root
+                    roots = [-(inv2 * aa) % p]  # one root
                 else:
                     roots = [ (inv2 * (r - aa)) % p, (inv2 * (-r - aa)) % p ]  # two roots  pylint: disable=E1130
             for r in roots:
@@ -267,11 +273,11 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
             if x not in factors[j]:
                 continue
             v = (x + sn) * (x + j + sn) - n
-            if factors[j][x][1] < 0.49* log(v):
-                continue # the number is unlikely to factor
+            if factors[j][x][1] < 0.49 * log(v):
+                continue  # the number is unlikely to factor
             primes = factors[j][x][0]
             primes.extend(no_sieve_primes)
-            factors_jx = [ 0 ] * factorbase_len
+            factors_jx = [0] * factorbase_len
             for i in primes:
                 p = factorbase[i]
                 if p <= no_sieve_bound and v % p != 0:

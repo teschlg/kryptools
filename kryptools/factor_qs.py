@@ -6,6 +6,7 @@ from math import isqrt, gcd, sqrt, log, exp, ceil, floor, log10
 from .primes import sieve_eratosthenes
 from .nt import legendre_symbol, sqrt_mod
 
+
 def bytexor(a: bytearray, b: bytes) -> bytes:
     """Xor the bytestring b to the bytearry a."""
     for i in range(len(a)):
@@ -24,7 +25,7 @@ def bytetest(a: bytes, i: int) -> bytes:
     return (a[i1] & 2**i0) != 0
 
 
-def factor_qs(n: int, verbose: int = 0) -> int|None:
+def factor_qs(n: int, verbose: int = 0) -> int | None:
     """Find factors of n using the quadratic sieve."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
@@ -61,16 +62,16 @@ def factor_qs(n: int, verbose: int = 0) -> int|None:
     factorbase_root = [0] * lf # compute the roots of n mod p
     for i, p in enumerate(factorbase):
         r1 = sqrt_mod(n, p)
-        assert r1 is not None # only quadratic residues
-        r2 = -r1 % p # pylint: disable=E1130
+        assert r1 is not None  # only quadratic residues
+        r2 = -r1 % p  # pylint: disable=E1130
         if r1 == r2:
-            factorbase_root[i] = [ r1 ]
+            factorbase_root[i] = [r1]
         else:
-            factorbase_root[i] = [ r1, -r1 % p ]  # pylint: disable=E1130
+            factorbase_root[i] = [r1, -r1 % p]  # pylint: disable=E1130
 
     m = isqrt(n - 1) + 1
     d = m**2 - n
-    if d == 0: # Our number is a square
+    if d == 0:  # Our number is a square
         return m
     m2 = 2 * m
 
@@ -87,8 +88,8 @@ def factor_qs(n: int, verbose: int = 0) -> int|None:
     sieve_step = sieve_bound // 10
 
     # start values for the iterators in the positive/negative direction
-    iterator_p = [ [0, 0] for _ in range(lf) ]
-    iterator_m = [ [0, 0] for _ in range(lf) ]
+    iterator_p = [[0, 0] for _ in range(lf)]
+    iterator_m = [[0, 0] for _ in range(lf)]
     for i, p in enumerate(factorbase):
         for j, r in enumerate(factorbase_root[i]):
             iterator_p[i][j] = (r - m) % p
@@ -125,7 +126,7 @@ def factor_qs(n: int, verbose: int = 0) -> int|None:
         relation += rhs  # extend the relation with this row
         values[relation_no] = j  # store the value which lead to the relation
         # do the Gauss elimination
-        index = lf # this will be the index of the first nonzero entry
+        index = lf  # this will be the index of the first nonzero entry
         # print(f'{j:3}', ' '.join(f'{b:08b}' for b in reversed(relation)))
         for i in range(lf):
             if bytetest(relation, i) and relations[i] is not None:  # make this entry zero if we can (Gauss elimination)

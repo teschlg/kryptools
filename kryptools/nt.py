@@ -18,6 +18,7 @@ from fractions import Fraction
 
 # extended Euclid
 
+
 def egcd(a: int, b: int) -> (int, int, int):
     """Perform the extended Euclidean agorithm. Returns `gcd`, `x`, `y` such that `a x + b y = gcd`."""
     r0, r1 = a, b
@@ -37,6 +38,7 @@ def fraction_repr(self):
     if self.denominator == 1:
         return str(self.numerator)
     return str(self.numerator) + "/" + str(self.denominator)
+
 
 Fraction.__repr__ = fraction_repr
 
@@ -83,6 +85,7 @@ def legendre_symbol(a: int, p: int) -> int:
         return 1
     return -1
 
+
 def jacobi_symbol(a: int, n: int) -> int:
     """Compute the Jacobi symbol of `a` with respect to the odd integer `n`."""
     if not isinstance(n, int) or n < 1 or not n % 2:
@@ -103,6 +106,7 @@ def jacobi_symbol(a: int, n: int) -> int:
     if n == 1:
         return t
     return 0
+
 
 def sqrt_mod(a: int, p: int) -> int:
     """Compute a square root of `a` modulo `p` unsing Cipolla's algorithm."""
@@ -162,6 +166,7 @@ def carmichael_lambda(n: int) -> int:
         lam = lcm(lam, l)
     return lam
 
+
 def moebius_mu(n: int) -> int:
     """Moebius' mu function of `n`."""
     if not isinstance(n, int) or n < 0:
@@ -175,6 +180,7 @@ def moebius_mu(n: int) -> int:
         return -1
     return 1
 
+
 def is_carmichael_number(n: int) -> bool:
     """Tests if a number is a Carmichael number using Korselt's criterion."""
     if n < 561:
@@ -185,6 +191,7 @@ def is_carmichael_number(n: int) -> bool:
     return max(factors.values()) == 1 and not any((n-1) % (p-1) for p in factors)
 
 # Order in Z_p^*
+
 
 def order(a: int, n: int, factor=False) -> int:
     """Compute the order of `a` in the group Z_n^*."""
@@ -225,7 +232,8 @@ def order(a: int, n: int, factor=False) -> int:
 
 # Chinese remainder theorem
 
-def crt(a: list[int], m: list[int], coprime = True) -> int:
+
+def crt(a: list[int], m: list[int], coprime=True) -> int:
     """Solve given linear congruences `x % m[j] == a[j]` using the Chinese Remainder Theorem."""
     l = len(m)
     if l != len(a):
@@ -237,28 +245,28 @@ def crt(a: list[int], m: list[int], coprime = True) -> int:
         if not all( isinstance(ai, int) for ai in a):
             raise ValueError("Residues must be integers.")
         # make a copy
-        m = [ mi for mi in m ]
-        a = [ ai for ai in a ]
+        m = [mi for mi in m]
+        a = [ai for ai in a]
         for i in range(l):
-            for j in range(i + 1,l):
+            for j in range(i + 1, l):
                 g = gcd(m[i], m[j])
-                if g == 1: # moduli are coprime, nothing to be done
+                if g == 1:  # moduli are coprime, nothing to be done
                     continue
                 if (a[i] - a[j]) % g:
                     raise ValueError("Congruences not solvable!")
                 for p, k in factorint(g).items():
-                    p = p**k #  remove this factor from one of the equations
+                    p = p**k  # remove this factor from one of the equations
                     if gcd(m[i] // p, p) == 1:
                         m[i] //= p
                         a[i] %= m[i]
                     else:
                         m[j] //= p
-                        a[j] %= m[j]                            
+                        a[j] %= m[j]
     for i in reversed(range(l)):
         if m[i] == 1:
             del m[i]
             del a[i]
-    l =len(m)
+    l = len(m)
 
     M = prod(m)
     Mi = [M // m[i] for i in range(l)]

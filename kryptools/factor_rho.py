@@ -6,7 +6,7 @@ from math import gcd, isqrt, floor, log10
 from random import randint
 
 
-def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent: bool = True, verbose: int = 0) -> int|None:
+def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent: bool = True, verbose: int = 0) -> int | None:
     """Factor n using the Pollard's rho method with start value x."""
     if not maxiter:
         maxiter = 10 * isqrt(n)  # stop iterating and try a different start value
@@ -18,17 +18,17 @@ def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent
         print(f"Factoring (Pollard rho, maxinit={maxinit}, maxiter={maxiter}): {n} ({floor(log10(n)) + 1} digits)")
 
     if verbose > 1:
-        print("Working ", end= "")
+        print("Working ", end="")
     for _ in range(maxinit):
         if verbose > 1:
-            print("X", end= "")
+            print("X", end="")
         if not brent:  # Floyd's cycle detection algorithm
             i = 1
             x = f(x)  # x_1=f(x_0)
             y = f(x)  # y_1=f(f(x_0))
             while gcd(x - y, n) == 1 and i < maxiter:
                 if verbose > 1 and i % 100 == 0:
-                    print(".", end= "")
+                    print(".", end="")
                 i += 1
                 x = f(x)  # f(x_j)
                 y = f(y)
@@ -39,7 +39,7 @@ def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent
             y = f(x)  # f(x_0)
             while gcd(x - y, n) == 1 and i < maxiter:
                 if verbose > 1 and (i+k) % 100 == 0:
-                    print(".", end= "")
+                    print(".", end="")
                 if i == k:  # start a new power of 2
                     x = y
                     i *= 2

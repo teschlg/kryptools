@@ -31,18 +31,20 @@ def sieve_eratosthenes(B: int) -> tuple:
         return ()
     if B < 3:
         return [2]
-    B= floor(B)
+    B = floor(B)
     B1 = (isqrt(B) - 1)//2
     B = (B - 1)//2
-    isprime = [True] * (B + 1)  # to begin with, all odd numbers are potentially prime
+    # to begin with, all odd numbers are potentially prime
+    isprime = [True] * (B + 1)
     # sieve out the primes p=2*q+1 starting at q = 1
     for q in range(1, B1 + 1):
-        if isprime[q]: # sieve out all multiples; numbers p*r with r<p were already sieved out previously
+        if isprime[q]:  # sieve out all multiples; numbers p*r with r<p were already sieved out previously
             qq = 2 * q * (q + 1)
             p = 2 * q + 1
-            isprime[qq :: p] = [False] * ((B - qq) // p + 1)
+            isprime[qq:: p] = [False] * ((B - qq) // p + 1)
 
     return tuple([2] + [2 * q + 1 for q in range(1, B + 1) if isprime[q]])
+
 
 def prime_pi(x: float) -> int:
     """Prime-counting function pi(x). Returns the number of primes below or equal `x`."""
@@ -84,9 +86,10 @@ def miller_rabin_test(n: int, bases: list[int] | int) -> bool:
                 return False
             if b == n - 1:  # -1 found
                 break
-        else: # no -1 found
+        else:  # no -1 found
             return False
     return True
+
 
 def _lucas_sequence(n, D, k):
     """Evaluate a Lucas sequence."""
@@ -113,6 +116,7 @@ def _lucas_sequence(n, D, k):
     return U % n, V % n, Qk
 
 # https://en.wikipedia.org/wiki/Lucas_pseudoprime#Implementing_a_Lucas_probable_prime_test
+
 
 def lucas_test(n: int) -> bool:
     """Run a strong Lucas primality test on `n`."""
@@ -156,6 +160,7 @@ def lucas_test(n: int) -> bool:
         Qk = pow(Qk, 2, n)
     return False
 
+
 def is_prime(n: int, trialdivision: bool = True) -> bool:
     """Test if an integer `n` if probable prime."""
     if not isinstance(n, int) or n < 2:
@@ -163,12 +168,12 @@ def is_prime(n: int, trialdivision: bool = True) -> bool:
     # Test small primes
     if trialdivision:
         for p in (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
-            101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199,
-            211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293,
-            307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397):
+                  101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199,
+                  211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293,
+                  307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397):
             if n % p == 0:
                 return n == p
-    if n < 341531: # https://miller-rabin.appspot.com
+    if n < 341531:  # https://miller-rabin.appspot.com
         return miller_rabin_test(n, [9345883071009581737])
     if n < 885594169:
         return miller_rabin_test(n, [725270293939359937, 3569819667048198375])
@@ -183,16 +188,19 @@ def is_prime(n: int, trialdivision: bool = True) -> bool:
     if n < 18446744073709551616:
         return miller_rabin_test(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
     if n < 318665857834031151167461:
-        return miller_rabin_test(n, [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37])    
+        return miller_rabin_test(n, [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37])
     if n < 3317044064679887385961981:
         return miller_rabin_test(n, [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41])
-    return miller_rabin_test(n, [2]) and lucas_test(n)  # Baillie–PSW primality test
+    # Baillie–PSW primality test
+    return miller_rabin_test(n, [2]) and lucas_test(n)
+
 
 def is_safeprime(p: int) -> bool:
     """Tests if a number is a safe prime."""
     if p < 107:
         return p in (5, 7, 11, 23, 47, 59, 83)
     return p % 12 == 11 and is_prime(p) and is_prime((p - 1) // 2)
+
 
 def is_blumprime(p: int) -> bool:
     """Tests if a number is a Blum prime."""
@@ -212,6 +220,7 @@ def next_prime(n: int) -> int:
         n += 2
     return n
 
+
 def previous_prime(n: int) -> int:
     """Find the previous prime smaller or equal `n`."""
     if n < 3:
@@ -221,6 +230,7 @@ def previous_prime(n: int) -> int:
     while not is_prime(n):
         n -= 2
     return n
+
 
 def next_safeprime(n: int) -> int:
     """Find the next safe prime larger or equal `n`."""
@@ -232,6 +242,7 @@ def next_safeprime(n: int) -> int:
     while not is_safeprime(n):
         n += 12
     return n
+
 
 def previous_safeprime(n: int) -> int:
     """Find the previous safe prime smaller or equal `n`."""
@@ -246,10 +257,12 @@ def previous_safeprime(n: int) -> int:
         n -= 12
     return n
 
+
 def random_bitlength(l: int) -> int:
     "Return a random number with bit lenght `l`."
     l = max(2, l)
     return randbits(l-1) | (1 << l-1)
+
 
 def random_prime(l: int) -> int:
     """Find a random prime with bit length `l`."""
@@ -259,6 +272,7 @@ def random_prime(l: int) -> int:
         r |= 1  # make sure r is odd
         if is_prime(r):
             return r
+
 
 def random_strongprime(l: int) -> int:
     """Find a random strong prime with factors of bit length `l` using Gordon's algorithm."""
@@ -276,6 +290,7 @@ def random_strongprime(l: int) -> int:
         uu += u
     return t, s, r, uu
 
+
 def random_safeprime(l: int) -> int:
     """Find a random safe prime with bit length `l` and `ord(2)=(p-1)/2`."""
     l = max(2, int(l))
@@ -284,6 +299,7 @@ def random_safeprime(l: int) -> int:
         r = r - (r % 24) + 23  # make sure p % 24 = 23
         if is_safeprime(r):
             return r
+
 
 def random_blumprime(l: int) -> int:
     """Find a random Blum prime with bit length `l`."""

@@ -29,10 +29,11 @@ def iroot(k: int, n: int) -> int:
     k1 = k-1
     while rr < r:
         r = rr
-        rr = (k1 * rr + n // rr ** k1) // k # Newton iteration
+        rr = (k1 * rr + n // rr ** k1) // k  # Newton iteration
     return r
 
-def ilog(b: int, n:int) -> int:
+
+def ilog(b: int, n: int) -> int:
     """For a given positive integer `n`, finds the largest integer `l` such that `b**l <= n`."""
     # https://stackoverflow.com/questions/39190815/how-to-make-perfect-power-algorithm-more-efficient/39191163#39191163
     if not isinstance(b, int) or b < 2:
@@ -53,12 +54,14 @@ def ilog(b: int, n:int) -> int:
             hi, bhi = mid, bmid
         elif bmid < n:
             lo, blo = mid, bmid
-        else: return mid
-    if bhi == n: return hi
+        else:
+            return mid
+    if bhi == n:
+        return hi
     return lo
 
 
-def perfect_square(n: int) -> int|None:
+def perfect_square(n: int) -> int | None:
     """Returns the root if `n` is a perfect square and None else."""
     if not isinstance(n, int) or n < 2:
         return None
@@ -66,7 +69,8 @@ def perfect_square(n: int) -> int|None:
     if s*s == n:
         return s
 
-def perfect_power(n: int) -> tuple|None:
+
+def perfect_power(n: int) -> tuple | None:
     """Returns integers `(m, p)` with `m**p == n` if `n` is a perfect power and None else."""
     if not isinstance(n, int) or abs(n) < 2:
         return None
@@ -82,10 +86,11 @@ def perfect_power(n: int) -> tuple|None:
             if p > 2:
                 return -m, p
 
-def prime_power(n: int) -> tuple|None:
+
+def prime_power(n: int) -> tuple | None:
     """Returns integers `(p, k)` with `p**k == n` if `n` is a prime power and None else."""
     if not isinstance(n, int) or n < 2:
-        return None    
+        return None
     if is_prime(n):
         return (n, 1)
     r = n

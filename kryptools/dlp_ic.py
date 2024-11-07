@@ -8,6 +8,7 @@ from .primes import sieve_eratosthenes
 from .dlp_qs import determine_factorbound, determine_trialdivison_bounds, is_smooth
 seed(0)
 
+
 def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int = 0) -> int:
     """Compute the discrete log_a(b) in Z_p of an element a of prime order m using Index Calculus."""
 
@@ -27,10 +28,11 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
         while trys < max_trys:
             x = randint(x_min, x_max)
             if include_b:
-                bax = b * pow(a ,x, n) % n
+                bax = b * pow(a, x, n) % n
             else:
-                bax = pow(a ,x, n)
-            relation = is_smooth(bax, factorbase, factorbase_len, smallprimes_len, pollard_k)
+                bax = pow(a, x, n)
+            relation = is_smooth(
+                bax, factorbase, factorbase_len, smallprimes_len, pollard_k)
             if relation:
                 break
             trys += 1
@@ -41,15 +43,16 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
                 print(f"rel found: b*a^{x}=", b * pow(a, x, n) % n, relation)
             else:
                 print(f"rel found: a^{x}=", pow(a, x, n), relation)
-        relation.reverse()  # the linear algebra is slightly faster if we take the large primes first
+        # the linear algebra is slightly faster if we take the large primes first
+        relation.reverse()
         if include_b:
-            relation += [ 1, x ]
+            relation += [1, x]
         else:
-            relation += [ 0, x ]
+            relation += [0, x]
         return relation
 
-
     # this functions does the linear algebra
+
     def process_relation(relation: list) -> None or int:
         """Add a new relation to the linear system and keep the system in echelon form."""
         nonlocal a, b, m, n, relations, len_relations, n_relations
@@ -79,7 +82,7 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
             break  # we don't need a reduced echelon form
         else:  # the relation contains no new information
             if verbose > 1:
-                print(n_relations,"redundant rel found")
+                print(n_relations, "redundant rel found")
             return None
         #for i in range(index):  # reduced echelon form
         #    if relations[i] != None:

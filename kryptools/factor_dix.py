@@ -7,7 +7,8 @@ from .primes import sieve_eratosthenes
 from .nt import legendre_symbol
 from .factor_qs import bytexor, byteset, bytetest
 
-def is_smooth(n: int, factorbase: list, lfb: int) -> bytes|None:
+
+def is_smooth(n: int, factorbase: list, lfb: int) -> bytes | None:
     """Try to factor n with respect to a given factorbase.
     Upon success a bytestring, whose bits are the exponents with repect to the factorbase mod 2, is returned.
     Otherwise None."""
@@ -26,7 +27,8 @@ def is_smooth(n: int, factorbase: list, lfb: int) -> bytes|None:
         return None  # the number factors if at the end nothing is left
     return factors
 
-def factor_dixon(n: int) -> int|None:
+
+def factor_dixon(n: int) -> int | None:
     """Find factors of n using the method of Dixon."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
@@ -51,15 +53,17 @@ def factor_dixon(n: int) -> int|None:
     lf = len(factorbase) + 1  # length of the factorbase (including -1)
     lfb = ceil(lf / 8)  # the number of bytes we need to store a relation
     m = isqrt(n - 1) + 1
+
     def process_relation(j: int, relation: bytes):
         nonlocal relation_no, values, relations
         relation_no += 1
-        rhs = bytearray(b"\x00") * lfb # construct the k'th row of the identity matrix
+        # construct the k'th row of the identity matrix
+        rhs = bytearray(b"\x00") * lfb
         byteset(rhs, relation_no)
         relation += rhs  # extend the relation with this row
         values[relation_no] = j  # store the value which lead to the relation
         # do the Gauss elimination
-        index = lf # this will be the index of the first nonzero entry
+        index = lf  # this will be the index of the first nonzero entry
         # print(f'{j:3}', ' '.join(f'{b:08b}' for b in reversed(relation)))
         for i in range(lf):
             if bytetest(relation, i) and relations[i] is not None:  # make this entry zero if we can (Gauss elimination)
