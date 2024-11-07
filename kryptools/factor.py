@@ -127,7 +127,7 @@ def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
         methods = {_factor_fermat: "fmt", factor_pm1: "pm1", factor_ecm: "ecm"}  #, factor_qs: "qs"}
         while remaining_factors:
             new_factors = {}
-            for method in [ _factor_fermat, factor_pm1, factor_ecm ]:  # , factor_qs ]:
+            for method in methods:
                 factors = list(remaining_factors)
                 for m in factors:
                     if method == _factor_fermat:
