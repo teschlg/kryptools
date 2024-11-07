@@ -1,4 +1,25 @@
-# https://www.math.rwth-aachen.de/~Frank.Luebeck/data/ConwayPol/CPimport.txt
+"""
+Dict of Conway polynomials for the prime 2. key = degree, value = coefficients as binary digits
+From https://www.math.rwth-aachen.de/~Frank.Luebeck/data/ConwayPol/CPimport.txt
+"""
+# To generate the dict use:
+#conway2 = {}
+#with open("CPimport.txt") as file:
+#    file.readline()
+#    for line in file:
+#        p, n, poly = eval(line[:-2])
+#        if p >2:
+#            break
+#        s = 0
+#        for i in reversed(poly):
+#            s <<= 1
+#            s |= i
+#        conway2[n] = s
+#
+#with open('conway_polynomials.py', 'w') as file:
+#    print("conway_polynomials2 = ", end ="", file=file)
+#    print(conway2, file=file)
+
 conway_polynomials2 = {
     1: 3,
     2: 7,

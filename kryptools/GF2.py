@@ -27,8 +27,7 @@ class GF_2:
     def __repr__(self):
         if self.__class__.print_hex:
             return format(self.x, "0"+str(self.__class__.power // 4)+"x")
-        else:
-            return self.x
+        return self.x
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.x == other.x
@@ -70,20 +69,22 @@ class GF_2:
         if self.__class__.bitreversed:
             for d in bin(other.x)[2:].zfill(self.__class__.power):
                 if int(d):
-                    z = z ^ y
+                    z ^= y
                 if y % 2:
-                    y = y >> 1
+                    y >>= 1
                     y ^= self.__class__.poly
                 else:
-                    y = y >> 1
+                    y >>= 1
         else:
-            for i in range(self.__class__.power):
-                z = z << 1
-                if z & 0b100000000:
-                    z = z ^ self.__class__.poly
-                if y & 0b010000000:
-                    z = z ^ self.x
-                y = y << 1
+            bitmap1 = self.__class__.order
+            bitmap2 = 1
+            for _ in range(self.__class__.power):
+                if self.x & bitmap2:
+                    z ^= y
+                bitmap2 <<= 1
+                y <<= 1
+                if y & bitmap1:
+                    y ^= self.__class__.poly
         return self.__class__(z)
 
     def __rmul__(self, scalar: int) -> "GF_2":
@@ -96,7 +97,7 @@ class GF_2:
     def __truediv__(self, other: "GF_2") -> "GF_2":
         if not isinstance(other, self.__class__):
             return NotImplemented
-        if not (other.x):
+        if not other.x:
             raise ValueError("Division by zero.")
         return self * other**(self.order - 2)
 
@@ -124,13 +125,13 @@ class GF_2:
         "Cyclic rotation to the left."
         x = self.x << i
         x = (x % self.order) + (x // self.order)
-        return (self.__class__(x))
+        return self.__class__(x)
 
     def __rshift__(self, i: int) -> "GF_2":
         "Cyclic rotation to the right."
         x = self.x >> i
         x += (self.order >> i) * (self.x % 2**i)
-        return (self.__class__(x))
+        return self.__class__(x)
 
 
 def GF2(n: int, poly: int | None = None):
@@ -161,9 +162,9 @@ def GF2(n: int, poly: int | None = None):
 
     """
     if not poly:
-        try:
+        if n in conway_polynomials2:
             poly = conway_polynomials2[n]
-        except:
+        else:
             raise ValueError("Unknown power. Please specify a polynomial.")
 
     name = 'GF2^'+str(n)
