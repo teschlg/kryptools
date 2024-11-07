@@ -311,3 +311,13 @@ class Poly:
         for i in range(len(y0)):
             y0.coeff[i] *= tmp
         return y0
+
+    def gcd(self, other: "Poly") -> "Poly":
+        "Greates common divisor with a given polynomial."
+        if not isinstance(other, self.__class__):
+            raise NotImplementedError(f"Cannot compute gcd: {other} must be a polynomial.")
+        r0, r1 = other, self
+        while r1:
+            q, r = r0.divmod(r1)
+            r0, r1 = r1, r
+        return r0
