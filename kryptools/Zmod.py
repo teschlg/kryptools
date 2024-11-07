@@ -39,6 +39,10 @@ class Zmod:
             return (ZmodPoint(xx, self) for xx in x)
         return ZmodPoint(x, self)
 
+    def __iter__(self):
+        for x in range(self.n):
+            yield ZmodPoint(x, self)
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.n == other.n
@@ -81,30 +85,32 @@ class Zmod:
             return True
         return False
 
-    def generator(self, all = False) -> int|None:
+    def generator(self) -> int|None:
         """Return a generator of the group Z_n^*."""
         if not self.is_cyclic():
-            if all:
-                return []
             return None
         for a in range(2, self.n):
             if gcd(a, self.n) > 1:
                 continue
             a = self(a)
             if a.is_generator():
-                if all:
-                    self.order()
-                    return list( a**j for j in range(1, self.group_order) if gcd(j,self.group_order) == 1 )
                 return a
 
-    def star(self) -> int:
-        """Return a list of all elements of the group Z_n^*."""
-        elements = [ self(1) ]
+    def generators(self) -> list|None:
+        """Return a generator for all generators of the group Z_n^*."""
+        a = self.generator()
+        if a is not None:
+            self.order()
+            for j in range(1, self.group_order):
+                if gcd(j, self.group_order) == 1:
+                    yield a**j
+    
+    def star(self) -> list:
+        """Return a generator for all elements of the group Z_n^*."""
+        yield self(1)
         for a in range(2, self.n):
-            if gcd(a, self.n) > 1:
-                continue
-            elements.append(self(a))
-        return elements
+            if gcd(a, self.n) == 1:
+                yield self(a)
 
 class ZmodPoint:
     "Represents a point in the ring Zmod."

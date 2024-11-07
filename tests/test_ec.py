@@ -25,3 +25,4 @@ def test_EC():
 	k = randint(1, Q.order())
 	R = k * Q
 	assert R.dlog(Q) == k
+	assert len(list(ec)) == ec.order()

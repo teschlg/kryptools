@@ -30,11 +30,13 @@ def test_Zmod_ops():
 
 def test_Zmod_methods():
 	Z_5 = Zmod(5)
+	assert len(list(Z_5)) == 5
+	assert Z_5.order() == 4
 	assert Z_5(3).order() == 4
 	assert Z_5(1).is_generator() == False
 	assert Z_5(3).is_generator() == True
-	assert Z_5.generator(all = True) == Z_5([2, 3])
-	assert Z_5.star() == Z_5([1, 2, 3, 4])
+	assert list(Z_5.generators()) == Z_5([2, 3])
+	assert list(Z_5.star()) == Z_5([1, 2, 3, 4])
 	assert [Z_5(i).sharp() for i in range(Z_5.n)] == [0, 1, 2, -2, -1]
 	assert [abs(Z_5(i)) for i in range(Z_5.n)] == [0, 1, 2, 2, 1]
 	assert str(Z_5(3)) == "3"
@@ -42,13 +44,15 @@ def test_Zmod_methods():
 	assert str(Z_5(6)) == "1 (mod 5)"
 
 	Z_6 = Zmod(6)
+	assert len(list(Z_6)) == 6
+	assert Z_6.order() == 2
 	assert Z_6(5).order() == 2
 	with pytest.raises(ValueError):
 		Z_6(3).order()
 	assert Z_6(1).is_generator() == False
 	assert Z_6(5).is_generator() == True
-	assert Z_6.generator(all = True) == Z_6([5])
-	assert Z_6.star() == Z_6([1, 5])
+	assert list(Z_6.generators()) == Z_6([5])
+	assert list(Z_6.star()) == Z_6([1, 5])
 	assert str(Z_6(3)) == "3"
 
 def test_Zmod_order():

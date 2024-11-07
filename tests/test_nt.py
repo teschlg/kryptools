@@ -3,7 +3,7 @@ from random import randint, seed
 from math import prod, lcm
 from fractions import Fraction
 from kryptools import sieve_eratosthenes, is_prime
-from kryptools import egcd, crt, cf, convergents, legendre_symbol, jacobi_symbol, carmichael_lambda, euler_phi, moebius_mu, is_carmichael_number
+from kryptools import egcd, crt, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, carmichael_lambda, euler_phi, moebius_mu, is_carmichael_number
 seed(0)
 
 
@@ -50,6 +50,16 @@ def test_jacobi_symbol():
 		else:
 			for x in range(n+1):
 				assert jacobi_symbol(x, n) == jacobi_data[i][x]
+
+def test_sqrt_mod():
+	primes = sieve_eratosthenes(11)
+	for p in primes:
+		for x in range(p):
+			y = sqrt_mod(x, p)
+			if y is None:
+				assert legendre_symbol(x, p) == -1
+			else:
+				assert pow(y, 2, p) == x
 
 #https://oeis.org/A000010
 OEIS_A000010 = [

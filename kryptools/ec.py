@@ -65,6 +65,17 @@ class EC_Weierstrass():
                 raise ValueError('Unsupported hex type.')
         return ECPoint(x, y, self, short)
 
+    def __iter__(self):
+        yield ECPoint(None, None, self)
+        for x in range(self.p):
+            y2 = int(x**3 + self.a * x + self.b)
+            y = sqrt_mod(y2, self.p)
+            if y is None:
+                continue
+            yield ECPoint(x, y, self)
+            if y:
+                yield ECPoint(x, (self.p - y) % self.p, self)
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.p == other.p and self.a == other.a and self.b == other.b

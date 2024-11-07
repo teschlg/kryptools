@@ -7,16 +7,21 @@ from .conway_polynomials import conway_polynomials2
 
 class GF_2:
     "Represents a point in the Galois field GF(2^n)."
-    poly = 0
-    power = 0
-    order = 0
-    print_hex = True
-    bitreversed = False
+    poly: int = 0  # integer whose biniary digits are the coefficients of the irreducible polynomial
+    power: int = 0  # n
+    order: int = 0  # 2**n
+    print_hex: bool = True
+    bitreversed: bool = False
+    byteorder: str = "big"  # big|little
 
     def __init__(self, x: int):
         if isinstance(x, bytes|bytearray):
-            x = int.from_bytes(x, byteorder="big")
+            x = int.from_bytes(x, byteorder = self.__class__.byteorder)
         self.x = int(x) % self.__class__.order
+
+    def __iter__(self):
+        for x in range(self.__class__.order):
+            yield self.__class__(x)
 
     def __repr__(self):
         if self.__class__.print_hex:

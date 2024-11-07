@@ -16,7 +16,7 @@ class Poly:
     3 x^2 + 2 x + 1
     """
 
-    print_reversed = True
+    print_reversed = True  # print the terms in reversed order
 
     def __init__(self, coeff: list, ring = None, modulus: list = None):
         self.coeff = list(coeff)
