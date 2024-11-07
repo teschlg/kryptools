@@ -118,4 +118,4 @@ def test_is_carmichael_number():
     for n in range(OEIS_A002997[4]+2):
         assert is_carmichael_number(n) == (n in OEIS_A002997)
     for n in OEIS_A002997:
-        assert is_carmichael_number(n) == True
+        assert is_carmichael_number(n) is True

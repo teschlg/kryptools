@@ -34,7 +34,7 @@ def test_ilog():
 
 def test_perfect_square():
     for n in (-1, 0, 1):
-        assert perfect_square(n) == None
+        assert perfect_square(n) is None
     for n in range(2, maxrange):
         factors = factorint(n)
         res = perfect_square(n)
@@ -42,12 +42,12 @@ def test_perfect_square():
             assert isinstance(res, int)
             assert res**2 == n
         else:
-            assert res == None
+            assert res is None
 
 
 def test_perfect_power():
     for n in (-1, 0, 1):
-        assert perfect_power(n) == None
+        assert perfect_power(n) is None
     for n in range(2, maxrange):
         factors = factorint(n)
         res = perfect_power(n)
@@ -63,15 +63,15 @@ def test_perfect_power():
                 assert isinstance(res, tuple)
                 assert res[0]**res[1] == n
             else:
-                assert res == None
+                assert res is None
         else:
-            assert res == None
-            assert perfect_power(-n) == None
+            assert res is None
+            assert perfect_power(-n) is None
 
 
 def test_prime_power():
     for n in (-1, 0, 1):
-        assert prime_power(n) == None
+        assert prime_power(n) is None
     for p in sieve_eratosthenes(30):
         for k in range(1, 6):
             assert prime_power(p**k) == (p, k)
