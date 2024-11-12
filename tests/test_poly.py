@@ -14,7 +14,7 @@ def test_Poly():
     d, m = q.divmod(p)
     assert d * p + m == q
 
-    gf = GF2(8, poly=0b100011011)
+    gf = GF2(8, modulus=0b100011011)
     p = Poly([2, 1, 1, 3], modulus=[1, 0, 0, 0, 1], ring=gf)
     q = p.inv()
     assert p * q == Poly([1], modulus=[1, 0, 0, 0, 1], ring=gf)

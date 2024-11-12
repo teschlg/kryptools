@@ -33,19 +33,11 @@ def egcd(a: int, b: int) -> (int, int, int):
 
 # Continued fractions
 
-def fraction_repr(self):
-    "Representation of a fraction."
-    if self.denominator == 1:
-        return str(self.numerator)
-    return str(self.numerator) + "/" + str(self.denominator)
-
-
-Fraction.__repr__ = fraction_repr
-
 
 def cf(x: Fraction) -> list[int]:
     "Compute the continued fraction expansion of the rational fraction `x`."
     res = []
+    x = Fraction(x)
     m = x.numerator
     n = x.denominator
     while True:
@@ -56,7 +48,7 @@ def cf(x: Fraction) -> list[int]:
         m, n = n, m
 
 
-def convergents(cont_frac: list[int]) -> float:
+def convergents(cont_frac: list[int]) -> list[Fraction]:
     "Compute the convergents of a continued fraction expansion."
     res = []
 
@@ -205,7 +197,8 @@ def order(a: int, n: int, factor=False) -> int:
                 factors[pm] += km
             else:
                 factors[pm] = km
-        if k > 1:  # if the multiplicity of of p is >1, then we need to add p**(k-1)
+        # if the multiplicity of of p is >1, then we need to add p**(k-1)
+        if k > 1:
             if p in factors:
                 factors[p] += k - 1
             else:
@@ -240,9 +233,9 @@ def crt(a: list[int], m: list[int], coprime=True) -> int:
         raise ValueError("The lists of numbers and modules must have equal length.")
 
     if not coprime:
-        if not all( (isinstance(mi, int) and mi > 1) for mi in m):
+        if not all((isinstance(mi, int) and mi > 1) for mi in m):
             raise ValueError("Moduli must be positive integers larger than one.")
-        if not all( isinstance(ai, int) for ai in a):
+        if not all(isinstance(ai, int) for ai in a):
             raise ValueError("Residues must be integers.")
         # make a copy
         m = [mi for mi in m]

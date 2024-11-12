@@ -127,6 +127,16 @@ class Matrix:
         tmp.map(func)
         return tmp
 
+    def _guess_ring(self):
+        zero = 0 * self.matrix[0][0]
+        try:
+            ring = type(zero)
+            one = ring(1)
+        except:
+            ring = None
+            one = zero**0
+        return zero, one, ring
+
     def norm2(self) -> float:
         "Squared Frobenius/Euclidean norm."
         return sum(sum(x*x for x in row) for row in self.matrix)
@@ -203,19 +213,20 @@ class Matrix:
 
     def rref(self) -> "Matrix":
         "Compute the reduced echelon form of a matrix M."
+        zero, one = self._guess_ring()[:2]
         n, m = self.cols, self.rows
         R = self[:, :]
         i = 0
         for j in range(n):
-            if not R[i, j]: # search for a nonzero entry in the present column
-                for ii in range(i+1,m):
+            if not R[i, j]:  # search for a nonzero entry in the present column
+                for ii in range(i+1, m):
                     if R[ii, j]:
                         R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
                         break
                 else:
                     continue  # all entries are zero
-            if R[i, j] != 1:
-                R[i, :] = 1 / R[i, j] * R[i, :]  # make the pivot one
+            if R[i, j] != one:
+                R[i, :] = R[i, j]**-1 * R[i, :]  # make the pivot one
             for ii in range(m):  # remove the column entries above/below the pivot
                 if i == ii:
                     continue
@@ -228,24 +239,25 @@ class Matrix:
 
     def det(self) -> int:
         "Compute the determinant of a matrix M."
+        zero, one = self._guess_ring()[:2]
         if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         n, m = self.cols, self.rows
         R = self[:, :]
-        D = 1
+        D = one
         i = 0
         for j in range(n):
             if not R[i, j]:  # search for a nonzero entry in the present column
                 for ii in range(i+1, m):
                     if R[ii, j]:
-                        D *= -1
+                        D *= -one
                         R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
                         break
                 else:
-                    return 0  # all entries are zero
-            if R[i, j] != 1:
+                    return zero  # all entries are zero
+            if R[i, j] != one:
                 D *= R[i, j]
-                R[i, :] = 1 / R[i, j] * R[i, :]  # make the pivot one
+                R[i, :] = R[i, j]**-1 * R[i, :]  # make the pivot one
             for ii in range(i+1, n):  # remove the column entries below the pivot
                 if i == ii:
                     continue
@@ -258,10 +270,11 @@ class Matrix:
         "Compute the inverse of a square matrix M."
         if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
+        zero, one = self._guess_ring()[:2]
         n = self.cols
-        MM = self.__class__([[0 for _ in range(2*n)] for _ in range(n)])
+        MM = self.__class__([[zero for _ in range(2*n)] for _ in range(n)])
         for i in range(n):
-            MM[i, n+i] = 1
+            MM[i, n+i] = one
         MM[:, 0:n] = self
         MM = MM.rref()
         if not prod(MM[i, i] for i in range(n)):
@@ -285,10 +298,7 @@ class Matrix:
             n, m = self.cols, self.rows
         elif not n:
             n = m
-        try:
-            zero = 0 * self[0]
-        except:
-            zero = 0
+        zero = self._guess_ring()[0]
         return self.__class__([[zero for j in range(n)] for i in range(m)])
 
     def eye(self, m: int = None, n: int = None):
@@ -301,14 +311,7 @@ class Matrix:
             n, m = self.cols, self.rows
         elif not n:
             n = m
-        try:
-            zero = 0 * self[0]
-        except:
-            zero = 0
-        try:
-            one = zero**0
-        except:
-            one = 1
+        zero, one = self._guess_ring()[:2]
         return self.__class__([[delta(i, j) for j in range(n)] for i in range(m)])
 
 

@@ -3,12 +3,14 @@ Galois field GF(2^n).
 """
 
 from types import new_class
+from .poly import Poly
+from .Zmod import Zmod
 from .conway_polynomials import conway_polynomials2
 
 
 class GF_2:
     "Represents a point in the Galois field GF(2^n)."
-    poly: int = 0  # integer whose biniary digits are the coefficients of the irreducible polynomial
+    modulus: int = 0  # integer whose biniary digits are the coefficients of the irreducible modulusnomial
     power: int = 0  # n
     order: int = 0  # 2**n
     print_hex: bool = True
@@ -37,6 +39,24 @@ class GF_2:
 
     def __int__(self):
         return self.x
+
+    def __bytes__(self):
+        return self.x.to_bytes(self.__class__.power // 8, byteorder=self.__class__.byteorder)
+
+    def poly(self):
+        "Convert to a polynomial"
+        Z_2 = Zmod(2)
+        if self.bitreversed:
+            coeff = [Z_2(int(d)) for d in str(
+                format(self.x, "0" + str(self.power) + "b"))]
+            coeff_modulus = [Z_2(int(d)) for d in str(
+                format((self.modulus << 1) + 1, "0" + str(self.power) + "b"))]
+        else:
+            coeff = reversed([Z_2(int(d)) for d in str(
+                format(self.x, "0" + str(self.power) + "b"))])
+            coeff_modulus = reversed([Z_2(int(d)) for d in str(
+                format(self.modulus, "0" + str(self.power) + "b"))])
+        return Poly(list(coeff), modulus=list(coeff_modulus))
 
     def __hash__(self):
         return hash(self.x)
@@ -67,12 +87,12 @@ class GF_2:
         z = 0
         y = other.x
         if self.__class__.bitreversed:
-            for d in bin(other.x)[2:].zfill(self.__class__.power):
+            for d in bin(self.x)[2:].zfill(self.__class__.power):
                 if int(d):
                     z ^= y
                 if y % 2:
                     y >>= 1
-                    y ^= self.__class__.poly
+                    y ^= self.__class__.modulus
                 else:
                     y >>= 1
         else:
@@ -84,7 +104,7 @@ class GF_2:
                 bitmap2 <<= 1
                 y <<= 1
                 if y & bitmap1:
-                    y ^= self.__class__.poly
+                    y ^= self.__class__.modulus
         return self.__class__(z)
 
     def __rmul__(self, scalar: int) -> "GF_2":
@@ -134,7 +154,7 @@ class GF_2:
         return self.__class__(x)
 
 
-def GF2(n: int, poly: int | None = None):
+def GF2(n: int, modulus: int | None = None):
     """
     Create a Galois field GF(2^n).
 
@@ -142,30 +162,28 @@ def GF2(n: int, poly: int | None = None):
     identified with polynomials whose coefficients are the binary digits of the integer.
     Multiplication is polynomial multiplication modulo a given irreducible polynomial.
     If the polynomial has the n'th bit set, the lowest bit corresponds to the constant coefficient
-    (like in AES). Otherwise, the bit order is reversed (like for Ghash). For n = 8 the default
-    polynomial is the AES polynomial 1 + x + x^3 + x^4 + x^8. For n = 128 the default polynomial
-    is the Ghash polynomial 1 + x + x^2 + x^7 (+ x^128). For ohter n the polynomial has to be given
-    explicitely.
+    (like in AES). Otherwise, the bit order is reversed (like for Ghash). The default modulus is
+    choosen from a list of Conway polynomials.
 
     Example:
 
     To define the Galois field GF(2^8) use
-    >>> gf=GF(8)
+    >>> gf=GF2(8)
 
     To declare 3 as an element of our Galois field use (elements are displayed as hex numbers)
     >>> gf(3)
     03
 
     The usual arithmetic operations are supported.
-    >>> gf(2)*gf(135)
-    15
+    >>> gf(2) * gf(123)
+    f6
 
     """
-    if not poly:
+    if not modulus:
         if n in conway_polynomials2:
-            poly = conway_polynomials2[n]
+            modulus = conway_polynomials2[n]
         else:
-            raise ValueError("Unknown power. Please specify a polynomial.")
+            raise ValueError("Unknown power. Please specify a modulus.")
 
     name = 'GF2^'+str(n)
     gf = new_class(
@@ -173,11 +191,11 @@ def GF2(n: int, poly: int | None = None):
         bases=(GF_2,),
         kwds={},
     )
-    if poly & 2**n == 2**n:
+    if modulus & 2**n == 2**n:
         gf.bitreversed = False
     else:
         gf.bitreversed = True
     gf.power = n
     gf.order = 2**n
-    gf.poly = poly
+    gf.modulus = modulus
     return gf

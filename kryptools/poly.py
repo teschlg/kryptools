@@ -119,7 +119,7 @@ class Poly:
             one = ring(1)
         except:
             ring = None
-            one = zero**0  # zero + 1
+            one = zero**0
         return zero, one, ring
 
     def __add__(self, other: "Poly") -> "Poly":
