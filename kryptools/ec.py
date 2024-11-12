@@ -67,7 +67,7 @@ class EC_Weierstrass():
         return ECPoint(x, y, self, short)
 
     def __iter__(self):
-        yield ECPoint(None, None, self)
+        yield self.inf()
         for x in range(self.p):
             y2 = int(x**3 + self.a * x + self.b)
             y = sqrt_mod(y2, self.p)
@@ -88,6 +88,10 @@ class EC_Weierstrass():
         if P.x is None and P.y is None:
             return True
         return P.y**2 == P.x**3 + self.a * P.x + self.b
+
+    def inf(self):
+        "Point at infinity"
+        return ECPoint(None, None, self)
 
     def info(self):
         "Display some basic info on the curve"
@@ -125,6 +129,8 @@ class EC_Weierstrass():
 
     def mult(self, j: int, x, y):  # Addition-subtraction ladder
         "Point multiplication"
+        if x is None:
+            return None, None
         if j == 0:
             return None, None
         if j < 0:
@@ -343,6 +349,8 @@ class ECPoint:
 
     def order(self) -> int:
         """Compute the order of an element."""
+        if self.x is None:
+            return 1
         self.curve.factor_order()  # Make sure the factorization is available
         order = self.curve.group_order
         for p, k in self.curve.group_order_factors.items():

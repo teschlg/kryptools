@@ -6,7 +6,7 @@ seed(0)
 
 def test_EC():
     ec = EC_Weierstrass(239, 3, 1)
-    O = ec(None, None)  # point at infinity
+    O = ec.inf()  # point at infinity
     assert O in ec
     P = ec.random()
     assert P in ec
