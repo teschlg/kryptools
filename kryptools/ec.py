@@ -129,9 +129,7 @@ class EC_Weierstrass():
 
     def mult(self, j: int, x, y):  # Addition-subtraction ladder
         "Point multiplication"
-        if x is None:
-            return None, None
-        if j == 0:
+        if j == 0 or x is None:
             return None, None
         if j < 0:
             y = -y
@@ -166,7 +164,6 @@ class EC_Weierstrass():
 
     def psi(self, n: int):
         """The x-part of the n'th division polynomial."""
-
         if len(self.psi_list) < 5:
             self.psi_list = [ Poly([i], ring=self.gf) for i in range(3)]
             self.psi_list += [ Poly([-self.a * self.a, 12 * self.b, 6 * self.a, 0, 3], ring=self.gf) ]
