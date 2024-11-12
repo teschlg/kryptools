@@ -18,4 +18,4 @@ from .la import Matrix, zeros, eye
 from .lat import gram_det, hadamard_ratio, hermite_nf, gram_schmidt, babai_round_cvp, babai_round_bnd, babai_plane_cvp, babai_plane_bnd, lagrange_lr, lll, random_unimodular_matrix
 from .poly import Poly
 from .Zmod import Zmod
-from .GF2 import GF2
+from .GF2 import GF2, GF2_aes, GF2_ghash
