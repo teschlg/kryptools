@@ -17,6 +17,8 @@ class Poly:
     """
 
     print_reversed = True  # print the terms in reversed order
+    print_x = "x"  # variable for printing
+    print_pow = "^"  # you can change this to "**" if you want it python style
 
     def __init__(self, coeff: list, ring=None, modulus: list = None):
         self.coeff = list(coeff)
@@ -47,8 +49,8 @@ class Poly:
             if i == 0:
                 return ""
             if i == 1:
-                return "x"
-            return "x^" + str(i)
+                return self.__class__.print_x
+            return self.__class__.print_x + self.__class__.print_pow + str(i)
 
         if not self:
             return str(self.coeff[0])
