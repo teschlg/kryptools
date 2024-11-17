@@ -315,19 +315,19 @@ class Matrix:
         return self.__class__([[delta(i, j) for j in range(n)] for i in range(m)])
 
 
-def zeros(m: int, n: int = None, zero=0) -> "Matrix":
+def zeros(m: int, n: int = None, zero=0, ring=None) -> "Matrix":
     "Returns a zero matrix of the given dimension."
     if not n:
         n = m
-    return Matrix([[zero for j in range(n)] for i in range(m)])
+    return Matrix([[zero for j in range(n)] for i in range(m)], ring=ring)
 
 
-def eye(m: int, n: int = None) -> "Matrix":
+def eye(m: int, n: int = None, zero=0, one=1, ring=None) -> "Matrix":
     "Returns an identity matrix of the given dimension."
     def delta(i, j):
         if i == j:
-            return 1
-        return 0
+            return one
+        return zero
     if not n:
         n = m
-    return Matrix([[delta(i, j) for j in range(n)] for i in range(m)])
+    return Matrix([[delta(i, j) for j in range(n)] for i in range(m)], ring=ring)

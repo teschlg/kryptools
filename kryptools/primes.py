@@ -1,7 +1,8 @@
 """
 Tools for prime numbers:
     sieve_eratosthenes(B) a tuple of all primes up to including B
-    prime_pi(n) number of primes below or equal n
+    prime_pi(x) number of primes below or equal x
+    primorial(x) product of all primes below or equal x
     is_prime(n) test if n is probably prime
     next_prime(n) find the next prime larger or equal n
     previous_prime(n) find the previous prime smaller or equal n
@@ -17,7 +18,7 @@ Tools for prime numbers:
     miller_rabin_test(n, b) Miller-Rabin primality test with base b
     lucas_test(n) strong Lucas test
 """
-from math import isqrt, gcd, floor, ceil
+from math import isqrt, gcd, floor, ceil, prod
 #from random import getrandbits as randbits
 from secrets import randbits
 from .nt import jacobi_symbol
@@ -25,7 +26,7 @@ from .nt import jacobi_symbol
 
 # Erathostenes
 
-def sieve_eratosthenes(B: int) -> tuple:
+def sieve_eratosthenes(B: float) -> tuple:
     """Returns a tuple of all primes up to (including) `B`."""
     if B < 2:
         return ()
@@ -35,13 +36,13 @@ def sieve_eratosthenes(B: int) -> tuple:
     B1 = (isqrt(B) - 1)//2
     B = (B - 1)//2
     # to begin with, all odd numbers are potentially prime
-    isprime = [True] * (B + 1)
+    isprime = bytearray([True]) * (B + 1) # bytearray makes it slightly faster
     # sieve out the primes p=2*q+1 starting at q = 1
     for q in range(1, B1 + 1):
         if isprime[q]:  # sieve out all multiples; numbers p*r with r<p were already sieved out previously
             qq = 2 * q * (q + 1)
             p = 2 * q + 1
-            isprime[qq:: p] = [False] * ((B - qq) // p + 1)
+            isprime[qq:: p] = bytearray([False]) * ((B - qq) // p + 1)
 
     return tuple([2] + [2 * q + 1 for q in range(1, B + 1) if isprime[q]])
 
@@ -49,6 +50,10 @@ def sieve_eratosthenes(B: int) -> tuple:
 def prime_pi(x: float) -> int:
     """Prime-counting function pi(x). Returns the number of primes below or equal `x`."""
     return len(sieve_eratosthenes(x))
+
+def primorial(x: float) -> int:
+    """Primorial. Returns the product of all primes below or equal `x`."""
+    return prod(sieve_eratosthenes(x))
 
 
 # Primality testing

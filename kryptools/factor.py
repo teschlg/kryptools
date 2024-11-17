@@ -42,7 +42,7 @@ def _factor_fermat(n: int, maxsteps: int = 10, verbose: int = 0) -> list:
         print("")
 
 
-def factorint(n: int, verbose: int = 0, trial_bnd: int = 2500) -> dict:
+def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
     "Factor an ineger `n` into prime factors."
     prime_factors = {}
     if not isinstance(n, int):
