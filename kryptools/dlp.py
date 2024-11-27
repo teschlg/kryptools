@@ -43,7 +43,7 @@ def _dlog_switch(a: int, b: int, n: int, m: int, verbose: int = 0) -> int:
     # compare the theoreticaly expected running times ob bsgs and ic; the constant 6 is determined experimentally
     if log(m) - 6 < 2 * sqrt(log(n) * log(log(n))):
         if verbose > 1:
-            print(f"BS GS: {a}^x == {b} (order={m})")
+            print(f"BS GS: {a}^x = {b} (order={m})")
         return dlog_bsgs(a, b, n, m, verbose=max(0, verbose - 1))
     if verbose > 1:
         print(f"Quadratic sieve: {a}^x == {b} (order={m})")

@@ -43,7 +43,7 @@ def dlog_bsgs(a: int, b: int, n: int, m: int = None, verbose: int = 0) -> int:
     giant_step = b
     for l in range(1, mm):
         giant_step = (giant_step * giant_stride) % n
-        if show and not k % show and k:
+        if show and not l % show and l:
             print(".", end="")
         if giant_step in baby_steps:
             if verbose:

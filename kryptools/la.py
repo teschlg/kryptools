@@ -127,15 +127,10 @@ class Matrix:
         tmp.map(func)
         return tmp
 
-    def _guess_ring(self):
+    def _guess_zero(self):
         zero = 0 * self.matrix[0][0]
-        try:
-            ring = type(zero)
-            one = ring(1)
-        except:
-            ring = None
-            one = zero**0
-        return zero, one, ring
+        one = zero**0
+        return zero, one
 
     def norm2(self) -> float:
         "Squared Frobenius/Euclidean norm."
@@ -213,7 +208,7 @@ class Matrix:
 
     def rref(self) -> "Matrix":
         "Compute the reduced echelon form of a matrix M."
-        zero, one = self._guess_ring()[:2]
+        zero, one = self._guess_zero()
         n, m = self.cols, self.rows
         R = self[:, :]
         i = 0
@@ -239,7 +234,7 @@ class Matrix:
 
     def det(self) -> int:
         "Compute the determinant of a matrix M."
-        zero, one = self._guess_ring()[:2]
+        zero, one = self._guess_zero()
         if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         n, m = self.cols, self.rows
@@ -270,7 +265,7 @@ class Matrix:
         "Compute the inverse of a square matrix M."
         if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
-        zero, one = self._guess_ring()[:2]
+        zero, one = self._guess_zero()
         n = self.cols
         MM = self.__class__([[zero for _ in range(2*n)] for _ in range(n)])
         for i in range(n):
@@ -298,7 +293,7 @@ class Matrix:
             n, m = self.cols, self.rows
         elif not n:
             n = m
-        zero = self._guess_ring()[0]
+        zero = self._guess_zero()[0]
         return self.__class__([[zero for j in range(n)] for i in range(m)])
 
     def eye(self, m: int = None, n: int = None):
@@ -311,7 +306,7 @@ class Matrix:
             n, m = self.cols, self.rows
         elif not n:
             n = m
-        zero, one = self._guess_ring()[:2]
+        zero, one = self._guess_zero()
         return self.__class__([[delta(i, j) for j in range(n)] for i in range(m)])
 
 

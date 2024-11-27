@@ -115,7 +115,7 @@ def factor_ecm(n: int, B1: int | None = None, B2: int | None = None, curves: int
         v = (4 * sigma) % n
         try:
             c = (pow(v - u, 3, n) * (3 * u + v) * pow(4 * u**3 * v, -1, n) - 2) % n
-        except:
+        except ValueError:
             if verbose > 1:
                 print("\nFactor found.")
             m = gcd(u, n)
