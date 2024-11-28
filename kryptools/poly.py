@@ -114,10 +114,15 @@ class Poly:
     def _check_type(self, other):
         return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])
 
-    def _guess_zero(self):
+    def _guess_ring(self):
         zero = 0 * self.coeff[0]
-        one = zero**0
-        return zero, one
+        try:
+            ring = type(zero)
+            one = ring(1)
+        except:
+            ring = None
+            one = zero**0
+        return zero, one, ring
 
     def __add__(self, other: "Poly") -> "Poly":
         zero = 0 * self.coeff[0]
@@ -225,9 +230,9 @@ class Poly:
 
     def divmod(self, other: "Poly") -> ("Poly", "Poly"):
         "Polynom division with remainder."
-        zero, one = self._guess_zero()
+        zero, one, ring = self._guess_ring()
         if isinstance(other, list):
-            other = self.__class__(other)
+            other = self.__class__(other, ring=ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot divide {self} and {other}.")
         if not other:
@@ -255,9 +260,9 @@ class Poly:
 
     def mod(self, other: "Poly") -> None:
         "Reduce with respect to a given polynomial."
-        one = self._guess_zero()[1]
+        one, ring = self._guess_ring()[1:]
         if isinstance(other, list):
-            other = self.__class__(other)
+            other = self.__class__(other, ring=ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot divide {self} and {other}.")
         if not other:
@@ -284,9 +289,9 @@ class Poly:
         "Inverse modulo a given polynomial."
         if not other:
             other = self.modulus
-        zero, one = self._guess_zero()
+        zero, one, ring = self._guess_ring()
         if isinstance(other, list):
-            other = self.__class__(other)
+            other = self.__class__(other, ring=ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot invert {self} modulo {other}.")
         if not other:
