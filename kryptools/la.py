@@ -6,7 +6,6 @@ from math import inf, sqrt, prod
 from numbers import Number
 from fractions import Fraction
 
-
 class Matrix:
     """
     Matrix class.
@@ -50,6 +49,13 @@ class Matrix:
         for i in range(self.rows):
             out[i] += self.__class__.print_post
         return '\n'.join(out)
+
+    def latex(self) -> str:
+        res = "\\begin{pmatrix}\n"
+        for row in self.matrix:
+            res += " & ".join(map(str, row)) + '\\\\\n'
+        res += '\\end{pmatrix}'
+        return res
 
     def __len__(self):
         return self.cols * self.rows
