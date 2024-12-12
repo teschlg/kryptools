@@ -27,5 +27,9 @@ The tools contained are:
 * Zmod: a class for the ring of integers modulo an integer
 * GF2: a class for Galois fields GF(2^n)
 
+* BlockCipher: a class implementing the usual modes of operation (ECB, CBC, GCM, etc.)
+* AESCipher: individual AES operations
+* DESCipher: individual DES operations
+
 Documentation can be found in the jupyter notebook
 (mostly done, but might not contain everything: use the force, read the source).
