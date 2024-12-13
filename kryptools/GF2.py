@@ -242,6 +242,32 @@ aes_sbox = list(map(GF2_aes, aes_sbox))
 aes_sbox_inv = list(map(GF2_aes, aes_sbox_inv))
 
 #
+# Mini-AES
+#
+
+# sbox for Mini-AES
+miniaes_sbox = [14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7]
+
+# inverse sbox for MiniAES
+miniaes_sbox_inv = [ 0 for i in range(16) ]
+for i in range(16):
+    miniaes_sbox_inv[miniaes_sbox[i]] = i
+
+class GF2_miniaes(GF_2):
+    "Represents a point in the Mini-AES Galois field GF(2^4)."
+    modulus: int = 0b10011  # x^4 + x + 1 = Mini-AES
+    power: int = 4  # n
+    order: int = 16  # 2**n
+
+    def sbox(self, inv: bool = False) -> "GF2_miniaes":
+        if inv:
+            return miniaes_sbox_inv[self.x]
+        return miniaes_sbox[self.x]
+
+miniaes_sbox = list(map(GF2_miniaes, miniaes_sbox))
+miniaes_sbox_inv = list(map(GF2_miniaes, miniaes_sbox_inv))
+
+#
 # GHASH
 #
 
