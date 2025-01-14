@@ -47,9 +47,7 @@ def factor_qs(n: int, verbose: int = 0) -> int | None:
         ls = legendre_symbol(n, p)
         if ls == 0:  # we already found a factor;-)
             if verbose > 1:
-                print("\nFound a small prime factor.")
-            if n == p:
-                return n
+                print("\nFactor base contains a factor.")
             return p
         if ls == 1:  # we only take primes such that n is quadratic residue
             factorbase.append(p)
