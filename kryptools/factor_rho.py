@@ -15,10 +15,10 @@ def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent
         return (pow(x, 2, n) + 2) % n
 
     if verbose:
-        print(f"Factoring (Pollard rho, maxinit={maxinit}, maxiter={maxiter}): {n} ({floor(log10(n)) + 1} digits)")
+        print(f"Factoring (Pollard rho, maxinit={maxinit}, maxiter={maxiter}): {n} ({floor(log10(n)) + 1} digits)", end="")
 
     if verbose > 1:
-        print("Working ", end="")
+        print("\nWorking ", end="")
     for _ in range(maxinit):
         if verbose > 1:
             print("X", end="")
@@ -54,4 +54,4 @@ def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent
             return tmp
         x = randint(1, n - 1)  # new x_0
     if verbose > 1:
-        print("")
+        print("\nFailed.")

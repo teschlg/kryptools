@@ -29,7 +29,7 @@ def factor_qs(n: int, verbose: int = 0) -> int | None:
     """Find factors of n using the quadratic sieve."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
-    # we use Newton
+    # we use Newton's method
     u = 2 * sqrt(log(n) / log(log(n)))  # asymptotic value
     for _ in range(3):
         u = (2 * log(n) + u * u * (2 + log(u))) / (
@@ -49,7 +49,7 @@ def factor_qs(n: int, verbose: int = 0) -> int | None:
             if verbose > 1:
                 print("\nFactor base contains a factor.")
             return p
-        if ls == 1:  # we only take primes such that n is quadratic residue
+        if ls == 1:  # we only take primes such that n is a quadratic residue
             factorbase.append(p)
     lf = len(factorbase)  # length of the factorbase (including -1)
     lfb = ceil((lf+1) / 8)  # the number of bytes we need to store a relation
@@ -65,11 +65,13 @@ def factor_qs(n: int, verbose: int = 0) -> int | None:
         if r1 == r2:
             factorbase_root[i] = [r1]
         else:
-            factorbase_root[i] = [r1, -r1 % p]  # pylint: disable=E1130
+            factorbase_root[i] = [r1, r2]
 
     m = isqrt(n - 1) + 1
     d = m**2 - n
-    if d == 0:  # Our number is a square
+    if d == 0:  # our number is a square
+        if verbose > 1:
+            print("\nThe number is a complete square.")
         return m
     m2 = 2 * m
 
