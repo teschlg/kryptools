@@ -1,5 +1,4 @@
 import pytest
-from kryptools import is_prime
 from kryptools.factor_qs import factor_qs
 
 
