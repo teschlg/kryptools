@@ -1,6 +1,6 @@
 import pytest
 from random import randint, seed
-from math import prod, lcm
+from math import gcd, prod, lcm
 from fractions import Fraction
 from kryptools import sieve_eratosthenes, is_prime
 from kryptools import egcd, crt, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, carmichael_lambda, euler_phi, moebius_mu, is_carmichael_number
@@ -9,9 +9,10 @@ seed(0)
 
 def test_egcd():
     maxsize = 100
-    for a in range(maxsize):
-        for b in range(maxsize):
+    for a in range(-maxsize, maxsize):
+        for b in range(-maxsize, maxsize):
             g, x, y = egcd(a, b)
+            assert g == gcd(a, b)
             assert x * a + y * b == g
 
 

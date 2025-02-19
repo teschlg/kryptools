@@ -22,6 +22,8 @@ from fractions import Fraction
 def egcd(a: int, b: int) -> (int, int, int):
     """Perform the extended Euclidean agorithm. Returns `gcd`, `x`, `y` such that `a x + b y = gcd`."""
     if a == 0:
+        if b < 0:
+            return -b, 0, -1
         return b, 0, 1
     if a < 0:    
         r0, r1 = -a, b
