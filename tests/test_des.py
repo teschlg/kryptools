@@ -31,12 +31,16 @@ def test_DES():
     for k1, k2 in zip(keys, test_values):
         assert list2int(k1) == k2
 
-    # Test the encryption (Handbook of Applied Cryptography)
-    key = 0x0123456789ABCDEF.to_bytes(8, 'big')
-    x = 0x4E6F772069732074.to_bytes(8, 'big')
-    y = 0x3FA40E8A984D4815.to_bytes(8, 'big')
+    # Test the encryption (Handbook of Applied Cryptography and NIST)
+    test_values = [[ 0x0123456789ABCDEF, 0x4E6F772069732074, 0x3FA40E8A984D4815 ],
+        [0x10316E028C8F3B4A, 0x0000000000000000, 0x82DCBAFBDEAB6602]]
 
-    des = DESCipher(key)
-    des(x).encrypt()
-    assert bytes(des) == y
-    assert des.decrypt() == x
+    for key, x, y in test_values:
+        key = key.to_bytes(8, 'big')
+        x = x.to_bytes(8, 'big')
+        y = y.to_bytes(8, 'big')
+
+        des = DESCipher(key)
+        des(x).encrypt()
+        assert bytes(des) == y
+        assert des.decrypt() == x
