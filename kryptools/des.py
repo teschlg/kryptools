@@ -151,10 +151,18 @@ class FeistelCipher:
         "Switch left and right halves"
         self.state = self.right() + self.left()
 
-    def f_box(self, a: list[int], key: list[int]) -> list[int]:
+    def f_box(self, a: list[int], key: list[int], showtmp:bool = False) -> list[int]:
         "Nonlinear f-box"
+        if showtmp:
+            def printtmp(title:str, a: list) -> None:
+                print(f"{title}: {"".join(map(str,a))}")
+        else:
+            def printtmp(title:str, a: list) -> None:
+                pass
         a = permute(a, self.__class__.E_box)  # expansion box
+        printtmp("EBox", a)
         a = self.xor(a, key)  # add key
+        printtmp("XKey", a)
         split = len(self.__class__.S_split)
         # apply sboxes
         num_sbox = len(self.__class__.S_box)  # number of sboxes
@@ -168,7 +176,9 @@ class FeistelCipher:
             s = self.__class__.S_box[i][index]
             aa += [int(d) for d in str(format(s, "0" + str(out_len) + "b"))]
         a = aa
+        printtmp("SBox", a)
         a = permute(a, self.__class__.P_box) # permutation box
+        printtmp("PBox", a)
         return a
 
     def ip(self) -> None:
