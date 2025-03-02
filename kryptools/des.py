@@ -155,7 +155,7 @@ class FeistelCipher:
         "Nonlinear f-box"
         if showtmp:
             def printtmp(title:str, a: list) -> None:
-                print(f"{title}: {"".join(map(str,a))}")
+                print(f'{title}: {"".join(map(str,a))}')
         else:
             def printtmp(title:str, a: list) -> None:
                 pass
