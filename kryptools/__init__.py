@@ -5,7 +5,7 @@ Implemenation of same basic algorithms used in cryptography.
 __author__ = "Gerald Teschl"
 __copyright__ = "Copyright 2024, Gerald Teschl"
 __license__ = "MIT License"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __email__ = "Gerald.Teschl@univie.ac.at"
 
 from .nt import egcd, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, euler_phi, carmichael_lambda, moebius_mu, is_carmichael_number, order, crt
@@ -21,4 +21,4 @@ from .Zmod import Zmod
 from .GF2 import GF2, GF2_aes, GF2_miniaes, GF2_ghash
 from .blockcipher import BlockCipher, bytexor
 from .aes import AESKeySchedule, AESCipher, AESBlockCipher
-from .des import list2int, SDESKeySchedule, SDESCipher, DESKeySchedule, DESCipher, DESBlockCipher
+from .des import list2int, int2list, permute, rotate_left, SDESKeySchedule, SDESCipher, DESKeySchedule, DESCipher, DESBlockCipher

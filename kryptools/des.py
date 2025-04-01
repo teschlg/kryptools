@@ -6,7 +6,7 @@ from math import ceil
 from .blockcipher import BlockCipher
 
 def permute(a: list[int], permutation: tuple[int]) -> list[int]:
-    "Apply a permutation to a list"
+    "Apply a permutation to a list."
     return [ a[i-1] for i in permutation]
 
 def rotate_left(l: list, n: int = 1) -> list:
@@ -14,7 +14,14 @@ def rotate_left(l: list, n: int = 1) -> list:
     n = n % len(l)
     return l[n:] + l[:n]
 
+def int2list(x: int, length: int = 8) -> list:
+    "Convert an integer or character to a list of binary digits."
+    if not isinstance(x, int):
+        x = ord(x)
+    return [int(d) for d in str(format(x, "0" + str(length) + "b"))]
+
 def list2int(a: list) -> int:
+    "Convert a list of binary digits to an integer."
     s = 0
     for i, d in enumerate(reversed(a)):
         if d:
@@ -68,7 +75,7 @@ class FeistelKeySchedule:
 
     def reset(self) -> None:
         "Reset key schedule."
-        self.state = self.state = permute(self.key, self.__class__.IP)
+        self.state = permute(self.key, self.__class__.IP)
         self.round = 0
 
     def gen_keys(self) -> list:
