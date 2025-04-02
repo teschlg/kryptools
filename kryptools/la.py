@@ -51,6 +51,7 @@ class Matrix:
         return '\n'.join(out)
 
     def latex(self) -> str:
+    	"Produce LaTeX code for the matrix."
         res = "\\begin{pmatrix}\n"
         for row in self.matrix:
             res += " & ".join(map(str, row)) + '\\\\\n'
@@ -214,7 +215,7 @@ class Matrix:
 
     def rref(self) -> "Matrix":
         "Compute the reduced echelon form of a matrix M."
-        zero, one = self._guess_zero()
+        one = self._guess_zero()[1]
         n, m = self.cols, self.rows
         R = self[:, :]
         i = 0

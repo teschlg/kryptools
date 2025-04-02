@@ -277,5 +277,3 @@ class GF2_ghash(GF_2):
     power: int = 128  # n
     order: int = 2**128  # 2**n
     bitreversed: bool = True
-
-

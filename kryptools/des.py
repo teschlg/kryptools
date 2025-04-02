@@ -6,8 +6,15 @@ from math import ceil
 from .blockcipher import BlockCipher
 
 def permute(a: list[int], permutation: tuple[int]) -> list[int]:
-    "Apply a permutation to a list."
+    "Apply a permutation (DES style - counting starts at 1) to a list."
     return [ a[i-1] for i in permutation]
+
+def invert_permutation(permutation: tuple[int]) -> tuple[int]:
+    "Invert a permutation (DES style - counting starts at 1)."
+    inverse = [ 0 ] * len(permutation)
+    for i, j in enumerate(permutation):
+        inverse[j-1] = i+1
+    return tuple(inverse)
 
 def rotate_left(l: list, n: int = 1) -> list:
     "Rotate a list cyclically n places to the left."
@@ -86,7 +93,7 @@ class FeistelKeySchedule:
         for _ in range(len(self.__class__.ROT)):
             keys.append(self.next())
         return keys
-        
+
 
 
 class FeistelCipher:
@@ -103,7 +110,7 @@ class FeistelCipher:
     P_box: tuple = tuple() # permutation after sbox
     S_split: tuple = tuple() # bit selection for sbox
     S_box: tuple = tuple() # list of sboxes
-    
+
     def __init__(self, key: bytes = None):
         self.keys = []
         self.state = [ 0 ] * (self.__class__.blocksize * 8)
@@ -145,7 +152,7 @@ class FeistelCipher:
     def xor(self, a: list[int], b: list[int]) -> list[int]:
         "XOR two lists"
         return [ i ^ j for i, j in zip(a,b)]
-        
+
     def left(self) -> list[int]:
         "Left halve"
         return self.state[:self.__class__.blocksize * 4]

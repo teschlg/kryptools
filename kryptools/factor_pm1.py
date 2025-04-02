@@ -47,7 +47,7 @@ def factor_pm1(n: int, B1: int | None = None, B2: int | None = None, x: int = 2,
     g = gcd(x - 1, n)
     if g == n:  # we hit a multiple of n
         if verbose:
-             print("\nFailed after stage one.")
+            print("\nFailed after stage one.")
         return None
     if 1 < g:
         if verbose > 1:

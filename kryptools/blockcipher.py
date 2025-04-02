@@ -10,9 +10,9 @@ def bytexor(a: bytes, b: bytes) -> bytes:
 
 class BlockCipher:
     "Generic class for a block cipher."
-    
+
     blocksize: int = 1 # blocksize in bytes
-    
+
     def __init__(self, key: bytes|int = None, mode: str|None = None):
         self.key = None  # here we store the key (if any)
         self.cipher = None  # here we can store an instance of the cipher initialized with the key
@@ -53,7 +53,7 @@ class BlockCipher:
         try:
             method = getattr(self, "encrypt_" + mode.lower())
         except:
-            raise ValueError("Unsupported encryption mode: ",mode.lower())
+            raise ValueError("Unsupported encryption mode: ", mode)
         if key:
             self.set_key(key)
         return method(text)
@@ -65,7 +65,7 @@ class BlockCipher:
         try:
             method = getattr(self, "decrypt_" + mode)
         except:
-            raise ValueError("Unsupported encryption mode: ",mode)
+            raise ValueError("Unsupported encryption mode: ", mode)
         if key:
             self.set_key(key)
         return method(ctext)
@@ -89,7 +89,7 @@ class BlockCipher:
     def encrypt_cbc(self, text: bytes, iv: bytes | None = None, padding: bool = True) -> bytes:
         "Encrypt using CBC mode."
         ctext = bytearray(b'')
-        if iv == None:
+        if iv is None:
             bb = randbytes(self.__class__.blocksize)  # iv
         else:
             bb = iv
@@ -114,7 +114,7 @@ class BlockCipher:
     def encrypt_cfb(self, text: bytes, iv: bytes | None = None) -> bytes:
         "Encrypt using CFB mode."
         ctext = bytearray(b'')
-        if iv == None:
+        if iv is None:
             bb = randbytes(self.__class__.blocksize)  # iv
         else:
             bb = iv
@@ -139,7 +139,7 @@ class BlockCipher:
     def encrypt_ofb(self, text: bytes, iv: bytes | None = None) -> bytes:
         "Encrypt using OFB mode."
         ctext = bytearray(b'')
-        if iv == None:
+        if iv is None:
             z = randbytes(self.__class__.blocksize)  # iv
         else:
             z = iv
@@ -156,7 +156,7 @@ class BlockCipher:
         ctext = ctext[self.__class__.blocksize:]  # remove iv
         for b in self.blocksplit(ctext, False):
             z = self.encrypt_block(z)
-            text.extend(bytexor(b, z)) 
+            text.extend(bytexor(b, z))
         return bytes(text)
 
     def adv_ctr(self, z: bytes, s: int) -> bytes:
@@ -174,7 +174,7 @@ class BlockCipher:
     def encrypt_ctr(self, text: bytes, iv: bytes | None = None) -> bytes:
         "Encrypt using CTR mode."
         ctext = bytearray(b'')
-        if iv == None:
+        if iv is None:
             ctr = randbytes(self.__class__.blocksize)  # iv
         else:
             ctr = iv
@@ -281,14 +281,14 @@ class BlockCipher:
             len_block = b'\x00' * (self.__class__.blocksize // 2) + len_block
             tag = 0
         return h, len_block, tag
-    
-    
+
+
     def encrypt_gcm(self, text: bytes, iv: bytes | None = None, aad: bytes | None = None) -> bytes:
         "Encrypt using Galois CTR mode."
         assert self.__class__.blocksize == 16, "GHASH requires a blocksize of 16 bytes."
         ctext = bytearray(b'')
         len_ctr = self.__class__.blocksize // 4
-        if iv == None:
+        if iv is None:
             iv = randbytes(self.__class__.blocksize - len_ctr)
         else:
             assert len(iv) + \

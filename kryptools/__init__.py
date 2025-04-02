@@ -21,4 +21,4 @@ from .Zmod import Zmod
 from .GF2 import GF2, GF2_aes, GF2_miniaes, GF2_ghash
 from .blockcipher import BlockCipher, bytexor
 from .aes import AESKeySchedule, AESCipher, AESBlockCipher
-from .des import list2int, int2list, permute, rotate_left, SDESKeySchedule, SDESCipher, DESKeySchedule, DESCipher, DESBlockCipher
+from .des import list2int, int2list, permute, invert_permutation, rotate_left, SDESKeySchedule, SDESCipher, DESKeySchedule, DESCipher, DESBlockCipher

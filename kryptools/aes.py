@@ -137,7 +137,7 @@ class AESKeySchedule:
             for j in range(4):
                 tmp.append(int(self.key[j, i]))
         return bytes(tmp)
-            
+
     def next(self) -> None:
         "Apply one round of the key shedule and return the next key."
         self.round += 1
