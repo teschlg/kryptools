@@ -164,11 +164,10 @@ class BlockCipher:
         zz = bytearray(z)
         for i in range(self.__class__.blocksize-1, self.__class__.blocksize-s-1, -1):
             c = z[i]+1
-            if (c < 256):
+            if c < 256:
                 zz[i] = c
                 break
-            else:
-                zz[i] = 0
+            zz[i] = 0
         return zz
 
     def encrypt_ctr(self, text: bytes, iv: bytes | None = None) -> bytes:

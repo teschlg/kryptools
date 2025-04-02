@@ -62,7 +62,7 @@ class FeistelKeySchedule:
 
     def __repr__(self):
         if self.__class__.print_hex:
-           return str(format(int(self), "0" + str(ceil(self.keylength/4)) + "x"))
+            return str(format(int(self), "0" + str(ceil(self.keylength/4)) + "x"))
         return str(self.state)
 
     def __int__(self):
@@ -126,7 +126,7 @@ class FeistelCipher:
 
     def __repr__(self):
         if self.__class__.print_hex:
-           return str(format(int(self), "0" + str(self.__class__.blocksize * 2) + "x"))
+            return str(format(int(self), "0" + str(self.__class__.blocksize * 2) + "x"))
         s = ''
         for i, d in enumerate(self.state):
             if not i % 8 and 0 < i < self.__class__.blocksize * 8:
@@ -354,6 +354,7 @@ class DESCipher(FeistelCipher):
 
 
 class DESBlockCipher(BlockCipher):
+    "Block cipher class for DES"
     blocksize = 8
     def set_key(self, key: bytes):
         if not isinstance(key, bytes) and len(key) != self.__class__.blocksize:

@@ -169,6 +169,7 @@ class AESKeySchedule:
         return keys
 
 class AESBlockCipher(BlockCipher):
+    "Block cipher class for AES"
     blocksize = 16
     def set_key(self, key: bytes):
         if not isinstance(key, bytes) and len(key) != self.__class__.blocksize:

@@ -25,7 +25,7 @@ def egcd(a: int, b: int) -> (int, int, int):
         if b < 0:
             return -b, 0, -1
         return b, 0, 1
-    if a < 0:    
+    if a < 0:
         r0, r1 = -a, b
         x0, x1, y0, y1 = -1, 0, 0, 1
     else:

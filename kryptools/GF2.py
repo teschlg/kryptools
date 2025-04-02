@@ -234,6 +234,7 @@ class GF2_aes(GF_2):
     order: int = 256  # 2**n
 
     def sbox(self, inv: bool = False) -> "GF2_aes":
+        "Apply the AES sbox."
         if inv:
             return aes_sbox_inv[self.x]
         return aes_sbox[self.x]
@@ -260,6 +261,7 @@ class GF2_miniaes(GF_2):
     order: int = 16  # 2**n
 
     def sbox(self, inv: bool = False) -> "GF2_miniaes":
+        "Apply the Mini-AES sbox."
         if inv:
             return miniaes_sbox_inv[self.x]
         return miniaes_sbox[self.x]

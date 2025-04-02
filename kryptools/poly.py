@@ -315,6 +315,5 @@ class Poly:
             raise NotImplementedError(f"Cannot compute gcd: {other} must be a polynomial.")
         r0, r1 = other, self
         while r1:
-            q, r = r0.divmod(r1)
-            r0, r1 = r1, r
+            r0, r1 = r1, r0.divmod(r1)[1]
         return r0
