@@ -51,7 +51,7 @@ class Matrix:
         return '\n'.join(out)
 
     def latex(self) -> str:
-    	"Produce LaTeX code for the matrix."
+        "Produce LaTeX code for the matrix."
         res = "\\begin{pmatrix}\n"
         for row in self.matrix:
             res += " & ".join(map(str, row)) + '\\\\\n'
