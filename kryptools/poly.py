@@ -44,12 +44,14 @@ class Poly:
     def __len__(self):
         return len(self.coeff)
 
-    def __repr__(self):
+    def __repr__(self, latex = False):
         def prx(i: int) -> str:
             if i == 0:
                 return ""
             if i == 1:
                 return self.__class__.print_x
+            if latex:
+                return self.__class__.print_x + "^{" + str(i) +"}"
             return self.__class__.print_x + self.__class__.print_pow + str(i)
 
         if not self:
@@ -90,6 +92,12 @@ class Poly:
                 tmp += " " + prx(i)
             plus = " + "
         return tmp.strip()
+
+    def _repr_mimebundle_(self, **kwargs):
+        return {
+            "text/plain": self.__repr__(),
+            "text/latex": "$" + self.__repr__(latex = True) + "$"
+        }
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):

@@ -50,6 +50,12 @@ class Matrix:
             out[i] += self.__class__.print_post
         return '\n'.join(out)
 
+    def _repr_mimebundle_(self, **kwargs):
+        return {
+            "text/plain": self.__repr__(),
+            "text/latex": "$\\displaystyle" + self.latex() + "$"
+        }
+
     def latex(self) -> str:
         "Produce LaTeX code for the matrix."
         res = "\\begin{pmatrix}\n"
