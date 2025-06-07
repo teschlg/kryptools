@@ -13,4 +13,4 @@ test_vectors = [
 def test_sha1():
     sha1 = SHA1()
     for msg, digest in test_vectors:
-        assert int.from_bytes(sha1(msg)) == digest
+        assert int.from_bytes(sha1(msg), byteorder='big') == digest
