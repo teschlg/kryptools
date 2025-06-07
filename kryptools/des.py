@@ -168,10 +168,10 @@ class FeistelCipher:
     def f_box(self, a: list[int], key: list[int], showtmp:bool = False) -> list[int]:
         "Nonlinear f-box"
         if showtmp:
-            def printtmp(title:str, a: list) -> None:
+            def printtmp(title: str, a: list) -> None:
                 print(f'{title}: {"".join(map(str,a))}')
         else:
-            def printtmp(title:str, a: list) -> None:
+            def printtmp(title: str, a: list) -> None:
                 pass
         a = permute(a, self.__class__.E_box)  # expansion box
         printtmp("EBox", a)

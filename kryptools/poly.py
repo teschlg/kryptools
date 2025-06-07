@@ -95,7 +95,7 @@ class Poly:
 
     def _repr_mimebundle_(self, **kwargs):
         return {
-            "text/plain": self.__repr__(),
+            "text/plain": repr(self),
             "text/latex": "$" + self.__repr__(latex = True) + "$"
         }
 

@@ -52,7 +52,7 @@ class Matrix:
 
     def _repr_mimebundle_(self, **kwargs):
         return {
-            "text/plain": self.__repr__(),
+            "text/plain": repr(self),
             "text/latex": "$\\displaystyle" + self.latex() + "$"
         }
 

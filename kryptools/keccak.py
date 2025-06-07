@@ -13,9 +13,13 @@ class Keccak:
             raise ValueError(f"Rate {rate} must be a multiple of 64.")
         self.pad = [b'\x81', b'\x01', b'\x80']
         self.rate = rate // 8  # in bytes
-        self.reset()
+        self.state = [0] * 25
+        self.lfsr = 1
+        self.buffer = b''
+        self.rnd_bytes = None
 
     def reset(self):
+        "Reset the state of the sponge."
         self.state = [0] * 25
         self.lfsr = 1
         self.buffer = b''
@@ -25,7 +29,7 @@ class Keccak:
         out = ""
         for i in range(5):
             for j in range(5):
-                out += "%016x" % self.state[5 * i + j]
+                out += f"{self.state[5 * i + j]:016x}"
                 if j < 4:
                     out += " "
             if i < 4:
@@ -35,7 +39,7 @@ class Keccak:
     def f(self) -> None:
         "Apply f to the state."
         self.lfsr = 1
-        for r in range(Keccak.rounds):
+        for _ in range(Keccak.rounds):
             self.theta()
             self.pi()
             self.rho()
@@ -139,7 +143,7 @@ class Keccak:
             self.state[0] ^= ((self.lfsr & 1) << w)
             self.lfsr <<= 1
             self.lfsr &= Keccak.MASK_64
-            if (self.lfsr & 0x100):
+            if self.lfsr & 0x100:
                 self.lfsr ^= 0x171
 
 

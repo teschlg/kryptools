@@ -143,15 +143,19 @@ class AESKeySchedule:
         self.round += 1
         #RotWord
         tmp = list(self.key[:,3])
-        if self.showtmp: print("Start    :" + str(tmp))
+        if self.showtmp:
+        	print("Start    :" + str(tmp))
         tmp = rotate_left(tmp, 1)
-        if self.showtmp: print("RotWord  :" + str(tmp))
+        if self.showtmp:
+        	print("RotWord  :" + str(tmp))
         #SubWord
         tmp = list(map(lambda x: x.sbox(), tmp))
-        if self.showtmp: print("SubWord  :" + str(tmp))
+        if self.showtmp:
+        	print("SubWord  :" + str(tmp))
         #AddRound constant
         tmp[0] += GF2_aes(2)**(self.round - 1)
-        if self.showtmp: print("AddConst :" + str(tmp))
+        if self.showtmp:
+        	print("AddConst :" + str(tmp))
         tmp = Matrix(tmp)
         self.key[:,0] += tmp
         self.key[:,1] += self.key[:,0]
