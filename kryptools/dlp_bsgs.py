@@ -6,7 +6,7 @@ from math import isqrt
 
 
 def dlog_bsgs(a: int, b: int, n: int, m: int = None, verbose: int = 0) -> int:
-    """Compute the discrete log_a(b) in Z_n of an element a of order m using Shanks' baby-step-giant-step algorithm."""
+    """Compute the discrete log_a(b) in Z_n of an element `a` of order `m` using Shanks' baby-step-giant-step algorithm."""
     a %= n
     b %= n
     if not m:

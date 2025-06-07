@@ -10,7 +10,7 @@ seed(0)
 
 
 def determine_factorbound(n: int) -> (int, int):
-    """Determines the optimal factor bound and the expected number of trys until a for a given n."""
+    """Determines the optimal factor bound and the expected number of trys until a relation is found for a given `n`."""
     # Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us the expected running time |factorbase|^2 u^u = u^(u+2) n^(2/u)/log(n).
     # There is no explicit expression for the optimum, hence we use Newton
     u = 2 * sqrt(log(n) / log(log(n)))  # asymptotic value
@@ -47,7 +47,7 @@ def determine_trialdivison_bounds(B: int, factorbase: list) -> (int, int):
 
 
 def is_smooth(n: int, factorbase: list, factorbase_len: int, smallprimes_len: int, pollard_k: int = None) -> list or None:
-    """Try to factor n with respect to a a given factorbase. Upon success a list of exponents with repect to the factorbase is returned. Otherwise None."""
+    """Try to factor `n` with respect to a given factorbase. Upon success a list of exponents with repect to the factorbase is returned. Otherwise None."""
     # factorbase_len = len(factorbase)
     factors = [0] * factorbase_len
     for i in range(smallprimes_len):
@@ -70,7 +70,7 @@ def is_smooth(n: int, factorbase: list, factorbase_len: int, smallprimes_len: in
 
 def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: float = None, verbose: int = 0) -> int:
     """
-    Compute the discrete log_a(b) in Z_p of an element a of prime order m using Index Calculus with a quadratic sieve.
+    Compute the discrete log_a(b) in Z_p of an element `a` of prime order `m` using Index Calculus with a quadratic sieve.
     The problem is assumed solvable.
     """
     # assert is_prime(m), "The order of a must be prime."

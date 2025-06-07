@@ -31,10 +31,8 @@ The tools contained are:
 * AESCipher: individual AES operations
 * DESCipher: individual DES operations
 
-* SHA1
-* Keccak individual sponge operations
-* SHA3
-* SHAKE
+* SHA1: custom initial state, padding function
+* Keccak: individual sponge operations, SHA3, SHAKE
 
 Documentation can be found in the jupyter notebook
 (mostly done, but might not contain everything: use the force, read the source).

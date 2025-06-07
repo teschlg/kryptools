@@ -8,25 +8,25 @@ from .nt import legendre_symbol, sqrt_mod
 
 
 def bytexor(a: bytearray, b: bytes) -> bytes:
-    """Xor the bytestring b to the bytearry a."""
+    """Xor the bytestring `b` to the bytearry `a`."""
     for i in range(len(a)):
         a[i] ^= b[i]
 
 
 def byteset(a: bytearray, i: int) -> bytes:
-    """Set the i'th bit in the bytearray a to 1."""
+    """Set the i'th bit in the bytearray `a` to 1."""
     i1, i0 = divmod(i, 8)
     a[i1] |= 2**i0
 
 
 def bytetest(a: bytes, i: int) -> bytes:
-    """Test if the i'th bit in the bytestring a is 1."""
+    """Test if the i'th bit in the bytestring `a` is 1."""
     i1, i0 = divmod(i, 8)
     return (a[i1] & 2**i0) != 0
 
 
 def factor_qs(n: int, verbose: int = 0) -> int | None:
-    """Find factors of n using the quadratic sieve."""
+    """Find factors of `n` using the quadratic sieve."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
     # we use Newton's method
@@ -119,6 +119,7 @@ def factor_qs(n: int, verbose: int = 0) -> int | None:
                 iterator_m[i][r] = j  # store as start value for the next step
 
     def process_relation(j: int, relation: bytes):
+        "Add a relation to the linear system and reduce the new system."
         nonlocal relation_no, values, relations
         relation_no += 1
         rhs = bytearray(b"\x00") * lfb # construct the k'th row of the identity matrix

@@ -7,7 +7,7 @@ from random import randint
 
 
 def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
-    """Compute the discrete log_a(b) in Z_p of an element a of order m using Pollard's rho algorithm."""
+    """Compute the discrete log_a(b) in Z_p of an element `a` of order `m` using Pollard's rho algorithm."""
     a %= n
     b %= n
     if not m:

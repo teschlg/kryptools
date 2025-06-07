@@ -9,7 +9,7 @@ from .factor_qs import bytexor, byteset, bytetest
 
 
 def is_smooth(n: int, factorbase: list, lfb: int) -> bytes | None:
-    """Try to factor n with respect to a given factorbase.
+    """Try to factor `n` with respect to a given factorbase.
     Upon success a bytestring, whose bits are the exponents with repect to the factorbase mod 2, is returned.
     Otherwise None."""
     factors = bytearray(b"\x00") * lfb  # we store the exponents mod 2 as bits
@@ -29,7 +29,7 @@ def is_smooth(n: int, factorbase: list, lfb: int) -> bytes | None:
 
 
 def factor_dixon(n: int) -> int | None:
-    """Find factors of n using the method of Dixon."""
+    """Find factors of `n` using the method of Dixon."""
     # first determine the bound B for the factorbase: Choosing B=p^(1/u) Canfield-Erdös-Pomerance gives us
     # the expected running time |B|^2 u^u = u^(u+2) p^(2/u)/log(n). There is no explicit expression for the optimum, hence
     # we use Newton
@@ -55,6 +55,7 @@ def factor_dixon(n: int) -> int | None:
     m = isqrt(n - 1) + 1
 
     def process_relation(j: int, relation: bytes):
+        "Add a relation to the linear system and reduce the new system."
         nonlocal relation_no, values, relations
         relation_no += 1
         # construct the k'th row of the identity matrix

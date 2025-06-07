@@ -89,7 +89,7 @@ def _ecm_parameters(B1: int, B2: int | None = None, D: int | None = None, primes
 
 
 def factor_ecm(n: int, B1: int | None = None, B2: int | None = None, curves: int = 150, ecm_parameters: tuple | None = None, verbose: int = 0) -> int | None:
-    "Factors a number n using Lentsta's ECM method."
+    "Factors a number `n` using Lentsta's ECM method."
 
     if ecm_parameters:
         B1, B2, curves, D, stage_one, stage_two_deltas = ecm_parameters

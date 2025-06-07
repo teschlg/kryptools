@@ -68,7 +68,7 @@ class Keccak:
 
     def squeeze(self, r: int) -> bytes:
         "Squeesze out 'r' bytes from the state."
-        if r <= 0:
+        if r < 0:
             raise ValueError("Number of bytes must be positive.")
         if self.rnd_bytes is None:
             self.absorb_block(self.buffer)

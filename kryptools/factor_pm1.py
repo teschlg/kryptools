@@ -27,7 +27,7 @@ def _pm1_parameters(B1: int, B2: int, primes: tuple = None) -> tuple:
 
 
 def factor_pm1(n: int, B1: int | None = None, B2: int | None = None, x: int = 2, pm1_parameters: tuple = None, verbose: int = 0) -> int | None:
-    "Factors a number n using Pollard's p-1 method."
+    "Factors a number `n` using Pollard's p-1 method."
     if pm1_parameters:
         B1, B2, stage_one, stage_two_deltas = pm1_parameters
     else:

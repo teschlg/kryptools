@@ -2,6 +2,7 @@
 SHA1
 """
 
+
 class SHA1:
     "SHA1 Hash function"
 
@@ -10,20 +11,23 @@ class SHA1:
     def __init__(self):
         pass
 
-    def __call__(self, message: bytes|str, h_init: list = h_init, length: int = None) -> int:
+    def __call__(self, message: bytes | str, h_init: list = h_init, length: int = None) -> int:
         return self.hash(message, h_init, length)
 
     def left_rotate(self, w: int, n: int) -> int:
         """Left rotate a 32-bit integer w by n bits."""
         return ((w << n) | (w >> (32 - n))) & 0xffffffff
+
     def pad(self, msg: bytes, length: int = None) -> bytes:
         """Pad a message. Optionally augment the message length."""
-        msg=bytearray(msg)
-        l=len(msg)
+        msg = bytearray(msg)
+        l = len(msg)
         if length:
-            l+=length
-        msg+=b'\x80'+b'\x00'*((55 - l) % 64) # append 1 plus zeros such that the length % 64 = 56
-        msg += int(l*8).to_bytes(8, byteorder='big') # add the bit length of the message
+            l += length
+        # append 1 plus zeros such that the length % 64 = 56
+        msg += b'\x80'+b'\x00'*((55 - l) % 64)
+        # add the bit length of the message
+        msg += int(l*8).to_bytes(8, byteorder='big')
         return bytes(msg)
 
     def compression_function(self, h: list, chunk: bytes) -> list:
@@ -35,7 +39,7 @@ class SHA1:
         # Break chunk into sixteen 4-byte big-endian words w[i]
         for i in range(16):
             w[i] = int.from_bytes(chunk[i * 4:(i+1) * 4], byteorder='big')
- 
+
         # Message schedule: extend the sixteen 32-bit words into eighty 32-bit words
         for i in range(16, 80):
             # Note: SHA-0 differs by not having this leftrotate
@@ -71,16 +75,16 @@ class SHA1:
 
         return [h0, h1, h2, h3, h4]
 
-    def hash(self, message: bytes|str, h_init: list = h_init, length: int = None) -> int:
+    def hash(self, message: bytes | str, h_init: list = h_init, length: int = None) -> int:
         """
         Computes SHA1 of a given message.
         Optinally the initial hash can be given and the length of the message can be augmented.
         """
         if isinstance(message, str):
             message = message.encode()
-        message= self.pad(message, length)
-        h = h_init # initialize the status
+        message = self.pad(message, length)
+        h = h_init  # initialize the status
         for i in range(0, len(message), 64):
             h = self.compression_function(h, message[i:i+64])
-        #return (h[0] << 128) | (h[1] << 96) | (h[2] << 64) | (h[3] << 32) | h[4]
-        return b''.join(map(lambda n: int.to_bytes(n,4), h))
+        # return (h[0] << 128) | (h[1] << 96) | (h[2] << 64) | (h[3] << 32) | h[4]
+        return b''.join(map(lambda n: int.to_bytes(n, 4, byteorder='big'), h))

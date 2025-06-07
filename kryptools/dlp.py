@@ -12,7 +12,7 @@ from .factor import factorint
 
 
 def dlog_naive(a: int, b: int, n: int, m: int = None, verbose: int = 0) -> int | None:
-    """Compute the discrete log_a(b) in Z_n of an element a of order m by exhaustive search."""
+    """Compute the discrete log_a(b) in Z_n of an element `a` of order `m` by exhaustive search."""
     a %= n
     b %= n
     if not m:
@@ -35,7 +35,7 @@ def dlog_naive(a: int, b: int, n: int, m: int = None, verbose: int = 0) -> int |
 
 
 def _dlog_switch(a: int, b: int, n: int, m: int, verbose: int = 0) -> int:
-    """Compute the discrete log_a(b) in Z_n of an element a of order m choosing an appropriate method."""
+    """Compute the discrete log_a(b) in Z_n of an element `a` of order `m` choosing an appropriate method."""
     if m < 1000:
         if verbose > 1:
             print(f"Naive search: {a}^x = {b} (order={m})")
@@ -51,7 +51,7 @@ def _dlog_switch(a: int, b: int, n: int, m: int, verbose: int = 0) -> int:
 
 
 def _dlog_ph(a: int, b: int, n: int, q: int, k: int, verbose: int = 0) -> int:
-    """Compute the discrete log_a(b) in Z_n of an element a of order q^k using Pohlig-Hellman reduction."""
+    """Compute the discrete log_a(b) in Z_n of an element `a` of order `q^k` using Pohlig-Hellman reduction."""
     if verbose > 1:
         print(f"PH reduction: {a}^x = {b} (order={q}^{k})")
     if k == 1 or q**k < 10000:

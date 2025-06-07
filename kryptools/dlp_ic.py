@@ -10,7 +10,7 @@ seed(0)
 
 
 def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int = 0) -> int:
-    """Compute the discrete log_a(b) in Z_p of an element a of prime order m using Index Calculus."""
+    """Compute the discrete log_a(b) in Z_p of an element `a` of prime order `m` using Index Calculus."""
 
     # assert is_prime(m), "The order of a must be prime."
     # assert order(a, n) == m, "The order of a is incorrect."

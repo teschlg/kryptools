@@ -6,7 +6,7 @@ from math import isqrt, floor, log10
 
 
 def factor_fermat(n: int, maxsteps: int | None = None, verbose: int = 0) -> list:
-    """Find factors of n using the method of Fermat."""
+    """Find factors of `n` using the method of Fermat."""
     if not isinstance(n, int) or n < 1:
         raise ValueError("Number to be factored must be a positive integer!")
     if verbose:
