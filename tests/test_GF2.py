@@ -1,6 +1,6 @@
 import pytest
 from random import randint, seed
-from kryptools import GF2
+from kryptools import GF2, euler_phi
 seed(0)
 
 num_tests = 50
@@ -8,6 +8,10 @@ num_tests = 50
 def test_GF2_ops():
     for n, modulus in [(4, None), (8, None), (8, 0b100011011), (12, None), (128, 0b11100001 << 120)]:
         gf = GF2(n, modulus=modulus)
+        if gf.power < 17:
+            assert len(list(gf)) == gf.order
+            assert len(list(gf.star())) == gf.order - 1
+            assert len(list(gf.generators())) == euler_phi(gf.order - 1)
         for _ in range(num_tests):
             a = randint(0, gf.order-1)
             b = randint(0, gf.order-1)

@@ -2,159 +2,14 @@
 Galois field GF(2^n).
 """
 
-from types import new_class
+from math import gcd
 from .poly import Poly
 from .Zmod import Zmod
+from .factor import factorint
 from .conway_polynomials import conway_polynomials2
 
 
-class GF_2:
-    "Represents a point in the Galois field GF(2^n)."
-    modulus: int = 0  # integer whose biniary digits are the coefficients of the irreducible modulusnomial
-    power: int = 0  # n
-    order: int = 0  # 2**n
-    print_hex: bool = True
-    bitreversed: bool = False
-    byteorder: str = "big"  # big|little
-
-    def __init__(self, x: int):
-        if isinstance(x, bytes | bytearray):
-            x = int.from_bytes(x, byteorder=self.__class__.byteorder)
-        self.x = int(x) % self.__class__.order
-
-    def __iter__(self):
-        for x in range(self.__class__.order):
-            yield self.__class__(x)
-
-    def __repr__(self):
-        if self.__class__.print_hex:
-            return format(self.x, "0"+str(self.__class__.power // 4)+"x")
-        return self.x
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.x == other.x
-
-    def __bool__(self):
-        return bool(self.x)
-
-    def __int__(self):
-        return self.x
-
-    def __bytes__(self):
-        return self.x.to_bytes(self.__class__.power // 8, byteorder=self.__class__.byteorder)
-
-    def poly(self):
-        "Convert to a polynomial"
-        Z_2 = Zmod(2)
-        if self.bitreversed:
-            coeff = [Z_2(int(d)) for d in str(
-                format(self.x, "0" + str(self.power) + "b"))]
-            coeff_modulus = [Z_2(int(d)) for d in str(
-                format((self.modulus << 1) + 1, "0" + str(self.power) + "b"))]
-        else:
-            coeff = reversed([Z_2(int(d)) for d in str(
-                format(self.x, "0" + str(self.power) + "b"))])
-            coeff_modulus = reversed([Z_2(int(d)) for d in str(
-                format(self.modulus, "0" + str(self.power) + "b"))])
-        return Poly(list(coeff), modulus=list(coeff_modulus))
-
-    def __hash__(self):
-        return hash(self.x)
-
-    def __add__(self, other: "GF_2") -> "GF_2":
-        if isinstance(other, self.__class__):
-            return self.__class__(self.x ^ other.x)
-        return NotImplemented
-
-    def __neg__(self) -> "GF_2":
-        return self
-
-    def __pos__(self) -> "GF_2":
-        return self
-
-    def __sub__(self, other: "GF_2") -> "GF_2":
-        if isinstance(other, self.__class__):
-            return self.__class__(self.x ^ other.x)
-        return NotImplemented
-
-    def __mul__(self, other: "GF_2") -> "GF_2":
-        if isinstance(other, int):
-            if other % 2:
-                return self
-            return self.__class__(0)
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        z = 0
-        y = other.x
-        if self.__class__.bitreversed:
-            for d in bin(self.x)[2:].zfill(self.__class__.power):
-                if int(d):
-                    z ^= y
-                if y % 2:
-                    y >>= 1
-                    y ^= self.__class__.modulus
-                else:
-                    y >>= 1
-        else:
-            bitmap1 = self.__class__.order
-            bitmap2 = 1
-            for _ in range(self.__class__.power):
-                if self.x & bitmap2:
-                    z ^= y
-                bitmap2 <<= 1
-                y <<= 1
-                if y & bitmap1:
-                    y ^= self.__class__.modulus
-        return self.__class__(z)
-
-    def __rmul__(self, scalar: int) -> "GF_2":
-        if isinstance(scalar, int):
-            if scalar % 2:
-                return self
-            return self.__class__(0)
-        return NotImplemented
-
-    def __truediv__(self, other: "GF_2") -> "GF_2":
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        if not other.x:
-            raise ValueError("Division by zero.")
-        return self * other**(self.order - 2)
-
-    def __pow__(self, j: int) -> "GF_2":
-        if not isinstance(j, int):
-            return NotImplemented
-        if not (self.x) and j < 0:
-            raise ValueError("Division by zero.")
-        if self.__class__.bitreversed:
-            res = self.__class__(self.__class__.order >> 1)
-        else:
-            res = self.__class__(1)
-        x = self.__class__(self.x)
-        j %= self.__class__.order - 1
-        while j > 0:
-            # If j is odd, multiply with x
-            if j & 1:
-                res *= x
-            # Now square
-            j = j >> 1  # j= j/2
-            x *= x
-        return res
-
-    def __lshift__(self, i: int) -> "GF_2":
-        "Cyclic rotation to the left."
-        x = self.x << i
-        x = (x % self.order) + (x // self.order)
-        return self.__class__(x)
-
-    def __rshift__(self, i: int) -> "GF_2":
-        "Cyclic rotation to the right."
-        x = self.x >> i
-        x += (self.order >> i) * (self.x % 2**i)
-        return self.__class__(x)
-
-
-def GF2(n: int, modulus: int | None = None):
+class GF2:
     """
     Create a Galois field GF(2^n).
 
@@ -179,32 +34,280 @@ def GF2(n: int, modulus: int | None = None):
     f6
 
     """
-    if not modulus:
-        if n in conway_polynomials2:
-            modulus = conway_polynomials2[n]
+    def __init__(self, n: int, modulus: int | None = None):
+        if not isinstance(n, int) or n < 1:
+            raise ValueError(f"{n} is not a positive integer.")
+        if not modulus:
+            if n in conway_polynomials2:
+                modulus = conway_polynomials2[n]
+            else:
+                raise ValueError("Unknown power. Please specify a modulus.")
+        self.modulus = modulus  # integer whose biniary digits are the coefficients of the irreducible modulus polynomial
+        if modulus & 2**n == 2**n:
+            self.bitreversed = False
         else:
-            raise ValueError("Unknown power. Please specify a modulus.")
+            self.bitreversed = True
+        self.power = n  # n
+        self.order = 2**n  # 2**n
+        self.print_hex: bool = True
+        self.byteorder: str = "big"  # big|little
+        self.mult_order = self.order -1
+        self.factors = {}  # factoring of the group order
 
-    name = 'GF2^'+str(n)
-    gf = new_class(
-        name,
-        bases=(GF_2,),
-        kwds={},
-    )
-    if modulus & 2**n == 2**n:
-        gf.bitreversed = False
-    else:
-        gf.bitreversed = True
-    gf.power = n
-    gf.order = 2**n
-    gf.modulus = modulus
-    return gf
+    def __repr__(self):
+        return f"GF(2^{self.power})"
 
-#
-# AES
-#
+    def __call__(self, x: int | list | tuple):
+        if isinstance(x, list|tuple):
+            return [GF2nPoint(xx, self) for xx in x]
+        return GF2nPoint(x, self)
+
+    def __iter__(self):
+        for x in range(self.order):
+            yield GF2nPoint(x, self)
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.order == other.order and self.modulus == other.modulus
+        return False
+
+    def __contains__(self, other: "ZmodPoint") -> bool:
+        return isinstance(other, GF2nPoint) and self == other.field
+
+    def _factors(self) -> dict:
+        "Return the factroization order of the group order of GF(2^n)^*."
+        if not self.factors:
+            self.factors = factorint(self.mult_order)
+        return self.factors
+
+    def one(self) -> bool:
+        "Return one."
+        if self.bitreversed:
+            return self(self.order - 1)
+        return self(1)
+
+    def is_cyclic(self) -> bool:
+        "GF(2^n)^* is cyclic."
+        return True
+
+    def is_field(self) -> bool:
+        "GF(2^n) is a field."
+        return True
+
+    def generator(self) -> int | None:
+        "Return a generator of the group GF(2^n)^*."
+        for a in range(2, self.order):
+            a = self(a)
+            if a.is_generator():
+                return a
+
+    def generators(self) -> list | None:
+        "Return a generator for all generators of the group GF(2^n)^*."
+        a = self.generator()
+        if a is not None:
+            for j in range(1, self.mult_order):
+                if gcd(j, self.mult_order) == 1:
+                    yield a**j
+
+    def star(self) -> list:
+        "Return a generator for all elements of the group GF(2^n)n^*."
+        for x in range(1, self.order):
+            yield self(x)
+
+
+class GF2nPoint:
+    "Represents a point in the Galois field GF(2^n)."
+
+    def __init__(self, x: int, field: "GF2n"):
+        if isinstance(x, bytes | bytearray):
+            x = int.from_bytes(x, byteorder=field.byteorder)
+        self.x = int(x) % field.order
+        self.field = field
+
+    def __repr__(self):
+        if self.field.print_hex:
+            return format(self.x, "0"+str(self.field.power // 4)+"x")
+        return self.x
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__) or self.field != other.field:
+            return False
+        return self.x == other.x
+
+    def __bool__(self):
+        return bool(self.x)
+
+    def __int__(self):
+        return self.x
+
+    def __bytes__(self):
+        return self.x.to_bytes(self.field.power // 8, byteorder=self.field.byteorder)
+
+    def bits(self) -> list:
+        "Convert to a list of bits."
+        if self.field.bitreversed:
+            coeff = [int(d) for d in str(
+                format(self.x, "0" + str(self.field.power) + "b"))]
+        else:
+            coeff = reversed([int(d) for d in str(
+                format(self.x, "0" + str(self.field.power) + "b"))])
+        return list(coeff)
+
+    def poly(self) -> "Poly":
+        "Convert to a polynomial."
+        Z_2 = Zmod(2)
+        if self.field.bitreversed:
+            coeff = [Z_2(int(d)) for d in str(
+                format(self.x, "0" + str(self.field.power) + "b"))]
+            coeff_modulus = [Z_2(int(d)) for d in str(
+                format((self.field.modulus << 1) + 1, "0" + str(self.field.power) + "b"))]
+        else:
+            coeff = reversed([Z_2(int(d)) for d in str(
+                format(self.x, "0" + str(self.field.power) + "b"))])
+            coeff_modulus = reversed([Z_2(int(d)) for d in str(
+                format(self.field.modulus, "0" + str(self.field.power) + "b"))])
+        return Poly(list(coeff), modulus=list(coeff_modulus))
+
+    def __hash__(self):
+        return hash(self.x)
+
+    def __add__(self, other: "GF2nPoint") -> "GF2nPoint":
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        if self.field != other.field:
+            raise NotImplementedError("Cannot add elements from different fields.")
+        return self.field(self.x ^ other.x)
+
+    def __neg__(self) -> "GF2nPoint":
+        return self
+
+    def __pos__(self) -> "GF2nPoint":
+        return self
+
+    def __sub__(self, other: "GF2nPoint") -> "GF2nPoint":
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        if self.field != other.field:
+            raise NotImplementedError("Cannot add elements from different fields.")
+        return self.field(self.x ^ other.x)
+
+    def __mul__(self, other: "GF2nPoint") -> "GF2nPoint":
+        if isinstance(other, int):
+            if other % 2:
+                return self
+            return self.field(0)
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        if self.field != other.field:
+            raise NotImplementedError("Cannot add elements from different fields.")
+        z = 0
+        y = other.x
+        if self.field.bitreversed:
+            for d in bin(self.x)[2:].zfill(self.field.power):
+                if int(d):
+                    z ^= y
+                if y % 2:
+                    y >>= 1
+                    y ^= self.field.modulus
+                else:
+                    y >>= 1
+        else:
+            bitmap1 = self.field.order
+            bitmap2 = 1
+            for _ in range(self.field.power):
+                if self.x & bitmap2:
+                    z ^= y
+                bitmap2 <<= 1
+                y <<= 1
+                if y & bitmap1:
+                    y ^= self.field.modulus
+        return self.field(z)
+
+    def __rmul__(self, scalar: int) -> "GF2nPoint":
+        if isinstance(scalar, int):
+            if scalar % 2:
+                return self
+            return self.field(0)
+        return NotImplemented
+
+    def __truediv__(self, other: "GF2nPoint") -> "GF2nPoint":
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        if self.field != other.field:
+            raise NotImplementedError("Cannot add elements from different fields.")
+        if not other.x:
+            raise ValueError("Division by zero.")
+        return self * other**(self.field.order - 2)
+
+    def __pow__(self, j: int) -> "GF2nPoint":
+        if not isinstance(j, int):
+            return NotImplemented
+        if not (self.x) and j < 0:
+            raise ValueError("Division by zero.")
+        if self.field.bitreversed:
+            res = self.field(self.field.order >> 1)
+        else:
+            res = self.field(1)
+        x = self.field(self.x)
+        j %= self.field.order - 1
+        while j > 0:
+            # If j is odd, multiply with x
+            if j & 1:
+                res *= x
+            # Now square
+            j = j >> 1  # j= j/2
+            x *= x
+        return res
+
+    def __lshift__(self, i: int) -> "GF2nPoint":
+        "Cyclic rotation to the left."
+        x = self.x << i
+        x = (x % self.field.order) + (x // self.field.order)
+        return self.field(x)
+
+    def __rshift__(self, i: int) -> "GF2nPoint":
+        "Cyclic rotation to the right."
+        x = self.x >> i
+        x += (self.field.order >> i) * (self.x % 2**i)
+        return self.field(x)
+
+    def sqrt(self) -> "GF2nPoint":
+        "Compute the square root."
+        return self**(self.field.order//2)
+
+    def order(self) -> int:
+        "Compute the order of the point in the group GF(2^n)^*."
+        self.field._factors()
+        order = self.field.mult_order  # our current guess
+        one = self.field.one()
+        for p, k in self.field.factors.items():
+            for _ in range(k):
+                order_try = order // p
+                if self ** order_try == one:
+                    order = order_try
+                else:
+                    break
+        return order
+
+    def is_generator(self):
+        "Test if the point is a generator of the group GF(2^n)^*."
+        return self.field.mult_order == self.order()
+
+    def sbox(self, inv: bool = False) -> "GF2nPoint":
+        "Apply the AES sbox."
+        if self.field.power == 8 and self.field.modulus == 0b100011011: # AES
+            if inv:
+                return aes_sbox_inv[self.x]
+            return aes_sbox[self.x]
+        elif self.field.power == 4 and self.field.modulus == 0b10011: # MiniAES
+            if inv:
+                return miniaes_sbox_inv[self.x]
+            return miniaes_sbox[self.x]
+        raise ValueError("sbox is only availaible for AES/MiniAES field.")
 
 # sbox for AES
+GF2_aes = GF2(8, 0b100011011)  # x^8 + x^4 + x^3 + x + 1 = AES
+
 aes_sbox = [99, 124, 119, 123, 242, 107, 111, 197, 48, 1, 103, 43, 254, 215, 171, 118,
  202, 130, 201, 125, 250, 89, 71, 240, 173, 212, 162, 175, 156, 164, 114, 192,
  183, 253, 147, 38, 54, 63, 247, 204, 52, 165, 229, 241, 113, 216, 49, 21,
@@ -226,27 +329,13 @@ aes_sbox = [99, 124, 119, 123, 242, 107, 111, 197, 48, 1, 103, 43, 254, 215, 171
 aes_sbox_inv = [ 0 for i in range(256) ]
 for i in range(256):
     aes_sbox_inv[aes_sbox[i]] = i
-
-class GF2_aes(GF_2):
-    "Represents a point in the AES Galois field GF(2^8)."
-    modulus: int = 0b100011011  # x^8 + x^4 + x^3 + x + 1 = AES
-    power: int = 8  # n
-    order: int = 256  # 2**n
-
-    def sbox(self, inv: bool = False) -> "GF2_aes":
-        "Apply the AES sbox."
-        if inv:
-            return aes_sbox_inv[self.x]
-        return aes_sbox[self.x]
-
 aes_sbox = list(map(GF2_aes, aes_sbox))
 aes_sbox_inv = list(map(GF2_aes, aes_sbox_inv))
 
-#
-# Mini-AES
-#
-
+    
 # sbox for Mini-AES
+GF2_miniaes = GF2(4, 0b10011)  # x^4 + x + 1 = Mini-AES
+
 miniaes_sbox = [14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7]
 
 # inverse sbox for MiniAES
@@ -254,28 +343,9 @@ miniaes_sbox_inv = [ 0 for i in range(16) ]
 for i in range(16):
     miniaes_sbox_inv[miniaes_sbox[i]] = i
 
-class GF2_miniaes(GF_2):
-    "Represents a point in the Mini-AES Galois field GF(2^4)."
-    modulus: int = 0b10011  # x^4 + x + 1 = Mini-AES
-    power: int = 4  # n
-    order: int = 16  # 2**n
-
-    def sbox(self, inv: bool = False) -> "GF2_miniaes":
-        "Apply the Mini-AES sbox."
-        if inv:
-            return miniaes_sbox_inv[self.x]
-        return miniaes_sbox[self.x]
-
 miniaes_sbox = list(map(GF2_miniaes, miniaes_sbox))
 miniaes_sbox_inv = list(map(GF2_miniaes, miniaes_sbox_inv))
 
-#
-# GHASH
-#
+#Ghash
 
-class GF2_ghash(GF_2):
-    "Represents a point in the GHASH Galois field GF(2^128)."
-    modulus: int = 0b11100001 << 120  # 1 + x + x^2 + x^7 (+ x^128) = Ghash
-    power: int = 128  # n
-    order: int = 2**128  # 2**n
-    bitreversed: bool = True
+GF2_ghash = GF2(128, 0b11100001 << 120)  # 1 + x + x^2 + x^7 (+ x^128) = Ghash

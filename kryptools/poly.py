@@ -3,7 +3,8 @@ Polynomials
 """
 
 from numbers import Number
-
+from .primes import is_prime
+from .factor import factorint
 
 class Poly:
     """
@@ -33,7 +34,10 @@ class Poly:
             self.mod(modulus)
 
     def __call__(self, x):
-        return sum(c * x**j for j, c in enumerate(self.coeff))
+        zero = 0 * self.coeff[0]
+        if not type(x) == type(zero):
+            raise ValueError("Evaluation point must be an element of the field.")
+        return sum((c * x**j for j, c in enumerate(self.coeff)), start = zero)
 
     def __getitem__(self, item):
         return self.coeff[item]
@@ -124,12 +128,17 @@ class Poly:
 
     def _guess_ring(self):
         zero = 0 * self.coeff[0]
+        one = zero**0
         try:
-            ring = type(zero)
-            one = ring(1)
+            ring = zero.ring  # Zmod
         except:
-            ring = None
-            one = zero**0
+            try:
+                ring = zero.field  # GF2
+            except:
+                try:
+                    ring = type(zero)  # galois
+                except:
+                    ring = None
         return zero, one, ring
 
     def __add__(self, other: "Poly") -> "Poly":
@@ -319,9 +328,60 @@ class Poly:
 
     def gcd(self, other: "Poly") -> "Poly":
         "Greates common divisor with a given polynomial."
-        if not isinstance(other, self.__class__):
+        ring = self._guess_ring()[-1]
+        if isinstance(other, list):
+            other = self.__class__(other, ring=ring)
+        elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot compute gcd: {other} must be a polynomial.")
         r0, r1 = other, self
         while r1:
             r0, r1 = r1, r0.divmod(r1)[1]
         return r0
+
+    def egcd(self, other: "Poly") -> ("Poly", "Poly", "Poly"):
+        """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that other * x + self * y = gcd."""
+        zero, one, ring = self._guess_ring()
+        if isinstance(other, list):
+            other = self.__class__(other, ring=ring)
+        elif not isinstance(other, self.__class__):
+            raise NotImplementedError(f"Cannot perform egcd: {other} must be a polynomial.")
+        r0, r1 = other, self
+        x0, x1 = self.__class__([one], modulus=self.modulus), self.__class__([zero], modulus=self.modulus)
+        y0, y1 = self.__class__([zero], modulus=self.modulus), self.__class__([one], modulus=self.modulus)
+        while r1:
+            q, r = r0.divmod(r1)
+            r0, r1 = r1, r
+            x0, x1 = x1, x0 - q * x1
+            y0, y1 = y1, y0 - q * y1
+        return r0, x0, y0
+
+    def derivative(self) -> "Poly":
+        "Returns the formal derivative."
+        l = len(self.coeff)
+        if l == 1:
+            tmp = 0 * self.coeff[0]
+        else:
+            tmp = [ j * self.coeff[j] for j in range(1, l) ]
+        return self.__class__(tmp, modulus=self.modulus)
+
+    def rabin_test(self) -> bool:
+        """Determine if a polynomial is irreducible over a Galois field using a Rabin test."""
+        ring = self._guess_ring()[-1]
+        if not ring:
+            raise ValueError("The polynomial does not seem to be over a known finite field.")
+        try:
+            q = ring.n  # Zmod
+            isfield = is_prime(q)
+        except:
+            q = ring.order  # GF2
+            isfield = True
+        if not isfield:
+            raise ValueError("The polynomial does not seem to be over a finite field.")
+        n = self.degree()
+        x = self.__class__([0, 1], ring=ring, modulus = self.coeff)  # x
+        for p in factorint(n).keys():
+            g = self.gcd(x**(q**(n//p)) - x)  # gcd with x^{q/n} - x
+            if g.degree():
+                return False
+        g = x**(q**n) - x
+        return not(g)

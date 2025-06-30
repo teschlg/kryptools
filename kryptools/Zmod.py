@@ -4,6 +4,7 @@ Ring of intergers modulo `n`.
 
 from math import gcd
 from .factor import factorint
+from .primes import is_prime
 from .intfuncs import prime_power
 
 
@@ -33,11 +34,12 @@ class Zmod:
         self.group_order = 0
         self.factors = {}  # factoring of the group order
 
+    def __repr__(self):
+        return f"Z_{self.n})"
+
     def __call__(self, x: int | list | tuple):
-        if isinstance(x, list):
+        if isinstance(x, list|tuple):
             return [ZmodPoint(xx, self) for xx in x]
-        if isinstance(x, tuple):
-            return (ZmodPoint(xx, self) for xx in x)
         return ZmodPoint(x, self)
 
     def __iter__(self):
@@ -53,7 +55,7 @@ class Zmod:
         return isinstance(other, ZmodPoint) and self.n == other.ring.n
 
     def order(self) -> int:
-        """Compute the order of the group Z_n^*."""
+        "Compute the order of the group Z_n^*."
         if self.group_order:
             return self.group_order
         # We compute euler_phi(n) and its factorization in one pass
@@ -76,7 +78,7 @@ class Zmod:
         return self.group_order
 
     def is_cyclic(self) -> bool:
-        """Test if the group Z_n^* is cyclic."""
+        "Test if the group Z_n^* is cyclic."
         n = self.n
         if n < 8:
             return True
@@ -88,8 +90,12 @@ class Zmod:
             return True
         return False
 
+    def is_field(self) -> bool:
+        "Test if Z_n is a field."
+        return is_prime(self.n)
+
     def generator(self) -> int | None:
-        """Return a generator of the group Z_n^*."""
+        "Return a generator of the group Z_n^*."
         if not self.is_cyclic():
             return None
         for a in range(2, self.n):
@@ -100,7 +106,7 @@ class Zmod:
                 return a
 
     def generators(self) -> list | None:
-        """Return a generator for all generators of the group Z_n^*."""
+        "Return a generator for all generators of the group Z_n^*."
         a = self.generator()
         if a is not None:
             self.order()
@@ -109,7 +115,7 @@ class Zmod:
                     yield a**j
 
     def star(self) -> list:
-        """Return a generator for all elements of the group Z_n^*."""
+        "Return a generator for all elements of the group Z_n^*."
         yield self(1)
         for a in range(2, self.n):
             if gcd(a, self.n) == 1:
@@ -210,7 +216,7 @@ class ZmodPoint:
         return (self.x + tmp) % self.ring.n - tmp
 
     def order(self) -> int:
-        """Compute the order of the point in the group Z_n^*."""
+        "Compute the order of the point in the group Z_n^*."
         if self.x == 0 or gcd(self.x, self.ring.n) != 1:
             raise ValueError(f"{self.x} and {self.ring.n} are not coprime!")
         order = self.ring.order()  # use euler_phi(n) as our current guess
@@ -224,5 +230,5 @@ class ZmodPoint:
         return order
 
     def is_generator(self):
-        """Test if the point is a generator of the group Z_n^*."""
+        "Test if the point is a generator of the group Z_n^*."
         return self.ring.order() == self.order()

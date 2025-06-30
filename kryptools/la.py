@@ -105,7 +105,7 @@ class Matrix:
             if isinstance(j, int):
                 cols = [j]
             elif isinstance(j, list):
-                cols = i
+                cols = j
             else:
                 cols = range(self.cols)[j]
             for i, ii in zip(cols, range(len(cols))):
@@ -118,6 +118,73 @@ class Matrix:
             for k in range(self.cols * self.rows)[item]:
                 i, j = divmod(k, self.cols)
                 self.matrix[i][j] = value[k]
+
+    def __delitem__(self, item):
+        if isinstance(item, tuple):
+            i, j = item
+            if isinstance(i, int):
+                rows = [i]
+            elif isinstance(i, list):
+                rows = set(i)
+            else:
+                rows = range(self.rows)[i]
+            if isinstance(j, int):
+                cols = [j]
+            elif isinstance(j, list):
+                cols = set(j)
+            else:
+                cols = range(self.cols)[j]
+            if len(cols) == self.cols:
+                self.delete_rows(rows)
+                return
+            elif len(rows) == self.rows:
+                self.delete_columns(cols)
+                return
+        raise ValueError("Can only delete entire rows or entire columns!")
+            
+    def delete_rows(self, rows: int|list) -> None:
+        "Deletes a row or a list of rows."
+        if isinstance(rows, int):
+            rows = [ rows ]
+        rows = list(map(lambda x: x % self.rows, rows))
+        rows = set(rows)
+        if len(rows) >= self.rows:
+            raise ValueError("Cannot delete all rows.")
+        for i in reversed(sorted(rows)):
+            del self.matrix[i]
+        self.rows -= len(rows)
+    
+    def delete_columns(self, cols: int|list) -> None:
+        "Deletes a column or a list of columns."
+        if isinstance(cols, int):
+            cols = [ cols ]
+        cols = list(map(lambda x: x % self.cols, cols))
+        cols = set(cols)
+        if len(cols) >= self.cols:
+            raise ValueError("Cannot delete all columns.")
+        for i in range(self.rows):
+            for j in reversed(sorted(cols)):
+                del self.matrix[i][j]
+        self.cols -= len(cols)
+    
+    def append_row(self, row: list, ring = None) -> None:
+        "Append a row."
+        if not isinstance(row, list|tuple) or len(row) != self.cols:
+            raise ValueError("Length does not match the number of columns.")
+        if ring:
+            row =list(map(ring, row))
+        self.matrix.append(row)
+        self.rows += 1
+
+    def append_column(self, col: list, ring = None) -> None:
+        "Append a column."
+        if not isinstance(col, list|tuple) or len(col) != self.rows:
+            raise ValueError("Length does not match the number of rows.")
+        if ring:
+            col =list(map(ring, col))
+        for i in range(self.rows):
+            self.matrix[i].append(col[i])
+        self.cols += 1
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -274,6 +341,14 @@ class Matrix:
             i += 1
         return D
 
+    def rank(self) -> int:
+        "Compute the rank of a matrix M."
+        MM = self.rref()
+        for i in range(self.rows-1,-1,-1):
+            if MM[i,:]:
+                return i+1
+        return 0
+
     def inv(self) -> "Matrix":
         "Compute the inverse of a square matrix M."
         if self.rows != self.cols:
@@ -306,6 +381,8 @@ class Matrix:
             n, m = self.cols, self.rows
         elif not n:
             n = m
+        if n < 1 or m < 1:
+            raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
         zero = self._guess_zero()[0]
         return self.__class__([[zero for j in range(n)] for i in range(m)])
 
@@ -319,6 +396,8 @@ class Matrix:
             n, m = self.cols, self.rows
         elif not n:
             n = m
+        if n < 1 or m < 1:
+            raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
         zero, one = self._guess_zero()
         return self.__class__([[delta(i, j) for j in range(n)] for i in range(m)])
 
@@ -327,6 +406,8 @@ def zeros(m: int, n: int = None, zero=0, ring=None) -> "Matrix":
     "Returns a zero matrix of the given dimension."
     if not n:
         n = m
+    if n < 1 or m < 1:
+        raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
     return Matrix([[zero for j in range(n)] for i in range(m)], ring=ring)
 
 
@@ -338,4 +419,6 @@ def eye(m: int, n: int = None, zero=0, one=1, ring=None) -> "Matrix":
         return zero
     if not n:
         n = m
+    if n < 1 or m < 1:
+        raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
     return Matrix([[delta(i, j) for j in range(n)] for i in range(m)], ring=ring)

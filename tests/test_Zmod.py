@@ -33,6 +33,7 @@ def test_Zmod_ops():
 def test_Zmod_methods():
     Z_5 = Zmod(5)
     assert len(list(Z_5)) == 5
+    assert len(list(Z_5.star())) == 4
     assert Z_5.order() == 4
     assert Z_5(3).order() == 4
     assert Z_5(1).is_generator() is False
@@ -47,6 +48,7 @@ def test_Zmod_methods():
 
     Z_6 = Zmod(6)
     assert len(list(Z_6)) == 6
+    assert len(list(Z_6.star())) == 2
     assert Z_6.order() == 2
     assert Z_6(5).order() == 2
     with pytest.raises(ValueError):
