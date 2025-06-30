@@ -167,7 +167,7 @@ class Matrix:
                 del self.matrix[i][j]
         self.cols -= len(cols)
     
-    def append_row(self, row: list, ring = None) -> None:
+    def append_row(self, row: list|tuple, ring = None) -> None:
         "Append a row."
         if not isinstance(row, list|tuple) or len(row) != self.cols:
             raise ValueError("Length does not match the number of columns.")
@@ -176,7 +176,7 @@ class Matrix:
         self.matrix.append(row)
         self.rows += 1
 
-    def append_column(self, col: list, ring = None) -> None:
+    def append_column(self, col: list|tuple, ring = None) -> None:
         "Append a column."
         if not isinstance(col, list|tuple) or len(col) != self.rows:
             raise ValueError("Length does not match the number of rows.")
@@ -363,6 +363,28 @@ class Matrix:
         if not prod(MM[i, i] for i in range(n)):
             raise ValueError("Matrix is not invertible!")
         return MM[:, n:]
+
+    def solve(self, b: "Matrix", ring = None) -> "Matrix":
+        "Solve the linear system with given inhomogenous vector."
+        if isinstance(b, list|tuple):
+            b = Matrix(b, ring = ring)
+        if self.rows != b.rows or b.cols != 1:
+            raise ValueError("Matrix dimensions do not match.")
+        A = self.zeros(self.rows, self.cols + 1) # extended coefficient matrix
+        A[:, 0:self.cols] = self
+        A[:, self.cols] = b
+        A = A.rref()
+        solution = self.zeros(self.rows, 1)
+        for i in range(A.rows-1, -1, -1):
+            if not any(A.matrix[i][:-1]):
+                if A.matrix[i][-1]:
+                    return None  # Not solvable
+            else:
+                for j in range(A.cols - 1):
+                    if A.matrix[i][j]:
+                        break # leading nonzero coefficient
+                solution[j]= A.matrix[i][-1]
+        return solution
 
     def is_unimodular(self) -> bool:
         "Test if the matrix is unimodular."
