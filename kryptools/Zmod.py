@@ -17,7 +17,7 @@ class Zmod:
     To define a finite Galois field modulo the prime 5 use
     >>> Z_5=Zmod(5)
 
-    To declare 3 as an element of our Galois filed use
+    To declare 3 as an element of our Galois field use
     >>> Z_5(3)
     3
 
@@ -209,6 +209,10 @@ class ZmodPoint:
 
     def __abs__(self) -> int:
         return abs(self.sharp())
+
+    def bits(self) -> list:
+        "Convert to a list of bits."
+        return [int(d) for d in str(format(self.x, "0" + str(int.bit_length(self.ring.n - 1)) + "b"))]
 
     def sharp(self):
         "Returns a symmetric (w.r.t. 0) representative."

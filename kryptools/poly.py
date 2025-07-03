@@ -231,6 +231,16 @@ class Poly:
             tmp *= tmp
         return res
 
+    def bits(self) -> list[int]:
+        "List of bits of all coefficients."
+        ring = self.coeff[0].__class__
+        if not (hasattr(ring, 'bits') and callable(ring.bits)):
+            raise NotImplementedError("Coefficients cannot be converted to bits.")
+        out = []
+        for c in self.coeff:
+            out += c.bits()
+        return out
+
     def max(self) -> int:
         "Maximum of the absolute value of all coefficients."
         return max(abs(c) for c in self.coeff)

@@ -109,7 +109,8 @@ def babai_plane_bnd(U: Matrix, p=2) -> float:
 
 def lagrange_lr(V: Matrix) -> Matrix:
     "Lagrange lattice reduction."
-    assert (V.rows, V.cols) == (2, 2)
+    if (V.rows, V.cols) != (2, 2):
+        raise ValueError("Lagrange lattice reduction requires dimension two.")
     v1, v2 = V[:, 0], V[:, 1]
     if norm2(v1) > norm2(v2):
         v1, v2 = v2, v1

@@ -374,7 +374,7 @@ class Matrix:
         A[:, 0:self.cols] = self
         A[:, self.cols] = b
         A = A.rref()
-        solution = self.zeros(self.rows, 1)
+        solution = self.zeros(self.cols, 1)
         for i in range(A.rows-1, -1, -1):
             if not any(A.matrix[i][:-1]):
                 if A.matrix[i][-1]:

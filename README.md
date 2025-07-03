@@ -21,11 +21,13 @@ The tools contained are:
 * elliptic curves (Weierstrass form), group operations, order, discrete logarithms
 * linear algebra: Hermite normal form, Gram-Schmidt
 * lattices: Hadamard ratio, Babai rounding/nearest plane algorithm, lattice reduction (Lenstra-Lenstra-Lovaz)
+* linear codes: Hamming distance, left standard form, parity check matrix
 
 * Matrix: a class for Matrices (inverse, det, reduced echelon form, etc.)
 * Poly: a class for polynomials (division, modulo)
 * Zmod: a class for the ring of integers modulo an integer
 * GF2: a class for Galois fields GF(2^n)
+* Goppa: a class for encoding and decoding Goppa codes
 
 * BlockCipher: a class implementing the usual modes of operation (ECB, CBC, GCM, etc.)
 * AESCipher: individual AES operations
