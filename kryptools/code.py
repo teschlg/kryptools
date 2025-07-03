@@ -119,6 +119,8 @@ class Goppa():
             for x in self.gf:
                 if not sigma(x):
                     y[int(x)] += 1
+            if self.H * y:
+                raise ValueError("Decoding failed!")
         x = self.G.transpose().solve(y)
         x.map(int)
         return list(x)
