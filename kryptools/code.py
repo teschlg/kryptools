@@ -109,7 +109,7 @@ class Goppa():
             v.modulus = None
             r0, r1 = self.g, v
             y0, y1 = Poly([self.gf(0)]), Poly([self.gf(1)])
-            while r1 and 2* r1.degree() > self.g.degree():
+            while 2 * r1.degree() > self.g.degree():
                 q, r = r0.divmod(r1)
                 r0, r1 = r1, r
                 y0, y1 = y1, y0 - q * y1
