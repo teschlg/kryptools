@@ -4,7 +4,7 @@ Polynomials
 
 from numbers import Number
 from .primes import is_prime
-from .factor import factorint
+#from .factor import factorint
 
 class Poly:
     """
@@ -387,11 +387,23 @@ class Poly:
             isfield = True
         if not isfield:
             raise ValueError("The polynomial does not seem to be over a finite field.")
-        n = self.degree()
-        x = self.__class__([0, 1], ring=ring, modulus = self.coeff)  # x
-        for p in factorint(n).keys():
-            g = self.gcd(x**(q**(n//p)) - x)  # gcd with x^{q/n} - x
+        #n = self.degree()
+        #x = self.__class__([0, 1], ring=ring, modulus = self.coeff)  # x
+        #for p in factorint(n).keys():
+        #    g = self.gcd(x**(q**(n//p)) - x)  # gcd with x^{q/n} - x
+        #    if g.degree():
+        #        return False
+        #g = x**(q**n) - x
+        #return not(g)
+        x = Poly([0, 1], ring = ring)  # x
+        xq = Poly(q * [0] + [1], ring = ring, modulus = self.coeff)  # x^q modulo self to keep the polynomials small
+        for k in range(1, self.degree() // 2 + 1):
+            if k == 1:
+                b = xq
+            else:
+                b **= q  # we compute x^{q^k} mod a recursively
+            g = self.gcd(b - x)  # gcd with x^{q^k} - x
             if g.degree():
                 return False
-        g = x**(q**n) - x
-        return not(g)
+        return True
+

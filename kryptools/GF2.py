@@ -62,6 +62,9 @@ class GF2:
             return [GF2nPoint(xx, self) for xx in x]
         return GF2nPoint(x, self)
 
+    def __len__(self):
+        return self.order
+
     def __iter__(self):
         for x in range(self.order):
             yield GF2nPoint(x, self)
