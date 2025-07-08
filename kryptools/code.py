@@ -17,14 +17,18 @@ def poly2bits(x: Poly) -> list:
 
 def left_standard_form(M: Matrix) -> (Matrix, Matrix):
     "Compute the left standard form of a generator matrix. Return the standard form and the pertmutation matrix."
+    # reduced row echelon form
     M = M.rref()
+    # purge zero rows
     for i in range(M.rows-1,-1,-1):
         if not M[i,:]:
-            M.delete_rows(i)  # remove zero rows
+            M.delete_rows(i)
+    # permute columns to get the identity on the left
     last = min(M.rows, M.cols)
     P = eye(M.cols)
     for i in range(last):
-        if not M[i,i]:
+        if not M[i,i]: # the diagonal entry vanishes
+            # find the index of the pivot and permute
             j = i + 1
             while j <= last and not M[i, j]:
                 j += 1
@@ -37,11 +41,16 @@ def gen2pchk(G: Matrix) -> Matrix:
     "Compute the parity check matrix from a given generator matrix (and vice versa)."
     G, P = left_standard_form(G)
     d = G.cols - G.rows
-    assert d > 0
+    if d <= 0:
+        raise ValueError("A generator matrix must have more columns than rows!")
     zero = 0 * G[0]
+    one = zero**0
+    # we start with a zero matrix
     H = zeros(d, G.cols, zero = zero)
+    # create the identity on the right
     for i in range(d):
-        H[i,G.rows+i] = zero**0
+        H[i,G.rows+i] = one
+    # add minus the transpose of the right part of G as the left part
     tmp = - G[:,-d:].transpose()
     for i in range(G.cols - d):
         H[:, i] = tmp[:, i]
@@ -55,12 +64,12 @@ def hamming_dist(a: iter, b: iter):
 
 class Goppa():
     """
-    Binary Goppa code.
+    Binary irreducible Goppa code.
 
     Example:
 
     >>> gf = GF2(4) # base field GF(2^n)
-    >>> g = Poly([2, 0, 0, 1], ring = gf) # Polynomial for the code
+    >>> g = Poly([2, 0, 0, 1], ring = gf) # irreducible Polynomial for the code
     >>> alpha = list(gf) # list of points from the base field (must not contain zeros of g)
     >>> goppa = Goppa(gf, g, alpha)
     
@@ -68,17 +77,20 @@ class Goppa():
     >>> goppa.encode([1, 0, 1, 1])
     [0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1]
 
-    Decoding still works if there are atmost deg(g) errors:
+    Decoding still works if there are at most deg(g) errors:
     >>> goppa.decode([0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0])
     [1, 0, 1, 1]
     
     """
 
     def __init__(self, gf: GF2, g: Poly, alpha: list["GF2Point"]):
-        assert all(map(g, alpha))
-        self.gf = gf
-        self.g = g
-        self.alpha = alpha
+        if not all(map(lambda x: x in gf, alpha)):
+            raise ValueError(f"{x}: alpha must be a list of elements from the Galois field!")
+        if not g.rabin_test():
+            raise ValueError(f"The polynomial g must be irreducible!")
+        self.gf = gf  # underlying Galois field
+        self.g = g  # polynomial
+        self.alpha = alpha # list of elements from gf
         # Compute the control matrix
         self.Z_2 = Zmod(2)
 
@@ -116,7 +128,7 @@ class Goppa():
             a, b = r1, y1
             sigma = a**2 + b**2 * Poly([0,1], ring = self.gf)
             # correct the error
-            for x in self.gf:
+            for x in self.alpha:
                 if not sigma(x):
                     y[int(x)] += 1
             if self.H * y:
