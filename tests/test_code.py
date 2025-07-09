@@ -38,14 +38,4 @@ def test_Goppa():
             for _ in range(t):
                 i = randint(0, goppa.G.cols-1)
                 y[i] = 1- y[i]
-            try:
-                goppa.decode(y)
-            except:
-                coeff = g.coeff
-                coeff = list(map(int, coeff))
-                with open("/tmp/error.txt", "w") as f:
-                    f.write(f"g = {coeff}\n")
-                    f.write(f"x = {x}\n")
-                    f.write(f"y = {y}\n")
-                assert int("".join(map(str,x)), base =2) == int("".join(map(str,y)), base =2)
-            assert goppa.decode(y) == x, f"x={int("".join(map(str,x)), base =2)}, y={int("".join(map(str,y)), base =2)}"
+            assert goppa.decode(y) == x
