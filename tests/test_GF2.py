@@ -8,6 +8,11 @@ num_tests = 50
 def test_GF2_ops():
     for n, modulus in [(4, None), (8, None), (8, 0b100011011), (12, None), (128, 0b11100001 << 120)]:
         gf = GF2(n, modulus=modulus)
+        assert gf(1)
+        assert not gf(0)
+        assert gf(1) == gf(1)
+        assert not gf(1) == gf(0)
+        assert not gf(0) == 0
         if gf.power < 17:
             assert len(list(gf)) == gf.order
             assert len(list(gf.star())) == gf.order - 1

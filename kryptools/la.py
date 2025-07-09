@@ -191,7 +191,7 @@ class Matrix:
             return False
         if self.rows != other.rows or self.cols != other.cols:
             return False
-        return any(self[i] == other[i] for i in range(self.rows * self.cols))
+        return all(self[i] == other[i] for i in range(self.rows * self.cols))
 
     def __bool__(self):
         return any(bool(self[i]) for i in range(self.rows * self.cols))

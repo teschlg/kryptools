@@ -5,17 +5,20 @@ from kryptools import gen2pchk, Goppa
 
 seed(0)
 Z_2 = Zmod(2)
-G_Hamming = Matrix([
-[1, 0, 0, 0, 1, 1, 0],
-[0, 1, 0, 0, 1, 0, 1],
-[0, 0, 1, 0, 0, 1, 1],
-[0, 0, 0, 1, 1, 1, 1]
-], ring = Z_2)
+
+def Hamming2(h: int) -> Matrix:
+    "Parity check matrix for the binary Hamming code."
+    out = []
+    for i in range(1,2**h):
+        out.append([int(d) for d in str(format(i, "0" + str(h) + "b"))])
+    return Matrix(out, ring = Z_2).transpose()
 
 
 def test_gen2pchk():
-    H = gen2pchk(G_Hamming)
-    assert not H * G_Hamming.transpose()
+    for h in range(2,6):
+        H = Hamming2(h)
+        G = gen2pchk(H)
+        assert not H * G.transpose()
 
 num_tests = 10
 
@@ -35,4 +38,14 @@ def test_Goppa():
             for _ in range(t):
                 i = randint(0, goppa.G.cols-1)
                 y[i] = 1- y[i]
-        assert goppa.decode(y) == x
+            try:
+                goppa.decode(y)
+            except:
+                coeff = g.coeff
+                coeff = list(map(int, coeff))
+                with open("/tmp/error.txt", "w") as f:
+                    f.write(f"g = {coeff}\n")
+                    f.write(f"x = {x}\n")
+                    f.write(f"y = {y}\n")
+                assert int("".join(map(str,x)), base =2) == int("".join(map(str,y)), base =2)
+            assert goppa.decode(y) == x, f"x={int("".join(map(str,x)), base =2)}, y={int("".join(map(str,y)), base =2)}"

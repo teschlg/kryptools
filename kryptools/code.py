@@ -30,11 +30,10 @@ def left_standard_form(M: Matrix) -> (Matrix, Matrix):
         if not M[i,i]: # the diagonal entry vanishes
             # find the index of the pivot and permute
             j = i + 1
-            while j <= last and not M[i, j]:
+            while j <= M.cols and not M[i, j]:
                 j += 1
-            if j <= last:
-                P[:,i], P[:,j] = P[:,j], P[:,i]
-                M[:,i], M[:,j] = M[:,j], M[:,i]
+            P[:,i], P[:,j] = P[:,j], P[:,i]
+            M[:,i], M[:,j] = M[:,j], M[:,i]
     return M, P
 
 def gen2pchk(G: Matrix) -> Matrix:
@@ -100,6 +99,9 @@ class Goppa():
         self.H = Matrix(tmp, ring=self.Z_2).transpose()
         # Compute the generator matrix
         self.G = gen2pchk(self.H)
+
+    def __repr__(self):
+        return f"Binary irreducible Goppa code over GF(2^{self.gf.power}) with polynomial g(x) = {self.g}."
 
     def encode(self, x: list[int]):
         "Encode a given list of bits."
