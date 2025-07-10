@@ -71,10 +71,7 @@ def test_Zmod_methods():
 
 def test_Zmod_order():
     for n in range(1, 100):
-        if n == 1:
-            o = 0
-        else:
-            o = euler_phi(n)
+        o = euler_phi(n)
         assert Zmod(n).order() == o
         assert len(list(Zmod(n).star())) == o
 
