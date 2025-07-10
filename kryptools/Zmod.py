@@ -58,6 +58,9 @@ class Zmod:
         "Compute the order of the group Z_n^*."
         if self.group_order:
             return self.group_order
+        elif self.n <= 3:
+            self.group_order = self.n - 1
+            return self.group_order
         # We compute euler_phi(n) and its factorization in one pass
         for p, k in factorint(self.n).items():  # first factorize n
             # factor p-1 and add the factors
@@ -80,6 +83,8 @@ class Zmod:
     def is_cyclic(self) -> bool:
         "Test if the group Z_n^* is cyclic."
         n = self.n
+        if n == 1:
+            return False
         if n < 8:
             return True
         if not n % 2:
@@ -98,6 +103,8 @@ class Zmod:
         "Return a generator of the group Z_n^*."
         if not self.is_cyclic():
             return None
+        if self.n == 2:
+            return self(1)
         for a in range(2, self.n):
             if gcd(a, self.n) > 1:
                 continue
@@ -109,17 +116,19 @@ class Zmod:
         "Return a generator for all generators of the group Z_n^*."
         a = self.generator()
         if a is not None:
+            yield a
             self.order()
-            for j in range(1, self.group_order):
+            for j in range(2, self.group_order):
                 if gcd(j, self.group_order) == 1:
                     yield a**j
 
     def star(self) -> list:
         "Return a generator for all elements of the group Z_n^*."
-        yield self(1)
-        for a in range(2, self.n):
-            if gcd(a, self.n) == 1:
-                yield self(a)
+        if self.n > 1:
+            yield self(1)
+            for a in range(2, self.n):
+                if gcd(a, self.n) == 1:
+                    yield self(a)
 
 
 class ZmodPoint:

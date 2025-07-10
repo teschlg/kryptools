@@ -1,6 +1,6 @@
 import pytest
 from math import gcd
-from kryptools import Zmod, euler_phi
+from kryptools import Zmod, euler_phi, is_prime
 
 
 def test_Zmod_ops():
@@ -70,9 +70,17 @@ def test_Zmod_methods():
 
 
 def test_Zmod_order():
-    for n in range(2, 10):
-        Z_n = Zmod(n)
-        assert Z_n.order() == euler_phi(n)
+    for n in range(1, 100):
+        if n == 1:
+            o = 0
+        else:
+            o = euler_phi(n)
+        assert Zmod(n).order() == o
+        assert len(list(Zmod(n).star())) == o
+
+def test_Zmod_field():
+    for n in range(1, 100):
+        assert Zmod(n).is_field() == is_prime(n)
 
 
 OEIS_A033948 = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 17, 18, 19, 22, 23, 25, 26, 27,
@@ -80,7 +88,24 @@ OEIS_A033948 = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 17, 18, 19, 22, 23, 25, 
                 79, 81, 82, 83, 86, 89, 94, 97, 98, 101, 103, 106, 107, 109, 113, 118, 121, 122, 125,
                 127, 131, 134, 137, 139]
 
-
 def test_Zmod_cyclic():
     for n in range(2, OEIS_A033948[-1]+1):
         assert Zmod(n).is_cyclic() == (n in OEIS_A033948)
+
+OEIS_A046145 = [0, 1, 2, 3, 2, 5, 3, 0, 2, 3, 2, 0, 2, 3, 0, 0, 3, 5, 2, 0, 0, 7, 5, 0, 2, 7, 2, 0, 2, 0, 3, 0, 0, 3, 0,
+ 0, 2, 3, 0, 0, 6, 0, 3, 0, 0, 5, 5, 0, 3, 3, 0, 0, 2, 5, 0, 0, 0, 3, 2, 0, 2, 3, 0, 0, 0, 0, 2, 0, 0, 0,
+ 7, 0, 5, 5, 0, 0, 0, 0, 3, 0, 2, 7, 2, 0, 0, 3, 0, 0, 3, 0]
+
+def test_Zmod_generator():
+    for j, a in enumerate(OEIS_A046145):
+        aa = Zmod(j+1).generator()
+        if aa is None:
+            aa = 0
+        assert a == int(aa)
+
+def test_Zmod_generators():
+    for n in range(1, 100):
+        if Zmod(n).is_cyclic():
+            assert len(list(Zmod(n).generators())) == euler_phi(euler_phi(n))
+        else:
+            assert list(Zmod(n).generators()) == []
