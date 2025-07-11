@@ -229,6 +229,8 @@ class ZmodPoint:
 
     def order(self) -> int:
         "Compute the order of the point in the group Z_n^*."
+        if self.ring.n == 1:
+            return 1
         if self.x == 0 or gcd(self.x, self.ring.n) != 1:
             raise ValueError(f"{self.x} and {self.ring.n} are not coprime!")
         order = self.ring.order()  # use euler_phi(n) as our current guess

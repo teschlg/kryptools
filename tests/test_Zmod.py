@@ -75,6 +75,18 @@ def test_Zmod_order():
         assert Zmod(n).order() == o
         assert len(list(Zmod(n).star())) == o
 
+def test_ZmodP_order():
+    for n in range(1,100):
+        ring = Zmod(n)
+        one = ring(1)
+        for x in ring.star():
+            o = 1
+            xx = x
+            while xx != one:
+                o += 1
+                xx *=x
+            assert o == x.order()
+
 def test_Zmod_field():
     for n in range(1, 100):
         assert Zmod(n).is_field() == is_prime(n)
@@ -95,9 +107,12 @@ OEIS_A046145 = [0, 1, 2, 3, 2, 5, 3, 0, 2, 3, 2, 0, 2, 3, 0, 0, 3, 5, 2, 0, 0, 7
 
 def test_Zmod_generator():
     for j, a in enumerate(OEIS_A046145):
-        aa = Zmod(j+1).generator()
+        ring = Zmod(j+1)
+        aa = ring.generator()
         if aa is None:
             aa = 0
+        else:
+            assert aa.order() == ring.order()
         assert a == int(aa)
 
 def test_Zmod_generators():

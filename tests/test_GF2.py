@@ -35,9 +35,26 @@ def test_GF2_ops():
             assert (gf(a)**-1).poly() == gf(a).poly().inv()
 
 def test_GF2_order():
-    for n in range(1, 7):
+    for n in range(1, 8):
         gf = GF2(n)
         assert len(list(gf)) == gf.order
         assert len(list(gf.star())) == gf.order - 1
         assert len(list(gf.generators())) == euler_phi(gf.order - 1)
 
+def test_GF2P_order():
+    for n in range(1, 9):
+        gf = GF2(n)
+        one = gf(1)
+        for x in gf.star():
+            o = 1
+            xx = x
+            while xx != one:
+                o += 1
+                xx *=x
+            assert o == x.order()
+
+def test_Zmod_generator():
+    for n in range(1, 9):
+        gf = GF2(n)
+        a = gf.generator()
+        assert a.order() == gf.mult_order
