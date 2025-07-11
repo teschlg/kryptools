@@ -33,3 +33,11 @@ def test_GF2_ops():
         for _ in range(num_tests):
             a = randint(1, gf.order-1)
             assert (gf(a)**-1).poly() == gf(a).poly().inv()
+
+def test_GF2_order():
+    for n in range(1, 7):
+        gf = GF2(n)
+        assert len(list(gf)) == gf.order
+        assert len(list(gf.star())) == gf.order - 1
+        assert len(list(gf.generators())) == euler_phi(gf.order - 1)
+

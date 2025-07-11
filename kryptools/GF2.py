@@ -51,7 +51,7 @@ class GF2:
         self.order = 2**n  # 2**n
         self.print_hex: bool = True
         self.byteorder: str = "big"  # big|little
-        self.mult_order = self.order -1
+        self.mult_order = self.order - 1
         self.factors = {}  # factoring of the group order
 
     def __repr__(self):
@@ -99,6 +99,8 @@ class GF2:
 
     def generator(self) -> int | None:
         "Return a generator of the group GF(2^n)^*."
+        if self.power == 1:
+            return self(1)
         for a in range(2, self.order):
             a = self(a)
             if a.is_generator():
@@ -107,10 +109,10 @@ class GF2:
     def generators(self) -> list | None:
         "Return a generator for all generators of the group GF(2^n)^*."
         a = self.generator()
-        if a is not None:
-            for j in range(1, self.mult_order):
-                if gcd(j, self.mult_order) == 1:
-                    yield a**j
+        yield a
+        for j in range(2, self.mult_order):
+            if gcd(j, self.mult_order) == 1:
+                yield a**j
 
     def star(self) -> list:
         "Return a generator for all elements of the group GF(2^n)n^*."
