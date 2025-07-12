@@ -18,19 +18,18 @@ def iroot(k: int, n: int) -> int:
         raise ValueError(f"n={n} must be a nonegative integer.")
     if n <= 1 or k == 1:
         return n
-    if k == 2:
+    if k == 2: # use the faster internal function
         return isqrt(n)
-    rr = n
-    kk = k
-    while kk > 1:
-        kk //= 2
-        rr = isqrt(rr)
-    r = rr + 1
-    k1 = k-1
-    while rr < r:
+    l = n.bit_length()
+    if k >= l:
+        return 1
+    r = 1 << ((l-1)//k + 1) # use 2^ceil(l/k) as starting value
+    k1 = k - 1
+    while True:
+        rr = (k1 * r + n // r ** k1) // k  # Newton iteration
+        if rr >= r:
+            return r
         r = rr
-        rr = (k1 * rr + n // rr ** k1) // k  # Newton iteration
-    return r
 
 
 def ilog(b: int, n: int) -> int:
