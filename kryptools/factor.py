@@ -6,6 +6,7 @@ Factorization of integers:
 
 from math import isqrt, gcd, prod, floor, log10
 from .primes import sieve_eratosthenes, is_prime
+from .intfuncs import perfect_power
 from .factor_pm1 import _pm1_parameters, factor_pm1
 from .factor_ecm import _ecm_parameters, factor_ecm
 #from .factor_qs import factor_qs
@@ -86,10 +87,16 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
         return prime_factors
     if verbose:
         print("Trial division found:", list(prime_factors))
+    # check if the remainder is a perfect power
+    res = perfect_power(n)
+    if res:
+        n, k = res
+    else:
+        n, k = n, 1
     if is_prime(n, trialdivision=False):
-        prime_factors[n] = 1
+        prime_factors[n] = k
         return prime_factors
-    remaining_factors = {n: 1}
+    remaining_factors = {n: k}
 
     # https://gitlab.inria.fr/zimmerma/ecm/
     ECM_PARAMETERS = [
