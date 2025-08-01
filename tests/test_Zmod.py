@@ -87,6 +87,26 @@ def test_ZmodP_order():
                 xx *=x
             assert o == x.order()
 
+def test_ZmodP_sqrt():
+    for n in range(1,100):
+        print(n)
+        ring = Zmod(n)
+        one = ring(1)
+        roots = {} # compute a dict of all roots
+        for x in ring:
+            y = x**2
+            if y in roots:
+               roots[y].append(x)
+            else:
+                roots[y] = [ x ]
+        for x in ring:
+            if x not in roots:
+                with pytest.raises(ValueError):
+                    x.sqrt()
+            else:
+                y = x.sqrt()
+                assert y**2 == x
+
 def test_Zmod_field():
     for n in range(1, 100):
         assert Zmod(n).is_field() == is_prime(n)

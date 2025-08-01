@@ -5,6 +5,7 @@ Ring of intergers modulo `n`.
 from math import gcd
 from .factor import factorint
 from .primes import is_prime
+from .nt import sqrt_mod, crt
 from .intfuncs import prime_power
 
 
@@ -30,12 +31,13 @@ class Zmod:
         if not isinstance(n, int) or n < 1:
             raise ValueError(f"{n} is not a positive integer.")
         self.n = n
+        self.n_factors = {} # factoring of n
         self.short = short
         self.group_order = 0
-        self.factors = {}  # factoring of the group order
+        self.factors = {}  # factoring of the multiplicative group order
 
     def __repr__(self):
-        return f"Z_{self.n})"
+        return f"Z_{self.n}"
 
     def __call__(self, x: int | list | tuple):
         if isinstance(x, list|tuple):
@@ -59,7 +61,9 @@ class Zmod:
         if self.group_order:
             return self.group_order
         # We compute euler_phi(n) and its factorization in one pass
-        for p, k in factorint(self.n).items():  # first factorize n
+        if not self.n_factors:
+            self.n_factors = factorint(self.n)
+        for p, k in self.n_factors.items():  # first factorize n
             # factor p-1 and add the factors
             for pm, km in factorint(p - 1).items():
                 if pm in self.factors:
@@ -242,6 +246,56 @@ class ZmodPoint:
                 else:
                     break
         return order
+
+    def sqrt(self) -> "ZmodPoint":
+        if not self.ring.n_factors:
+            self.ring.n_factors = factorint(self.ring.n)
+        a = int(self)
+        if a in (0, 1):
+            return self.ring(a)
+        roots = []
+        powers = []
+        for p, k in self.ring.n_factors.items():
+            q = p**(k-1)
+            pk = q * p
+            ak = a % pk
+            powers.append(pk)
+            if ak in (0, 1):
+                roots.append(ak)
+                continue
+            # write ak as p^j * invertible
+            j = 0
+            while ak % p == 0:
+                j += 1
+                ak //= p
+            if j % 2:
+                raise ValueError("No quadratic residue!")
+            if ak == 1:
+                roots.append(p**(j//2))
+                continue
+            if p == 2:
+                if ak % 8 != 1:
+                    raise ValueError("No quadratic residue!")
+                m = 4 # start at 2^2
+                x = ak % m # this is the root mod m
+                for i in range(3, k + 1):
+                    # test all 4 poosible roots
+                    if (x**2 - ak) % (m * 2):
+                        x = m - x
+                        if (x**2 - ak) % (m*2):
+                            x = (x * (m//2-1)) % m
+                            if (x**2 - ak) % (m * 2):
+                                x = m - x
+                    m *= 2
+            else:
+                # odd prime: Cipolla's formula
+                x = sqrt_mod(ak, p)
+                if x is None:
+                    raise ValueError("No quadratic residue!")
+                if k > 1:
+                    x = pow(x, q, pk) * pow(ak,((p-2)*q+1)//2, pk) % pk
+            roots.append((p**(j//2) * x) % pk)
+        return self.ring(crt(roots, powers))
 
     def is_generator(self):
         "Test if the point is a generator of the group Z_n^*."

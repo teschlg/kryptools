@@ -111,7 +111,7 @@ def jacobi_symbol(a: int, n: int) -> int:
     return 0
 
 
-def sqrt_mod(a: int, p: int) -> int:
+def sqrt_mod(a: int, p: int) -> int|None:
     """Compute a square root of `a` modulo `p` unsing Cipolla's algorithm."""
     a %= p
     if a in (0, 1):
@@ -120,6 +120,12 @@ def sqrt_mod(a: int, p: int) -> int:
         return None
     if p % 4 == 3:  # easy case
         return pow(a, (p + 1) // 4, p)
+    if p % 8 == 5:
+        x = pow(a, (p + 3)//8, p)
+        c = pow(x, 2, p)
+        if c % p == a:
+            return x
+        return (x * pow(2, (p - 1)//4, p)) % p
     # Cipolla's algorithm
     for c in range(1, p):  # find a field extension
         tmp = (c * c - a) % p
