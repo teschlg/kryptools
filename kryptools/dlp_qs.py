@@ -97,7 +97,7 @@ def dlog_qs(a: int, b: int, n: int, m: int, pollard: bool = True, sieve_factor: 
                 break
             trys += 1
         else:
-            raise Exception(f"Sorry, Quadratic Sieve failed failed to find a new relation after {trys} trys.")
+            raise Exception(f"Sorry, Quadratic Sieve failed to find a new relation after {trys} trys.")
         if verbose > 2:
             if include_b:
                 print(f"rel found: b*a^{x}=", b * pow(a, x, n) % n, relation)
