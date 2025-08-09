@@ -2,6 +2,7 @@
 Polynomials
 """
 
+from math import prod
 from numbers import Number
 from .primes import is_prime
 #from .factor import factorint
@@ -407,3 +408,22 @@ class Poly:
                 return False
         return True
 
+
+def lagrange_interpolation(x_coordinates:list, y_coordinates:list) -> "Poly":
+    "Compute the Lagrange interpolation polynomial from a given list of x and y values."
+    l = len(x_coordinates)
+    if l == 0 or l != len(y_coordinates):
+        raise ValueError('List of x and y values must be nonempty of equal length.')
+    if l != len(set(x_coordinates)):
+        raise ValueError('List of x values must not contain duplicate values.')
+    # Guess zero and one
+    zero = 0 * x_coordinates[0]
+    one = zero**0
+
+    poly = Poly([zero])
+    L_all = prod([Poly([-x, one]) for x in x_coordinates], start = one)
+
+    for x, y in zip(x_coordinates, y_coordinates):
+        L = L_all // Poly([-x, one])
+        poly += (y / prod([x -xx for xx in x_coordinates if xx != x], start = one)) * L
+    return poly
