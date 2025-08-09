@@ -52,7 +52,7 @@ def test_Cyclic():
 def test_ReedSolomon():
     for gf, k in [ [Zmod(13), 3],  [GF2(6), 4]]:
         rsc = ReedSolomonCode(k, gf)
-        t = (rsc.n - rsc.k - 2) // 2
+        t = (rsc.n - rsc.k) // 2
         for _ in range(num_tests):
             x = [ gf(randint(0, rsc.n)) for _ in range(rsc.k) ]
             y = rsc.encode(x)

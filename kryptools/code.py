@@ -198,7 +198,7 @@ class CyclicCode():
         if x.degree() >= self.k:
             raise ValueError(f"Degree can be at most {self.k-1}.")
         if standard_form:
-            x.coeff = [zero] * g.degree() + x.coeff
+            x.coeff = [zero] * self.g.degree() + x.coeff
             y = x - (x % self.g)
         else:
             y = self.g * x
@@ -307,7 +307,7 @@ class ReedSolomonCode(CyclicCode):
             raise ValueError(f"Degree can be at most {self.n-1}.")
         x = Poly([ -y(self.alpha**(-j)) for j in range(self.n) ])
         if x.degree() >= self.k: # No codewort
-            t = (self.n - self.k - 2) // 2
+            t = (self.n - self.k) // 2
             A = Matrix([[ x[j - l % self.n] for l in range(1, t+1) ] for j in range(self.k+t, self.k+2*t) ])
             b = [ -x[self.k + t + l ] for l in range(t) ]
             lam = Poly([one] + list(A.solve(b)))
