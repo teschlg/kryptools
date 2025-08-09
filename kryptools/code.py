@@ -2,9 +2,10 @@
 Linear codes
 """
 
+from math import prod
 from .Zmod import Zmod
 from .GF2 import GF2
-from .poly import Poly
+from .poly import Poly, lagrange_interpolation
 from .la import Matrix, eye, zeros
 
 
@@ -67,7 +68,7 @@ class Goppa():
 
     Example:
 
-    >>> gf = GF2(4) # base field GF(2^n)
+    >>> gf = GF2(4) # base field GF(2^4)
     >>> g = Poly([2, 0, 0, 1], ring = gf) # irreducible Polynomial for the code
     >>> alpha = list(gf) # list of points from the base field (must not contain zeros of g)
     >>> goppa = Goppa(gf, g, alpha)
@@ -86,7 +87,7 @@ class Goppa():
         if not all(map(lambda x: x in gf, alpha)):
             raise ValueError(f"{x}: alpha must be a list of elements from the Galois field!")
         if not g.rabin_test():
-            raise ValueError(f"The polynomial g must be irreducible!")
+            raise ValueError("The polynomial g must be irreducible!")
         self.gf = gf  # underlying Galois field
         self.g = g  # polynomial
         self.alpha = alpha # list of elements from gf
@@ -138,3 +139,188 @@ class Goppa():
         x = self.G.transpose().solve(y)
         x.map(int)
         return list(x)
+
+class CyclicCode():
+    """
+    Cyclic code.
+
+    Example:
+
+    >>> n = 4 # length of the code
+    >>> g = Poly([1, 1], ring = Zmod(2)) # generating Polynomial for the code
+    >>> cc = CyclicCode(n, g)
+    
+    To encode a list of letters (the length must be equal to the dimension k of the code):
+    >>> cc.encode([0,1,0], ring = Zmod(2))
+    [0, 1, 1, 0]
+
+    Decoding is only implemnted for code words:
+    >>> cc.decode([0, 1, 1, 0], ring = Zmod(2))
+    [0, 1, 0]
+    
+    """
+
+    def __init__(self, n:int, g: Poly):
+        if n < 2:
+            raise ValueError(f"Code lenght {n} must be at least 2!")
+        zero = 0 * g[0]
+        try:
+            order = zero.ring.n  # Zmod
+        except:
+            try:
+                order = zero.field.order  # GF2
+            except:
+                try:
+                    order = type(zero).order  # galois
+                except:
+                    raise ValueError("Unknown base filed!")
+        self.order = order  # order of the base field
+        one = zero**0
+        modulus = Poly([-one] + [zero] * (n-1) + [one])
+        self.modulus = modulus
+        if modulus % g:
+            raise ValueError(f"The polynomial g must be a factor of x^{n} - 1!")
+        self.n = n  # lenght
+        self.k = n - g.degree()  # dimension
+        self.g = g  # generating polynomial
+        self.h = Poly(modulus) // g
+
+    def __repr__(self):
+        return f"Cyclic [{self.n}, {self.k}] code over GF({self.order}) with generator polynomial g(x) = {self.g}."
+    
+    def encode(self, x: list|Poly, gf = None, standard_form = False):
+        "Encode a given list or polynomial."
+        as_list = False
+        zero = 0 * self.g[0]
+        if isinstance(x, list | tuple):
+            as_list = True
+            x = Poly(x, ring = gf)
+        if x.degree() >= self.k:
+            raise ValueError(f"Degree can be at most {self.k-1}.")
+        if standard_form:
+            x.coeff = [zero] * g.degree() + x.coeff
+            y = x - (x % self.g)
+        else:
+            y = self.g * x
+        if as_list:
+            return y.coeff + [zero] * (self.n - len(y.coeff))
+        return y
+
+    def decode(self, y: list|Poly, gf = None, standard_form = False):
+        "Decode a given list or polynomial."
+        as_list = False
+        zero = 0 * self.g[0]
+        if isinstance(y, list | tuple):
+            as_list = True
+            y = Poly(y, ring = gf)
+        if y.degree() >= self.n:
+            raise ValueError(f"Degree can be at most {self.n-1}.")
+        x, r = y.divmod(self.g)
+        if r:
+            raise NotImplementedError(f"Word is no code word! Cannot decode.")
+        if standard_form:
+            x.coeff = y.coeff[self.g.degree():]
+        if as_list:
+            return x.coeff + [zero] * (self.k - len(x.coeff))
+        return x
+
+    def generator_matrix(self):
+        "Return the generator matrix of the code."
+        zero = 0 * self.g[0]
+        return Matrix([[zero] * j + self.g.coeff + [zero] * (self.k - j - 1 ) for j in range(self.k)])
+
+    def check_matrix(self):
+        "Return the parity check matrix of the code."
+        zero = 0 * self.g[0]
+        tmp = list(reversed(self.h.coeff))
+        return Matrix([[zero] * j + tmp + [zero] * (self.n - self.k - j - 1 ) for j in range(self.n-self.k)])
+
+class ReedSolomonCode(CyclicCode):
+    """
+    Reed-Solomon code.
+
+    Example:
+
+    >>> gf = Zmod(13) # Galois field
+    >>> k = 3 # dimension of the code
+    >>> rsc = ReedSolomonCode(k, gf)
+    
+    To encode a list of letters (the length must be equal to the dimension k of the code; conversion to the Galois field is done automatically):
+    >>> cc.encode([1, 2, 3])
+    [0, 1, 1, 0]
+
+    Decoding is only implemnted for code words:
+    >>> cc.decode([0, 1, 1, 0], ring = Zmod(2))
+    [0, 1, 0]
+    
+    """
+    def __init__(self, k:int, gf, alpha = None):
+        zero = gf(0)
+        one = zero**0
+        self. gf = gf
+        try:
+            n = gf.order()
+        except:
+            n = gf.order - 1
+        self.order = n + 1  # order of the base field
+        self.n = n  # lenght
+        self.k = k  # dimension
+        self.d = n - k - 1  # minimal distance
+        self.modulus = Poly([-one] + [zero] * (n-1) + [one])
+        if alpha is None:
+            try:
+                alpha = gf.generator()  # Zmod|GF2
+            except:
+                alpha = gf.primitive_element  # galois
+        self.alpha = alpha
+        self.g = prod([Poly([-alpha**j, one]) for j in range(1,n-k+1)], start = one) # generating polynomial
+        self.h = Poly(self.modulus) // self.g  # check polynomial
+        assert k == n - self.g.degree()
+        assert self.g * self.h == self.modulus
+
+    def __repr__(self):
+        return f"Reed-Solomon-Code [{self.n}, {self.k}, {self.d}] over GF({self.n+1})."
+
+    def encode(self, x: list|Poly):
+        "Encode a given list or polynomial."
+        as_list = False
+        zero = 0 * self.g[0]
+        if isinstance(x, list | tuple):
+            as_list = True
+            x = Poly(x, ring = self.gf)
+        if x.degree() >= self.k:
+            raise ValueError(f"Degree can be at most {self.k-1}.")
+        y = [ x(self.alpha**j) for j in range(self.n) ]
+        if as_list:
+            return y + [zero] * (self.n - len(y))
+        return Poly(y)
+
+    def decode(self, y: list|Poly):
+        "Decode a given list or polynomial."
+        as_list = False
+        zero = 0 * self.g[0]
+        one = zero**0
+        if isinstance(y, list | tuple):
+            as_list = True
+            y = Poly(y, ring = self.gf)
+        if y.degree() >= self.n:
+            raise ValueError(f"Degree can be at most {self.n-1}.")
+        x = Poly([ -y(self.alpha**(-j)) for j in range(self.n) ])
+        if x.degree() >= self.k: # No codewort
+            t = (self.n - self.k - 2) // 2
+            A = Matrix([[ x[j - l % self.n] for l in range(1, t+1) ] for j in range(self.k+t, self.k+2*t) ])
+            b = [ -x[self.k + t + l ] for l in range(t) ]
+            lam = Poly([one] + list(A.solve(b)))
+            x_coordinates = []
+            y_coordinates = []
+            for j in range(self.n):
+                if len(x_coordinates) == self.k:
+                    break
+                alphaj = self.alpha**j
+                if lam(alphaj):
+                    x_coordinates.append(alphaj)
+                    y_coordinates.append(y[j])
+            x = lagrange_interpolation(x_coordinates, y_coordinates)
+        if as_list:
+            return x.coeff + [zero] * (self.k - len(x.coeff))
+        return x

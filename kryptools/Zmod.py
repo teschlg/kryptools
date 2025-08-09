@@ -39,8 +39,8 @@ class Zmod:
     def __repr__(self):
         return f"Z_{self.n}"
 
-    def __call__(self, x: int | list | tuple):
-        if isinstance(x, list|tuple):
+    def __call__(self, x: int | list | tuple | range | map):
+        if isinstance(x, list|tuple|range|map):
             return [ZmodPoint(xx, self) for xx in x]
         return ZmodPoint(x, self)
 

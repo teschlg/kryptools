@@ -57,8 +57,8 @@ class GF2:
     def __repr__(self):
         return f"GF(2^{self.power})"
 
-    def __call__(self, x: int | list | tuple):
-        if isinstance(x, list|tuple):
+    def __call__(self, x: int | list | tuple | range | map):
+        if isinstance(x, list|tuple|range|map):
             return [GF2nPoint(xx, self) for xx in x]
         return GF2nPoint(x, self)
 
