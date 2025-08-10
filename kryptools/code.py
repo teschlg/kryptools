@@ -188,7 +188,7 @@ class CyclicCode():
     def __repr__(self):
         return f"Cyclic [{self.n}, {self.k}] code over GF({self.order}) with generator polynomial g(x) = {self.g}."
     
-    def encode(self, x: list|Poly, gf = None, standard_form = False):
+    def encode(self, x: list|Poly, gf = None, systematic_form = False):
         "Encode a given list or polynomial."
         as_list = False
         zero = 0 * self.g[0]
@@ -197,7 +197,7 @@ class CyclicCode():
             x = Poly(x, ring = gf)
         if x.degree() >= self.k:
             raise ValueError(f"Degree can be at most {self.k-1}.")
-        if standard_form:
+        if systematic_form:
             x.coeff = [zero] * self.g.degree() + x.coeff
             y = x - (x % self.g)
         else:
@@ -206,7 +206,7 @@ class CyclicCode():
             return y.coeff + [zero] * (self.n - len(y.coeff))
         return y
 
-    def decode(self, y: list|Poly, gf = None, standard_form = False):
+    def decode(self, y: list|Poly, gf = None, systematic_form = False):
         "Decode a given list or polynomial."
         as_list = False
         zero = 0 * self.g[0]
@@ -218,7 +218,7 @@ class CyclicCode():
         x, r = y.divmod(self.g)
         if r:
             raise NotImplementedError(f"Word is no code word! Cannot decode.")
-        if standard_form:
+        if systematic_form:
             x.coeff = y.coeff[self.g.degree():]
         if as_list:
             return x.coeff + [zero] * (self.k - len(x.coeff))
