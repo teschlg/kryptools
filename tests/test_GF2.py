@@ -13,7 +13,7 @@ def test_GF2_ops():
         assert gf(1) == gf(1)
         assert not gf(1) == gf(0)
         assert not gf(0) == 0
-        if gf.power < 17:
+        if gf.degree < 17:
             assert len(list(gf)) == gf.order
             assert len(list(gf.star())) == gf.order - 1
             assert len(list(gf.generators())) == euler_phi(gf.order - 1)

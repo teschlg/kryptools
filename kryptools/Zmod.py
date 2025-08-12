@@ -31,9 +31,10 @@ class Zmod:
         if not isinstance(n, int) or n < 1:
             raise ValueError(f"{n} is not a positive integer.")
         self.n = n
+        self.isfield = None
         self.n_factors = {} # factoring of n
         self.short = short
-        self.group_order = 0
+        self.group_order = 0 # order of the multiplicative group
         self.factors = {}  # factoring of the multiplicative group order
 
     def __repr__(self):
@@ -63,7 +64,7 @@ class Zmod:
         # We compute euler_phi(n) and its factorization in one pass
         if not self.n_factors:
             self.n_factors = factorint(self.n)
-        for p, k in self.n_factors.items():  # first factorize n
+        for p, k in self.n_factors.items():  # factorization of n
             # factor p-1 and add the factors
             for pm, km in factorint(p - 1).items():
                 if pm in self.factors:
@@ -96,7 +97,18 @@ class Zmod:
 
     def is_field(self) -> bool:
         "Test if Z_n is a field."
-        return is_prime(self.n)
+        if self.isfield is None:
+            if self.n_factors:
+                if len(self.n_factors) == 1:
+                    self.isfield = True
+                else:
+                    self.isfield = False
+            elif is_prime(self.n):
+                self.isfield = True
+                self.n_factors = { self.n: 1}
+            else:
+                self.isfield = False
+        return self.isfield
 
     def generator(self) -> int | None:
         "Return a generator of the group Z_n^*."

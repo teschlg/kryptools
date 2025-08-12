@@ -41,13 +41,14 @@ class GF2:
             if n in conway_polynomials2:
                 modulus = conway_polynomials2[n]
             else:
-                raise ValueError("Unknown power. Please specify a modulus.")
+                raise ValueError("Unknown degree. Please specify a modulus.")
         self.modulus = modulus  # integer whose biniary digits are the coefficients of the irreducible modulus polynomial
         if modulus & 2**n == 2**n:
             self.bitreversed = False
         else:
             self.bitreversed = True
-        self.power = n  # n
+        self.degree = n  # n
+        self.characteristic = 2
         self.order = 2**n  # 2**n
         self.print_hex: bool = True
         self.byteorder: str = "big"  # big|little
@@ -55,7 +56,7 @@ class GF2:
         self.factors = {}  # factoring of the group order
 
     def __repr__(self):
-        return f"GF(2^{self.power})"
+        return f"GF(2^{self.degree})"
 
     def __call__(self, x: int | list | tuple | range | map):
         if isinstance(x, list|tuple|range|map):
@@ -99,7 +100,7 @@ class GF2:
 
     def generator(self) -> int | None:
         "Return a generator of the group GF(2^n)^*."
-        if self.power == 1:
+        if self.degree == 1:
             return self(1)
         for a in range(2, self.order):
             a = self(a)
@@ -131,7 +132,7 @@ class GF2nPoint:
 
     def __repr__(self):
         if self.field.print_hex:
-            return format(self.x, "0"+str(self.field.power // 4)+"x")
+            return format(self.x, "0"+str(self.field.degree // 4)+"x")
         return self.x
 
     def __eq__(self, other):
@@ -146,16 +147,16 @@ class GF2nPoint:
         return self.x
 
     def __bytes__(self):
-        return self.x.to_bytes(self.field.power // 8, byteorder=self.field.byteorder)
+        return self.x.to_bytes(self.field.degree // 8, byteorder=self.field.byteorder)
 
     def bits(self) -> list:
         "Convert to a list of bits."
         if self.field.bitreversed:
             coeff = [int(d) for d in str(
-                format(self.x, "0" + str(self.field.power) + "b"))]
+                format(self.x, "0" + str(self.field.degree) + "b"))]
         else:
             coeff = reversed([int(d) for d in str(
-                format(self.x, "0" + str(self.field.power) + "b"))])
+                format(self.x, "0" + str(self.field.degree) + "b"))])
         return list(coeff)
 
     def poly(self) -> "Poly":
@@ -163,14 +164,14 @@ class GF2nPoint:
         Z_2 = Zmod(2)
         if self.field.bitreversed:
             coeff = [Z_2(int(d)) for d in str(
-                format(self.x, "0" + str(self.field.power) + "b"))]
+                format(self.x, "0" + str(self.field.degree) + "b"))]
             coeff_modulus = [Z_2(int(d)) for d in str(
-                format((self.field.modulus << 1) + 1, "0" + str(self.field.power) + "b"))]
+                format((self.field.modulus << 1) + 1, "0" + str(self.field.degree) + "b"))]
         else:
             coeff = reversed([Z_2(int(d)) for d in str(
-                format(self.x, "0" + str(self.field.power) + "b"))])
+                format(self.x, "0" + str(self.field.degree) + "b"))])
             coeff_modulus = reversed([Z_2(int(d)) for d in str(
-                format(self.field.modulus, "0" + str(self.field.power) + "b"))])
+                format(self.field.modulus, "0" + str(self.field.degree) + "b"))])
         return Poly(list(coeff), modulus=list(coeff_modulus))
 
     def __hash__(self):
@@ -208,7 +209,7 @@ class GF2nPoint:
         z = 0
         y = other.x
         if self.field.bitreversed:
-            for d in bin(self.x)[2:].zfill(self.field.power):
+            for d in bin(self.x)[2:].zfill(self.field.degree):
                 if int(d):
                     z ^= y
                 if y % 2:
@@ -219,7 +220,7 @@ class GF2nPoint:
         else:
             bitmap1 = self.field.order
             bitmap2 = 1
-            for _ in range(self.field.power):
+            for _ in range(self.field.degree):
                 if self.x & bitmap2:
                     z ^= y
                 bitmap2 <<= 1
@@ -300,11 +301,11 @@ class GF2nPoint:
 
     def sbox(self, inv: bool = False) -> "GF2nPoint":
         "Apply the AES sbox."
-        if self.field.power == 8 and self.field.modulus == 0b100011011: # AES
+        if self.field.degree == 8 and self.field.modulus == 0b100011011: # AES
             if inv:
                 return aes_sbox_inv[self.x]
             return aes_sbox[self.x]
-        elif self.field.power == 4 and self.field.modulus == 0b10011: # MiniAES
+        elif self.field.degree == 4 and self.field.modulus == 0b10011: # MiniAES
             if inv:
                 return miniaes_sbox_inv[self.x]
             return miniaes_sbox[self.x]

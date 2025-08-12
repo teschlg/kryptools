@@ -49,6 +49,9 @@ class Poly:
     def __len__(self):
         return len(self.coeff)
 
+    def __hash__(self):
+        return hash(tuple(self.coeff))
+
     def __repr__(self, latex = False):
         def prx(i: int) -> str:
             if i == 0:
@@ -377,17 +380,15 @@ class Poly:
 
     def rabin_test(self) -> bool:
         """Determine if a polynomial is irreducible over a Galois field using a Rabin test."""
-        ring = self._guess_ring()[-1]
-        if not ring:
+        field = self._guess_ring()[-1]
+        if not field:
             raise ValueError("The polynomial does not seem to be over a known finite field.")
-        try:
-            q = ring.n  # Zmod
-            isfield = is_prime(q)
-        except:
-            q = ring.order  # GF2
-            isfield = True
-        if not isfield:
-            raise ValueError("The polynomial does not seem to be over a finite field.")
+        if hasattr(field, 'n'):
+            q = field.n  # Zmod
+            if not field.is_field():
+                raise ValueError("The polynomial does not seem to be over a finite field.")
+        else:
+            q = field.order  # G2 or galois
         #n = self.degree()
         #x = self.__class__([0, 1], ring=ring, modulus = self.coeff)  # x
         #for p in factorint(n).keys():
@@ -396,8 +397,8 @@ class Poly:
         #        return False
         #g = x**(q**n) - x
         #return not(g)
-        x = Poly([0, 1], ring = ring)  # x
-        xq = Poly(q * [0] + [1], ring = ring, modulus = self.coeff)  # x^q modulo self to keep the polynomials small
+        x = Poly([0, 1], ring = field)  # x
+        xq = Poly(q * [0] + [1], ring = field, modulus = self.coeff)  # x^q modulo self to keep the polynomials small
         for k in range(1, self.degree() // 2 + 1):
             if k == 1:
                 b = xq
@@ -416,7 +417,7 @@ def lagrange_interpolation(x_coordinates:list, y_coordinates:list) -> "Poly":
         raise ValueError('List of x and y values must be nonempty of equal length.')
     if l != len(set(x_coordinates)):
         raise ValueError('List of x values must not contain duplicate values.')
-    # Guess zero and one
+    # guess zero and one
     zero = 0 * x_coordinates[0]
     one = zero**0
 
