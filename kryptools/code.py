@@ -114,22 +114,24 @@ class Goppa():
     def decode(self, y: list[int]):
         "Decode a given list of bits."
         y = Matrix(y, ring = self.Z_2)
+        zero = self.gf(0)
+        one = zero**0
         if self.H * y: # no code word
-            s = self.gf(0) # syndrom polynomial
+            s = zero # syndrom polynomial
             for i, x in enumerate(self.alpha):
-                s += int(y[i]) * Poly([-x, 1], ring = self.gf, modulus = self.g).inv()
-            v = (s.inv() - Poly([0, 1], ring = self.gf, modulus = self.g))**(self.gf.order ** self.g.degree() // 2)
+                s += int(y[i]) * Poly([-x, one], modulus = self.g).inv()
+            v = (s.inv() - Poly([zero, one], modulus = self.g))**(self.gf.order ** self.g.degree() // 2)
             # determine error locator polynomial sigma(x) = a(x^2) + b(x^2) * x
             # find a and b by running EEA until b has the desired degree
             v.modulus = None
             r0, r1 = self.g, v
-            y0, y1 = Poly([self.gf(0)]), Poly([self.gf(1)])
+            y0, y1 = Poly([zero]), Poly([one])
             while 2 * r1.degree() > self.g.degree():
                 q, r = r0.divmod(r1)
                 r0, r1 = r1, r
                 y0, y1 = y1, y0 - q * y1
             a, b = r1, y1
-            sigma = a**2 + b**2 * Poly([0,1], ring = self.gf)
+            sigma = a**2 + b**2 * Poly([zero, one])
             # correct the error
             for x in self.alpha:
                 if not sigma(x):

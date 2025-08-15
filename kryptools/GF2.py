@@ -3,6 +3,7 @@ Galois field GF(2^n).
 """
 
 from math import gcd
+from random import randint
 from .poly import Poly
 from .Zmod import Zmod
 from .factor import factorint
@@ -75,7 +76,7 @@ class GF2:
             return self.order == other.order and self.modulus == other.modulus
         return False
 
-    def __contains__(self, other: "ZmodPoint") -> bool:
+    def __contains__(self, other: "GF2nPoint") -> bool:
         return isinstance(other, GF2nPoint) and self == other.field
 
     def _factors(self) -> dict:
@@ -84,11 +85,21 @@ class GF2:
             self.factors = factorint(self.mult_order)
         return self.factors
 
+    def zero(self) -> bool:
+        "Return zero."
+        return self(0)
+
     def one(self) -> bool:
         "Return one."
         if self.bitreversed:
             return self(self.order - 1)
         return self(1)
+
+    def random(self, num: int = 0) -> "GF2nPoint":
+        "Return a single random point or a list of random points."
+        if num:
+            return([self(randint(0,self.order-1)) for _ in range(num)])
+        return self(randint(0,self.order-1))
 
     def is_cyclic(self) -> bool:
         "GF(2^n)^* is cyclic."

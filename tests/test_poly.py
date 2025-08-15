@@ -1,8 +1,9 @@
 import pytest
-from random import sample, choices
+from math import prod
+from random import sample, choices, randint, seed
 from kryptools import Poly, Zmod, GF2, lagrange_interpolation
 from kryptools import divisors, moebius_mu
-
+seed(0)
 
 def test_Poly():
     p = Poly([2, 0, 2])
@@ -35,6 +36,19 @@ def test_rabin():
             if a.rabin_test():
                 count += 1
         assert count == sum([moebius_mu(d) * order ** (t // d) for d in divisors(t)]) // t
+
+def test_factor():
+    for gf,t in [ [Zmod(7), 14], [GF2(4), 17]]:
+        order = len(list(gf))
+        one = Poly([gf(1)])
+        for _ in range(20):
+            p = one
+            while p.degree() < 1:
+                p = Poly([randint(0,order-1) for _ in range(t)], ring =gf)
+            factors = p.factor()
+            assert prod([f**k for f,k in factors.items()], start = one) == p, p
+            for fac in factors.keys():
+                assert fac.degree() == 0 or fac.rabin_test(), p
 
 def test_lagrange():
     for gf in [ Zmod(2), Zmod(3), Zmod(5), Zmod(7), Zmod(23), GF2(4), GF2(6)]:

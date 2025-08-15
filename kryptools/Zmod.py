@@ -3,6 +3,7 @@ Ring of intergers modulo `n`.
 """
 
 from math import gcd
+from random import randint
 from .factor import factorint
 from .primes import is_prime
 from .nt import sqrt_mod, crt
@@ -56,6 +57,12 @@ class Zmod:
 
     def __contains__(self, other: "ZmodPoint") -> bool:
         return isinstance(other, ZmodPoint) and self.n == other.ring.n
+
+    def random(self, num: int = 0) -> "ZmodPoint":
+        "Return a single random point or a list of random points."
+        if num:
+            return([self(randint(0,self.n-1)) for _ in range(num)])
+        return self(randint(0,self.n-1))
 
     def order(self) -> int:
         "Compute the order of the group Z_n^*."
