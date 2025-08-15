@@ -6,7 +6,7 @@ from math import prod
 from numbers import Number
 from random import randint
 from .primes import is_prime
-#from .factor import factorint
+
 
 class Poly:
     """
@@ -38,8 +38,9 @@ class Poly:
     def __call__(self, x):
         zero = 0 * self.coeff[0]
         if not type(x) == type(zero):
-            raise ValueError("Evaluation point must be an element of the field.")
-        return sum((c * x**j for j, c in enumerate(self.coeff)), start = zero)
+            raise ValueError(
+                "Evaluation point must be an element of the field.")
+        return sum((c * x**j for j, c in enumerate(self.coeff)), start=zero)
 
     def __getitem__(self, item):
         return self.coeff[item]
@@ -53,14 +54,14 @@ class Poly:
     def __hash__(self):
         return hash(tuple(self.coeff))
 
-    def __repr__(self, latex = False):
+    def __repr__(self, latex=False):
         def prx(i: int) -> str:
             if i == 0:
                 return ""
             if i == 1:
                 return self.__class__.print_x
             if latex:
-                return self.__class__.print_x + "^{" + str(i) +"}"
+                return self.__class__.print_x + "^{" + str(i) + "}"
             return self.__class__.print_x + self.__class__.print_pow + str(i)
 
         if not self:
@@ -105,7 +106,7 @@ class Poly:
     def _repr_mimebundle_(self, **kwargs):
         return {
             "text/plain": repr(self),
-            "text/latex": "$" + self.__repr__(latex = True) + "$"
+            "text/latex": "$" + self.__repr__(latex=True) + "$"
         }
 
     def __eq__(self, other):
@@ -149,17 +150,19 @@ class Poly:
     def _guess_field(self):
         zero, one, field = self._guess_ring()
         if not field:
-            raise ValueError("The polynomial does not seem to be over a known finite field.")
+            raise ValueError(
+                "The polynomial does not seem to be over a known finite field.")
         if hasattr(field, 'n'):  # Zmod
             p = field.n
             q = field.n
             if not field.is_field():
-                raise ValueError("The polynomial does not seem to be over a finite field.")
+                raise ValueError(
+                    "The polynomial does not seem to be over a finite field.")
         else:  # G2 or galois
             p = field.characteristic
             q = field.order
         return field, zero, one, q, p
-    
+
     def __add__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
             if self._check_type(other):
@@ -172,8 +175,8 @@ class Poly:
             modulus = other.modulus
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
-            return self.__class__([ s + o for s, o in zip(self.coeff, other.coeff) ] + other.coeff[ls:], modulus=modulus)
-        return self.__class__([ s + o for s, o in zip(self.coeff, other.coeff) ] + self.coeff[lo:], modulus=modulus)
+            return self.__class__([s + o for s, o in zip(self.coeff, other.coeff)] + other.coeff[ls:], modulus=modulus)
+        return self.__class__([s + o for s, o in zip(self.coeff, other.coeff)] + self.coeff[lo:], modulus=modulus)
 
     def __radd__(self, other: "Poly") -> "Poly":
         return self + other
@@ -197,7 +200,8 @@ class Poly:
             return NotImplemented
         zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
-        coeff = [ sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0, k - lo + 1), min(ls, k + 1))), start=zero) for k in range(ls + lo - 1) ]
+        coeff = [sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0,
+                     k - lo + 1), min(ls, k + 1))), start=zero) for k in range(ls + lo - 1)]
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
@@ -211,13 +215,15 @@ class Poly:
             return self.__class__([s / other for s in self.coeff], modulus=self.modulus)
         if isinstance(other, self.__class__):
             if not other.modulus:
-                raise NotImplementedError("Cannot invert polynomials without modulus.")
+                raise NotImplementedError(
+                    "Cannot invert polynomials without modulus.")
             return self * other.inv()
         return NotImplemented
 
     def __rtruediv__(self, other) -> "Poly":
         if not self.modulus:
-            raise NotImplementedError("Cannot invert polynomials without modulus.")
+            raise NotImplementedError(
+                "Cannot invert polynomials without modulus.")
         return other * self.inv()
 
     def __pow__(self, j: int) -> "Poly":
@@ -227,7 +233,8 @@ class Poly:
         res = self.__class__([one], modulus=self.modulus)
         if j < 0:
             if not self.modulus:
-                raise NotImplementedError("Cannot divide polynomials without modulus.")
+                raise NotImplementedError(
+                    "Cannot divide polynomials without modulus.")
             tmp = self.inv()
             j *= -1
         else:
@@ -245,7 +252,8 @@ class Poly:
         "List of bits of all coefficients."
         ring = self.coeff[0].__class__
         if not (hasattr(ring, 'bits') and callable(ring.bits)):
-            raise NotImplementedError("Coefficients cannot be converted to bits.")
+            raise NotImplementedError(
+                "Coefficients cannot be converted to bits.")
         out = []
         for c in self.coeff:
             out += c.bits()
@@ -284,8 +292,8 @@ class Poly:
             oth = [c * tmp for c in other.coeff]
             rem = [c * tmp for c in self.coeff]
         else:
-            oth = other.coeff
-            rem = [c * one for c in self.coeff] # "* 1" is here to make sure we get a copy
+            oth = other.coeff  # "* 1" is here to make sure we get a copy
+            rem = [c * one for c in self.coeff]
         for i in range(sd - od + 1):
             tmp = rem[sd - i] * one  # "* 1" is here to make sure we get a copy
             div[sd - od - i] = tmp
@@ -314,10 +322,10 @@ class Poly:
         else:
             oth = other.coeff
         for i in range(sd - od + 1):
-            tmp = self.coeff[sd - i] * one # "* 1" is here to make sure we get a copy
+            tmp = self.coeff[sd - i] * one  # "* 1" is here to make sure we get a copy
             for j in range(od + 1):
                 self.coeff[sd - i - j] -= tmp * oth[od - j]
-        for i in range(len(self.coeff) - 1, 0, -1): # strip leading zeros
+        for i in range(len(self.coeff) - 1, 0, -1):  # strip leading zeros
             if self.coeff[i]:
                 break
             self.coeff.pop(i)
@@ -330,8 +338,9 @@ class Poly:
         if isinstance(other, self.__class__):
             other = other.coeff
         elif not isinstance(other, list):
-            raise NotImplementedError(f"{other} must be a list of coefficients or a polynomial.")
-        other = Poly(other, ring = ring)
+            raise NotImplementedError(
+                f"{other} must be a list of coefficients or a polynomial.")
+        other = Poly(other, ring=ring)
         if not other:
             raise NotImplementedError(f"{other} must be nonzero.")
         r0, r1 = other, self
@@ -349,7 +358,8 @@ class Poly:
         "Greates common divisor with a given polynomial."
         ring = self._guess_ring()[-1]
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot compute gcd: {other} must be a polynomial.")
+            raise NotImplementedError(f"Cannot compute gcd: {
+                                      other} must be a polynomial.")
         if not self:
             if not other:
                 return Poly([self.coeff[0]])
@@ -366,7 +376,8 @@ class Poly:
         """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that other * x + self * y = gcd."""
         zero, one, ring = self._guess_ring()
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot perform egcd: {other} must be a polynomial.")
+            raise NotImplementedError(f"Cannot perform egcd: {
+                                      other} must be a polynomial.")
         if not self:
             if not other:
                 return Poly([zero]), Poly([zero]), Poly([zero])
@@ -388,23 +399,23 @@ class Poly:
         if l == 1:
             tmp = 0 * self.coeff[0]
         else:
-            tmp = [ j * self.coeff[j] for j in range(1, l) ]
+            tmp = [j * self.coeff[j] for j in range(1, l)]
         return self.__class__(tmp, modulus=self.modulus)
 
     def square_free_factors(self) -> dict:
         "Determine the square free factors of a polynomial over a Galois field."
         _, zero, _, q, p = self._guess_field()
-        pr = q // p # x^pr will be the p'th root of x
+        pr = q // p  # x^pr will be the p'th root of x
         if self.degree() < 1:
             return {}
         if self.degree() == 1:
-            return { self  / self.coeff[-1]: 1}
+            return {self / self.coeff[-1]: 1}
         factors = {}
         w = self / self.coeff[-1]
         c = w.gcd(w.derivative())
         w = w // c
 
-        # first we find all factors which are not a power of p 
+        # first we find all factors which are not a power of p
         i = 1
         while w.degree() > 0:
             y = w.gcd(c)
@@ -418,11 +429,11 @@ class Poly:
         if c.degree() > 0:
             # compute the p'th root of c
             d = c.degree() // p
-            root = [ zero ] * (d + 1)
+            root = [zero] * (d + 1)
             while d >= 0:
                 root[d] = c.coeff[d * p]**pr
                 d -= 1
-            #assert Poly(root)**p == c, root
+            # assert Poly(root)**p == c, root
             for fac, mult in Poly(root).square_free_factors().items():
                 factors[fac] = p * mult
         return factors
@@ -432,7 +443,7 @@ class Poly:
         multiplicities = self.square_free_factors().values()
         return len(multiplicities) == 1 and multiplicities[0] == 1
 
-    def distinct_degree_factors(self, test:bool = False) -> bool|dict:
+    def distinct_degree_factors(self, test: bool = False) -> bool | dict:
         "Factors the polynomial over a Galois field into distinct products of irredicible factors of the same degree."
         _, zero, one, q, _ = self._guess_field()
         if self.degree() < 1:
@@ -440,7 +451,8 @@ class Poly:
         factors = {}
         w = self
         x = Poly([zero, one])  # x
-        xq = Poly(q * [zero] + [one], modulus = self.coeff)  # x^q modulo self to keep the polynomials small
+        # x^q modulo self to keep the polynomials small
+        xq = Poly(q * [zero] + [one], modulus=self.coeff)
         k = 1
         while k <= w.degree()//2:
             if k == 1:
@@ -462,40 +474,42 @@ class Poly:
 
     def rabin_test(self) -> bool:
         "Determine if a polynomial is irreducible over a Galois field using a Rabin test."
-        return self.distinct_degree_factors(test = True)
+        return self.distinct_degree_factors(test=True)
 
     def is_irreducible(self) -> bool:
         "Test if the polynomial over a Galois field is irreducibel."
         if self.degree() == 0:
             return False
-        return self.distinct_degree_factors(test = True)
+        return self.distinct_degree_factors(test=True)
 
-    def equal_degree_factors(self ,k:int) -> list:
+    def equal_degree_factors(self, k: int) -> list:
         "Factors a square free product of irreducibel polynomials of degree `k` over a Galois field."
         field, zero, one, q, p = self._guess_field()
         if hasattr(field, "degree"):
-            degree= field.degree
+            degree = field.degree
         else:
             degree = 1
         d = self.degree()
-        if not isinstance(k, int) or k < 1 :
+        if not isinstance(k, int) or k < 1:
             raise ValueError(f"The degree {k} must be a positive integer.")
         if d < k or d % k:
-            raise ValueError(f"The polynomial is no product of irreducibel polynomials of degree {k}.")
+            raise ValueError(
+                f"The polynomial is no product of irreducibel polynomials of degree {k}.")
         r = d // k
         qk = (q**k - 1) // 2
         poly = [0] * k + [1]
- 
-        factors = [ self ]
+
+        factors = [self]
         while len(factors) < r:
-            g = Poly([randint(0,q-1) for _ in range(d+1)], ring = field, modulus = self)
-            if p == 2: # Gathen-Shoup
+            g = Poly([randint(0, q-1)
+                     for _ in range(d+1)], ring=field, modulus=self)
+            if p == 2:  # Gathen-Shoup
                 h = g
-                for i in range(1,k):
+                for i in range(1, k):
                     g += h**q
                 if degree > 1:
                     h = g
-                    for i in range(1,degree):
+                    for i in range(1, degree):
                         g += g**2
             else:  # Cantor–Zassenhaus
                 g **= qk
@@ -526,18 +540,20 @@ class Poly:
             factors = {}
         for fac1, m in self.square_free_factors().items():
             for k, fac2 in fac1.distinct_degree_factors().items():
-                if k == fac2.degree(): # irreducible
+                if k == fac2.degree():  # irreducible
                     factors[fac2] = m
                 else:
                     for fac3 in fac2.equal_degree_factors(k):
                         factors[fac3] = m
         return dict(sorted(factors.items(), key=lambda item: item[0].degree()))
 
-def lagrange_interpolation(x_coordinates:list, y_coordinates:list) -> "Poly":
+
+def lagrange_interpolation(x_coordinates: list, y_coordinates: list) -> "Poly":
     "Compute the Lagrange interpolation polynomial from a given list of x and y values."
     l = len(x_coordinates)
     if l == 0 or l != len(y_coordinates):
-        raise ValueError('List of x and y values must be nonempty of equal length.')
+        raise ValueError(
+            'List of x and y values must be nonempty of equal length.')
     if l != len(set(x_coordinates)):
         raise ValueError('List of x values must not contain duplicate values.')
     # guess zero and one
@@ -545,9 +561,10 @@ def lagrange_interpolation(x_coordinates:list, y_coordinates:list) -> "Poly":
     one = zero**0
 
     poly = Poly([zero])
-    L_all = prod([Poly([-x, one]) for x in x_coordinates], start = one)
+    L_all = prod([Poly([-x, one]) for x in x_coordinates], start=one)
 
     for x, y in zip(x_coordinates, y_coordinates):
         L = L_all // Poly([-x, one])
-        poly += (y / prod([x -xx for xx in x_coordinates if xx != x], start = one)) * L
+        poly += (y /
+                 prod([x - xx for xx in x_coordinates if xx != x], start=one)) * L
     return poly
