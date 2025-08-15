@@ -24,7 +24,7 @@ The tools contained are:
 * linear codes: Hamming distance, left standard form, parity check matrix
 
 * Matrix: a class for Matrices (inverse, det, reduced echelon form, etc.)
-* Poly: a class for polynomials (division, modulo, irreducibility test, Lagrange interpolation)
+* Poly: a class for polynomials (division, modulo, factoring and irreducibility test over finite fields, Lagrange interpolation)
 * Zmod: a class for the ring of integers modulo an integer
 * GF2: a class for Galois fields GF(2^n)
 * Goppa: a class for encoding and decoding Goppa codes
