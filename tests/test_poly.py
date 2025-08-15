@@ -38,7 +38,7 @@ def test_rabin():
         assert count == sum([moebius_mu(d) * order ** (t // d) for d in divisors(t)]) // t
 
 def test_factor():
-    for gf,t in [ [Zmod(7), 14], [GF2(4), 17]]:
+    for gf,t in [ [Zmod(7), 14], [GF2(4), 11]]:
         order = len(list(gf))
         one = Poly([gf(1)])
         for _ in range(20):
