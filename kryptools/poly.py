@@ -36,10 +36,15 @@ class Poly:
             self.mod(modulus)
 
     def __call__(self, x):
-        zero = 0 * self.coeff[0]
-        if not type(x) == type(zero):
+        result = 0 * self.coeff[0]
+        if not type(x) == type(result):
             raise ValueError(
-                "Evaluation point must be an element of the field.")
+                "Evaluation point must be an element of the ring.")
+        # Horner's method
+        for c in reversed(self.coeff):
+            result = result * x + c
+        return result
+
         return sum((c * x**j for j, c in enumerate(self.coeff)), start=zero)
 
     def __getitem__(self, item):

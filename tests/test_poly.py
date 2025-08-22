@@ -4,23 +4,48 @@ from random import sample, choices, randint, seed
 from kryptools import Poly, Zmod, GF2, lagrange_interpolation
 from kryptools import divisors, moebius_mu
 seed(0)
+num_tests = 10
 
 def test_Poly():
     p = Poly([2, 0, 2])
     q = Poly([1, 2, 3, 4])
     d, m = q.divmod(p)
     assert d * p + m == q
+    for _ in range(num_tests):
+        p = Poly([randint(0,100) for _ in range(10)])
+        q = Poly([randint(0,100) for _ in range(12)])
+        x = randint(0,100)
+        assert p(x) == sum((c * x**j for j, c in enumerate(p.coeff)), start=0)
+        assert (p + q)(x) == p(x) + q(x)
+        assert (p - q)(x) == p(x) - q(x)
+        assert (p*q)(x) == p(x) * q(x)
 
-    Z_5 = Zmod(5)
-    p.map(Z_5)
-    q.map(Z_5)
+    gf = Zmod(5)
+    p = Poly([2, 0, 2], ring = gf)
+    q = Poly([1, 2, 3, 4], ring = gf)
     d, m = q.divmod(p)
     assert d * p + m == q
+    for _ in range(num_tests):
+        p = Poly(gf.random(10))
+        q = Poly(gf.random(12))
+        x = gf.random()
+        assert p(x) == sum((c * x**j for j, c in enumerate(p.coeff)), start=gf(0))
+        assert (p + q)(x) == p(x) + q(x)
+        assert (p - q)(x) == p(x) - q(x)
+        assert (p * q)(x) == p(x) * q(x)
 
     gf = GF2(8, modulus=0b100011011)
     p = Poly([2, 1, 1, 3], modulus=[1, 0, 0, 0, 1], ring=gf)
     q = p.inv()
     assert p * q == Poly([1], modulus=[1, 0, 0, 0, 1], ring=gf)
+    for _ in range(num_tests):
+        p = Poly(gf.random(10))
+        q = Poly(gf.random(12))
+        x = gf.random()
+        assert p(x) == sum((c * x**j for j, c in enumerate(p.coeff)), start=gf(0))
+        assert (p + q)(x) == p(x) + q(x)
+        assert (p - q)(x) == p(x) - q(x)
+        assert (p * q)(x) == p(x) * q(x)
 
 def test_rabin():
     for gf,t in [ [Zmod(7), 4], [GF2(4), 3]]:
@@ -38,13 +63,13 @@ def test_rabin():
         assert count == sum([moebius_mu(d) * order ** (t // d) for d in divisors(t)]) // t
 
 def test_factor():
-    for gf,t in [ [Zmod(7), 14], [GF2(4), 11]]:
+    for gf, t in [ [Zmod(7), 14], [GF2(4), 9]]:
         order = len(list(gf))
         one = Poly([gf(1)])
         for _ in range(20):
             p = one
             while p.degree() < 1:
-                p = Poly([randint(0,order-1) for _ in range(t)], ring =gf)
+                p = Poly(gf.random(t), ring =gf)
             factors = p.factor()
             assert prod([f**k for f,k in factors.items()], start = one) == p, p
             for fac in factors.keys():
