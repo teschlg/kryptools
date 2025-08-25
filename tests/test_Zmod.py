@@ -89,7 +89,6 @@ def test_ZmodP_order():
 
 def test_ZmodP_sqrt():
     for n in range(1,100):
-        print(n)
         ring = Zmod(n)
         one = ring(1)
         roots = {} # compute a dict of all roots
