@@ -218,3 +218,11 @@ class SHAKE():
     def __call__(self, r: int) -> bytes:
         "Extract `r` bytes."
         return self.keccak.squeeze(r)
+
+    def digest(self, r: int) -> bytes:
+        "Extract `r` bytes."
+        return self(r)
+
+    def hexdigest(self, r: int) -> bytes:
+        "Extract `r` bytes as hex values."
+        return self(r).hex()
