@@ -152,22 +152,20 @@ from .factor import factorint
 def euler_phi(n: int) -> int:
     """Euler's phi function of `n`."""
     if not isinstance(n, int) or n < 1:
-        raise ValueError(f"{n} is not a positive integer")
-    k = factorint(n)
-    return prod([(p - 1) * p ** (k[p] - 1) for p in k])
+        raise ValueError(f"{n} is not a positive integer.")
+    return prod([(p - 1) * p ** (k - 1) for p, k in factorint(n).items()])
 
 
 def carmichael_lambda(n: int) -> int:
     """Carmichael's lambda function of `n`."""
     if not isinstance(n, int) or n < 1:
-        raise ValueError(f"{n} is not a positive integer")
+        raise ValueError(f"{n} is not a positive integer.")
     if n == 1:
         return 1
-    k = factorint(n)
     lam_all = []  # values corresponding to the prime factors
-    for p in k:
-        lam = (p - 1) * p ** (k[p] - 1)
-        if p == 2 and k[p] > 2:
+    for p, k in factorint(n).items():
+        lam = (p - 1) * p ** (k - 1)
+        if p == 2 and k > 2:
             lam = lam // 2
         lam_all += [lam]
     lam = lam_all[0]  # now take the least common multiple of all values
@@ -179,7 +177,7 @@ def carmichael_lambda(n: int) -> int:
 def moebius_mu(n: int) -> int:
     """Moebius' mu function of `n`."""
     if not isinstance(n, int) or n < 0:
-        raise ValueError(f"{n} is not a nonegative integer")
+        raise ValueError(f"{n} is not a nonegative integer.")
     if n == 0:
         return 0
     factors = factorint(n)
@@ -255,8 +253,8 @@ def crt(a: list[int], m: list[int], coprime=True) -> int:
         if not all(isinstance(ai, int) for ai in a):
             raise ValueError("Residues must be integers.")
         # make a copy
-        m = [mi for mi in m]
-        a = [ai for ai in a]
+        m = [mi for mi in m]  # pylint: disable=R1721
+        a = [ai for ai in a]  # pylint: disable=R1721
         for i in range(l):
             for j in range(i + 1, l):
                 g = gcd(m[i], m[j])

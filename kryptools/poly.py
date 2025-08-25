@@ -112,10 +112,10 @@ class Poly:
             plus = " + "
         return tmp.strip()
 
-    def _repr_mimebundle_(self, **kwargs):
+    def _repr_mimebundle_(self, **kwargs):  # pylint: disable=W0613
         return {
             "text/plain": repr(self),
-            "text/latex": "$" + self.__repr__(latex=True) + "$"
+            "text/latex": "$" + self.__repr__(latex=True) + "$"  # pylint: disable=C2801
         }
 
     def __eq__(self, other):
@@ -510,7 +510,7 @@ class Poly:
                     g += h**q
                 if degree > 1:
                     h = g
-                    for i in range(1, degree):
+                    for _ in range(1, degree):
                         g += g**2
             else:  # Cantor–Zassenhaus
                 g = g**qk - one

@@ -171,7 +171,7 @@ class FeistelCipher:
             def printtmp(title: str, a: list) -> None:
                 print(f'{title}: {"".join(map(str,a))}')
         else:
-            def printtmp(title: str, a: list) -> None:
+            def printtmp(title: str, a: list) -> None:  # pylint: disable=W0613
                 pass
         a = permute(a, self.__class__.E_box)  # expansion box
         printtmp("EBox", a)

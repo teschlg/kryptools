@@ -37,7 +37,7 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
                 break
             trys += 1
         else:
-            raise Exception(f"Sorry, Index Calculus failed to find a relation after {trys} trys.")
+            raise RuntimeWarning(f"Sorry, Index Calculus failed to find a relation after {trys} trys.")
         if verbose > 2:
             if include_b:
                 print(f"rel found: b*a^{x}=", b * pow(a, x, n) % n, relation)
@@ -101,7 +101,7 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
             x = (m - relations[index][len_relations]) % m
             if pow(a, x, n) == b:
                 return x
-            raise Exception("Sorry, Index Calculus failed! Either the DLP is not solvable, or the order is not prime or incorrect.")
+            raise RuntimeWarning("Sorry, Index Calculus failed! Either the DLP is not solvable, or the order is not prime or incorrect.")
 
     #
     # Determine the parameters
@@ -111,7 +111,7 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
     factorbase = tuple(p for p in sieve_eratosthenes(B) if gcd(p,n) == 1)  # compute the factorbse
     factorbase_len = len(factorbase)  # length of the factorbase
     if factorbase_len == 0:
-        raise Exception("Sorry, Index Calculus could not find a factorbase!")
+        raise RuntimeWarning("Sorry, Index Calculus could not find a factorbase!")
     smallprimes_len, pollard_k = factorbase_len, None
     if pollard:  # should we speed up trial division with Pollard p-1
         smallprimes_len, pollard_k = determine_trialdivison_bounds(B // 150, factorbase)
@@ -137,4 +137,4 @@ def dlog_ic(a: int, b: int, n: int, m: int, pollard: bool = True, verbose: int =
         if res:
             return res
 
-    raise Exception("Sorry, Index Calculus could not find enough relations! ({n_relations} - {n_relations_redundant} = {n_relations - n_relations_redundant} out of {len_relations})")
+    raise RuntimeWarning("Sorry, Index Calculus could not find enough relations! ({n_relations} - {n_relations_redundant} = {n_relations - n_relations_redundant} out of {len_relations})")

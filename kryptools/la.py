@@ -50,7 +50,7 @@ class Matrix:
             out[i] += self.__class__.print_post
         return '\n'.join(out)
 
-    def _repr_mimebundle_(self, **kwargs):
+    def _repr_mimebundle_(self, **kwargs):  # pylint: disable=W0613
         return {
             "text/plain": repr(self),
             "text/latex": "$\\displaystyle" + self.latex() + "$"
@@ -137,11 +137,11 @@ class Matrix:
             if len(cols) == self.cols:
                 self.delete_rows(rows)
                 return
-            elif len(rows) == self.rows:
+            if len(rows) == self.rows:
                 self.delete_columns(cols)
                 return
         raise ValueError("Can only delete entire rows or entire columns!")
-      
+
     def delete_rows(self, rows: int|list) -> None:
         "Deletes a row or a list of rows."
         if isinstance(rows, int):

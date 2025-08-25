@@ -92,7 +92,7 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
     if res:
         n, k = res
     else:
-        n, k = n, 1
+        k = 1
     if is_prime(n, trialdivision=False):
         prime_factors[n] = k
         return prime_factors

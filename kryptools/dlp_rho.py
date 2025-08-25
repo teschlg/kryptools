@@ -59,4 +59,4 @@ def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
                 l += mm
             return l
         trys -= 1
-    raise Exception("Sorry, pollard rho failed!")
+    raise RuntimeWarning("Sorry, pollard rho failed!")
