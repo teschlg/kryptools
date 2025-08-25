@@ -455,15 +455,11 @@ class Poly:
             raise ValueError("The polynomial must be non-constant.")
         factors = {}
         w = self
-        x = Poly([zero, one])  # x
-        # x^q modulo self to keep the polynomials small
-        xq = Poly(q * [zero] + [one], modulus=self.coeff)
+        x = Poly([zero, one], modulus=self.coeff)  # x
+        b = x
         k = 1
         while k <= w.degree()//2:
-            if k == 1:
-                b = xq
-            else:
-                b **= q  # we compute x^{q^k} mod a recursively
+            b **= q  # we compute x^{q^k} mod a recursively
             g = w.gcd(b - x)  # gcd with x^{q^k} - x
             if g.degree():
                 if test:
