@@ -56,7 +56,7 @@ class Poly:
 
     def __iter__(self):
         yield from self.coeff
-  
+
     def __len__(self):
         return len(self.coeff)
 
