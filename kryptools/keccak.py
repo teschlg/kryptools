@@ -161,16 +161,21 @@ class SHA3():
     def __init__(self, n: int = 256):
         if n not in (224, 256, 384, 512):
             raise ValueError(f"n must be one of: 224, 256, 384, 512")
-        self.keccak = Keccak(rate=1600-2*n)
+        self.keccak = Keccak(rate = 1600 - 2*n)
         self.keccak.pad = [b'\x86', b'\x06', b'\x80']
-        self.hash_length = n // 8  # in bytes
+        self.digest_size = n // 8  # in bytes
+        self.block_size = (1600 - 2*n) // 8  # in bytes
+        self.name = f"SHA3-{n}"
 
     def __call__(self, msg: bytes | str) -> bytes:
         "Compute the hash of the message given or absorbed."
         self.keccak.reset()
         self.keccak.absorb(msg)
-        return self.keccak.squeeze(self.hash_length)
+        return self.keccak.squeeze(self.digest_size)
 
+    def __repr__(self):
+        return self.name
+    
     def update(self, msg: bytes | str) -> None:
         "Absorb the given message into the sponge."
         self.keccak.absorb(msg)
@@ -179,9 +184,13 @@ class SHA3():
         "Compute the hash of the message given or absorbed."
         if msg is not None:
             self.keccak.absorb(msg)
-        digest = self.keccak.squeeze(self.hash_length)
+        digest = self.keccak.squeeze(self.digest_size)
         self.keccak.reset()
         return digest
+
+    def hexdigest(self, msg: bytes | str | None = None) -> bytes:
+        "Compute the hash of the message given or absorbed. Return as hex value."
+        return self.digest(msg).hex()
 
 
 class SHAKE():
@@ -201,6 +210,10 @@ class SHAKE():
         self.keccak = Keccak(rate=1600-2*n)
         self.keccak.pad = [b'\x9f', b'\x1f', b'\x80']
         self.keccak.absorb(msg)
+        self.name = f"SHAKE-{n}"
+
+    def __repr__(self):
+        return self.name
 
     def __call__(self, r: int) -> bytes:
         "Extract `r` bytes."
