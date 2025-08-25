@@ -261,6 +261,8 @@ class GF2nPoint:
             return NotImplemented
         if not (self.x) and j < 0:
             raise ValueError("Division by zero.")
+        if self.field.order == 2:
+            return self
         if self.field.bitreversed:
             res = self.field(self.field.order >> 1)
         else:
@@ -290,6 +292,8 @@ class GF2nPoint:
 
     def sqrt(self) -> "GF2nPoint":
         "Compute the square root."
+        if self.field.order == 2:
+            return self
         return self**(self.field.order//2)
 
     def order(self) -> int:

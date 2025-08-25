@@ -307,8 +307,8 @@ class ReedSolomonCode(CyclicCode):
             y = Poly(y, ring = self.gf)
         if y.degree() >= self.n:
             raise ValueError(f"Degree can be at most {self.n-1}.")
-        x = Poly([ -y(self.alpha**(-j)) for j in range(self.n) ])
-        if x.degree() >= self.k: # No codewort
+        x = [ -y(self.alpha**(-j)) for j in range(self.n) ]
+        if Poly(x).degree() >= self.k: # No codewort
             t = (self.n - self.k) // 2
             A = Matrix([[ x[j - l % self.n] for l in range(1, t+1) ] for j in range(self.k+t, self.k+2*t) ])
             b = [ -x[self.k + t + l ] for l in range(t) ]

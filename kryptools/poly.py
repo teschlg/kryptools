@@ -48,11 +48,19 @@ class Poly:
         return sum((c * x**j for j, c in enumerate(self.coeff)), start=zero)
 
     def __getitem__(self, item):
+        if item >= len(self.coeff):
+            return self.coeff[0] * 0
         return self.coeff[item]
 
     def __setitem__(self, item, value):
+        if item >= len(self.coeff):
+            zero = self.coeff[0] * 0
+            self.coeff += [zero] * (item - len(self.coeff) + 1)
         self.coeff[item] = value
 
+    def __iter__(self):
+        yield from self.coeff
+        
     def __len__(self):
         return len(self.coeff)
 
@@ -205,8 +213,8 @@ class Poly:
             return NotImplemented
         zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
-        coeff = [sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0,
-                     k - lo + 1), min(ls, k + 1))), start=zero) for k in range(ls + lo - 1)]
+        coeff = [sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0, k - lo + 1), min(ls, k + 1))), start=zero) 
+                     for k in range(ls + lo - 1)]
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
@@ -513,7 +521,7 @@ class Poly:
                     for i in range(1, degree):
                         g += g**2
             else:  # Cantor–Zassenhaus
-                g **= qk
+                g = g**qk - one
             factors2 = []  # list for the next round (to avoid the the new factors are tested a second time with the same g)
             for fac in factors:
                 if fac.degree() == k:  # this one is already irreducible

@@ -18,21 +18,20 @@ def test_GF2_ops():
             assert len(list(gf.star())) == gf.order - 1
             assert len(list(gf.generators())) == euler_phi(gf.order - 1)
         for _ in range(num_tests):
-            a = randint(0, gf.order-1)
-            b = randint(0, gf.order-1)
-            assert (gf(a) + gf(b)).poly() == gf(a).poly() + gf(b).poly()
-            assert (gf(a) - gf(b)).poly() == gf(a).poly() - gf(b).poly()
-            assert (gf(a) * gf(b)).poly() == gf(a).poly() * gf(b).poly()
-            if not (b):
-                continue
-            assert (gf(a) / gf(b)).poly() == gf(a).poly() / gf(b).poly()
+            a = gf(randint(0, gf.order-1))
+            b = gf(randint(0, gf.order-1))
+            assert (a + b).poly() == a.poly() + b.poly()
+            assert (a - b).poly() == a.poly() - b.poly()
+            assert (a * b).poly() == a.poly() * b.poly()
+            if a:
+                assert (a**-1).poly() == a.poly().inv()
+            if b:
+                assert (a / b).poly() == a.poly() / b.poly()
+            assert a.sqrt()**2 == a
         with pytest.raises(ValueError):
             gf(1) / gf(0)
         with pytest.raises(ValueError):
             gf(0)**-1
-        for _ in range(num_tests):
-            a = randint(1, gf.order-1)
-            assert (gf(a)**-1).poly() == gf(a).poly().inv()
 
 def test_GF2_order():
     for n in range(1, 8):
@@ -53,7 +52,7 @@ def test_GF2P_order():
                 xx *=x
             assert o == x.order()
 
-def test_Zmod_generator():
+def test_GF2_generator():
     for n in range(1, 9):
         gf = GF2(n)
         a = gf.generator()
