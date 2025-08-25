@@ -267,6 +267,7 @@ class ZmodPoint:
         return order
 
     def sqrt(self) -> "ZmodPoint":
+        "Compute a square root of the point."
         if not self.ring.n_factors:
             self.ring.n_factors = factorint(self.ring.n)
         a = int(self)
@@ -297,7 +298,7 @@ class ZmodPoint:
                     raise ValueError("No quadratic residue!")
                 m = 4 # start at 2^2
                 x = ak % m # this is the root mod m
-                for i in range(3, k + 1):
+                for _ in range(3, k + 1):
                     # test all 4 poosible roots
                     if (x**2 - ak) % (m * 2):
                         x = m - x

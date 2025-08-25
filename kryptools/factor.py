@@ -114,7 +114,7 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
     ]
     fermat_steps = 10
 
-    for round, parameters in enumerate(ECM_PARAMETERS):
+    for nr, parameters in enumerate(ECM_PARAMETERS):
         fermat_steps += 10
         B1, B2, num_curves = parameters
         p_max = isqrt(max(remaining_factors))+1
@@ -126,7 +126,7 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
         D = isqrt(B2)
 
         if verbose:
-            print(f"Round {round+1} (B1={B1})")
+            print(f"Round {nr+1} (B1={B1})")
 
         primes = sieve_eratosthenes(B1 - 1 + ((B2 - B1 + 1) // (2 * D) + 1) * 2 * D)
         pm1_parameters = tuple([10 * B1, B2] + list(_pm1_parameters(10 * B1, B2, primes=primes)))

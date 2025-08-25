@@ -371,8 +371,7 @@ class Poly:
         "Greates common divisor with a given polynomial."
         ring = self._guess_ring()[-1]
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot compute gcd: {
-                                      other} must be a polynomial.")
+            raise NotImplementedError(f"Cannot compute gcd: {other} must be a polynomial.")
         if not self:
             if not other:
                 return Poly([self.coeff[0]])

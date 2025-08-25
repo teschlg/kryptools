@@ -85,7 +85,7 @@ class Goppa():
 
     def __init__(self, gf: GF2, g: Poly, alpha: list["GF2Point"]):
         if not all(map(lambda x: x in gf, alpha)):
-            raise ValueError(f"{x}: alpha must be a list of elements from the Galois field!")
+            raise ValueError("All elements of alpha must be from the Galois field!")
         if not g.rabin_test():
             raise ValueError("The polynomial g must be irreducible!")
         self.gf = gf  # underlying Galois field
@@ -189,7 +189,7 @@ class CyclicCode():
 
     def __repr__(self):
         return f"Cyclic [{self.n}, {self.k}] code over GF({self.order}) with generator polynomial g(x) = {self.g}."
-    
+
     def encode(self, x: list|Poly, gf = None, systematic_form = False):
         "Encode a given list or polynomial."
         as_list = False
@@ -219,7 +219,7 @@ class CyclicCode():
             raise ValueError(f"Degree can be at most {self.n-1}.")
         x, r = y.divmod(self.g)
         if r:
-            raise NotImplementedError(f"Word is no code word! Cannot decode.")
+            raise NotImplementedError("Word is no code word! Cannot decode.")
         if systematic_form:
             x.coeff = y.coeff[self.g.degree():]
         if as_list:

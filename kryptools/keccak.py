@@ -160,7 +160,7 @@ class SHA3():
 
     def __init__(self, n: int = 256):
         if n not in (224, 256, 384, 512):
-            raise ValueError(f"n must be one of: 224, 256, 384, 512")
+            raise ValueError("n must be one of: 224, 256, 384, 512")
         self.keccak = Keccak(rate = 1600 - 2*n)
         self.keccak.pad = [b'\x86', b'\x06', b'\x80']
         self.digest_size = n // 8  # in bytes
@@ -206,7 +206,7 @@ class SHAKE():
 
     def __init__(self, msg: bytes | str, n: int = 128) -> None:
         if n not in (128, 256):
-            raise ValueError(f"n must be one of: 128, 256")
+            raise ValueError("n must be one of: 128, 256")
         self.keccak = Keccak(rate=1600-2*n)
         self.keccak.pad = [b'\x9f', b'\x1f', b'\x80']
         self.keccak.absorb(msg)

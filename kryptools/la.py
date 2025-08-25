@@ -141,7 +141,7 @@ class Matrix:
                 self.delete_columns(cols)
                 return
         raise ValueError("Can only delete entire rows or entire columns!")
-            
+      
     def delete_rows(self, rows: int|list) -> None:
         "Deletes a row or a list of rows."
         if isinstance(rows, int):
@@ -153,7 +153,7 @@ class Matrix:
         for i in reversed(sorted(rows)):
             del self.matrix[i]
         self.rows -= len(rows)
-    
+
     def delete_columns(self, cols: int|list) -> None:
         "Deletes a column or a list of columns."
         if isinstance(cols, int):
@@ -166,7 +166,7 @@ class Matrix:
             for j in reversed(sorted(cols)):
                 del self.matrix[i][j]
         self.cols -= len(cols)
-    
+
     def append_row(self, row: list|tuple, ring = None) -> None:
         "Append a row."
         if not isinstance(row, list|tuple) or len(row) != self.cols:

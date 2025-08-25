@@ -320,7 +320,7 @@ class GF2nPoint:
             if inv:
                 return aes_sbox_inv[self.x]
             return aes_sbox[self.x]
-        elif self.field.degree == 4 and self.field.modulus == 0b10011: # MiniAES
+        if self.field.degree == 4 and self.field.modulus == 0b10011: # MiniAES
             if inv:
                 return miniaes_sbox_inv[self.x]
             return miniaes_sbox[self.x]
@@ -353,7 +353,7 @@ for i in range(256):
 aes_sbox = list(map(GF2_aes, aes_sbox))
 aes_sbox_inv = list(map(GF2_aes, aes_sbox_inv))
 
-    
+
 # sbox for Mini-AES
 GF2_miniaes = GF2(4, 0b10011)  # x^4 + x + 1 = Mini-AES
 
