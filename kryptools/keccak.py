@@ -175,7 +175,7 @@ class SHA3():
 
     def __repr__(self):
         return self.name
-    
+
     def update(self, msg: bytes | str) -> None:
         "Absorb the given message into the sponge."
         self.keccak.absorb(msg)

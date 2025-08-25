@@ -5,8 +5,6 @@ Polynomials
 from math import prod
 from numbers import Number
 from random import randint
-from .primes import is_prime
-
 
 class Poly:
     """
@@ -45,8 +43,6 @@ class Poly:
             result = result * x + c
         return result
 
-        return sum((c * x**j for j, c in enumerate(self.coeff)), start=zero)
-
     def __getitem__(self, item):
         if item >= len(self.coeff):
             return self.coeff[0] * 0
@@ -60,7 +56,7 @@ class Poly:
 
     def __iter__(self):
         yield from self.coeff
-        
+  
     def __len__(self):
         return len(self.coeff)
 
@@ -213,7 +209,7 @@ class Poly:
             return NotImplemented
         zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
-        coeff = [sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0, k - lo + 1), min(ls, k + 1))), start=zero) 
+        coeff = [sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0, k - lo + 1), min(ls, k + 1))), start=zero)
                      for k in range(ls + lo - 1)]
         modulus = self.modulus
         if not modulus and other.modulus:
@@ -369,7 +365,6 @@ class Poly:
 
     def gcd(self, other: "Poly") -> "Poly":
         "Greates common divisor with a given polynomial."
-        ring = self._guess_ring()[-1]
         if not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot compute gcd: {other} must be a polynomial.")
         if not self:
@@ -386,7 +381,7 @@ class Poly:
 
     def egcd(self, other: "Poly") -> ("Poly", "Poly", "Poly"):
         """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that other * x + self * y = gcd."""
-        zero, one, ring = self._guess_ring()
+        zero, one, _ = self._guess_ring()
         if not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot perform egcd: {other} must be a polynomial.")
         if not self:
@@ -491,7 +486,7 @@ class Poly:
 
     def equal_degree_factors(self, k: int) -> list:
         "Factors a square free product of irreducibel polynomials of degree `k` over a Galois field."
-        field, zero, one, q, p = self._guess_field()
+        field, _, one, q, p = self._guess_field()
         if hasattr(field, "degree"):
             degree = field.degree
         else:
@@ -504,7 +499,6 @@ class Poly:
                 f"The polynomial is no product of irreducibel polynomials of degree {k}.")
         r = d // k
         qk = (q**k - 1) // 2
-        poly = [0] * k + [1]
 
         factors = [self]
         while len(factors) < r:
@@ -512,7 +506,7 @@ class Poly:
                      for _ in range(d+1)], ring=field, modulus=self)
             if p == 2:  # Gathen-Shoup
                 h = g
-                for i in range(1, k):
+                for _ in range(1, k):
                     g += h**q
                 if degree > 1:
                     h = g
