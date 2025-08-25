@@ -388,8 +388,7 @@ class Poly:
         """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that other * x + self * y = gcd."""
         zero, one, ring = self._guess_ring()
         if not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot perform egcd: {
-                                      other} must be a polynomial.")
+            raise NotImplementedError(f"Cannot perform egcd: {other} must be a polynomial.")
         if not self:
             if not other:
                 return Poly([zero]), Poly([zero]), Poly([zero])
