@@ -1,6 +1,7 @@
-import pytest
-from math import prod
-from random import sample, choices, randint, seed
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from math import prod  # pylint: disable=C0411
+from random import sample, choices, randint, seed  # pylint: disable=C0411
 from kryptools import Poly, Zmod, GF2, lagrange_interpolation
 from kryptools import divisors, moebius_mu
 seed(0)
@@ -64,7 +65,6 @@ def test_rabin():
 
 def test_factor():
     for gf, t in [ [Zmod(7), 14], [GF2(4), 9]]:
-        order = len(list(gf))
         one = Poly([gf(1)])
         for _ in range(20):
             p = one
@@ -72,16 +72,16 @@ def test_factor():
                 p = Poly(gf.random(t), ring =gf)
             factors = p.factor()
             assert prod([f**k for f,k in factors.items()], start = one) == p, p
-            for fac in factors.keys():
+            for fac in factors:
                 assert fac.degree() == 0 or fac.rabin_test(), p
 
 def test_lagrange():
     for gf in [ Zmod(2), Zmod(3), Zmod(5), Zmod(7), Zmod(23), GF2(4), GF2(6)]:
-        all = list(gf)
-        l = len(all)//2
+        allpoints = list(gf)
+        l = len(allpoints)//2
         for _ in range(10):
-            x_coordinates = sample(all, l)
-            y_coordinates = choices(all, k = l)
+            x_coordinates = sample(allpoints, l)
+            y_coordinates = choices(allpoints, k = l)
             p = lagrange_interpolation(x_coordinates, y_coordinates)
             assert p.degree() <= len(x_coordinates) - 1
             for x, y in zip(x_coordinates, y_coordinates):

@@ -135,7 +135,7 @@ class GF2:
 class GF2nPoint:
     "Represents a point in the Galois field GF(2^n)."
 
-    def __init__(self, x: int, field: "GF2n"):
+    def __init__(self, x: int, field: "GF2"):
         if isinstance(x, bytes | bytearray):
             x = int.from_bytes(x, byteorder=field.byteorder)
         self.x = int(x) % field.order
@@ -278,16 +278,16 @@ class GF2nPoint:
             x *= x
         return res
 
-    def __lshift__(self, i: int) -> "GF2nPoint":
+    def __lshift__(self, j: int) -> "GF2nPoint":
         "Cyclic rotation to the left."
-        x = self.x << i
+        x = self.x << j
         x = (x % self.field.order) + (x // self.field.order)
         return self.field(x)
 
-    def __rshift__(self, i: int) -> "GF2nPoint":
+    def __rshift__(self, j: int) -> "GF2nPoint":
         "Cyclic rotation to the right."
-        x = self.x >> i
-        x += (self.field.order >> i) * (self.x % 2**i)
+        x = self.x >> j
+        x += (self.field.order >> j) * (self.x % 2**j)
         return self.field(x)
 
     def sqrt(self) -> "GF2nPoint":
@@ -298,7 +298,7 @@ class GF2nPoint:
 
     def order(self) -> int:
         "Compute the order of the point in the group GF(2^n)^*."
-        self.field._factors()
+        self.field._factors()  # pylint: disable=W0212
         order = self.field.mult_order  # our current guess
         one = self.field.one()
         for p, k in self.field.factors.items():

@@ -63,8 +63,7 @@ class SHA1:
                 f = b ^ c ^ d
                 k = 0xCA62C1D6
 
-            a, b, c, d, e = ((self.left_rotate(a, 5) + f + e + k + w[i]) & 0xffffffff,
-                             a, self.left_rotate(b, 30), c, d)
+            a, b, c, d, e = ((self.left_rotate(a, 5) + f + e + k + w[i]) & 0xffffffff, a, self.left_rotate(b, 30), c, d)  # pylint: disable=E0606
 
         # Add this chunk's hash to result so far
         h0 = (h[0] + a) & 0xffffffff

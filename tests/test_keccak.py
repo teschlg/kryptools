@@ -1,17 +1,18 @@
-import pytest
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
 
 from kryptools import Keccak, SHA3
 
 
 def test_KECCAK():
-	result = [ 0xf1258f7940e1dde7, 0x84d5ccf933c0478a, 0xd598261ea65aa9ee, 0xbd1547306f80494d, 0x8b284e056253d057,
-		0xff97a42d7f8e6fd4, 0x90fee5a0a44647c4, 0x8c5bda0cd6192e76, 0xad30a6f71b19059c, 0x30935ab7d08ffc64,
-		0xeb5aa93f2317d635, 0xa9a6e6260d712103, 0x81a57c16dbcf555f, 0x43b831cd0347c826, 0x1f22f1a11a5569f,
-		0x5e5635a21d9ae61, 0x64befef28cc970f2, 0x613670957bc46611, 0xb87c5a554fd00ecb, 0x8c3ee88a1ccf32c8,
-		0x940c7922ae3a2614, 0x1841f924a2c509e4, 0x16f53526e70465c2, 0x75f644e97f30a13b, 0xeaf1ff7b5ceca249 ]
-	keccak = Keccak()
-	keccak.f()
-	assert keccak.state == result
+    result = [ 0xf1258f7940e1dde7, 0x84d5ccf933c0478a, 0xd598261ea65aa9ee, 0xbd1547306f80494d, 0x8b284e056253d057,
+        0xff97a42d7f8e6fd4, 0x90fee5a0a44647c4, 0x8c5bda0cd6192e76, 0xad30a6f71b19059c, 0x30935ab7d08ffc64,
+        0xeb5aa93f2317d635, 0xa9a6e6260d712103, 0x81a57c16dbcf555f, 0x43b831cd0347c826, 0x1f22f1a11a5569f,
+        0x5e5635a21d9ae61, 0x64befef28cc970f2, 0x613670957bc46611, 0xb87c5a554fd00ecb, 0x8c3ee88a1ccf32c8,
+        0x940c7922ae3a2614, 0x1841f924a2c509e4, 0x16f53526e70465c2, 0x75f644e97f30a13b, 0xeaf1ff7b5ceca249 ]
+    keccak = Keccak()
+    keccak.f()
+    assert keccak.state == result
 
 
 # https://www.di-mgt.com.au/sha_testvectors.html
@@ -43,12 +44,12 @@ all_tests = [
 ]
 
 def test_SHA3():
-	for test in all_tests:
-		msg = bytes(test["message"]["data"], 'utf-8')
-		for key in test:
-			if key[:5] != "SHA-3":
-				continue
-			n = int(key[6:])
-			h = int(test[key], 16)
-			k = SHA3(n)(msg)
-			assert int.from_bytes(k, 'big') == h, f"{n}: {msg}"
+    for test in all_tests:
+        msg = bytes(test["message"]["data"], 'utf-8')
+        for key, item in test.items():
+            if key[:5] != "SHA-3":
+                continue
+            n = int(key[6:])
+            h = int(item, 16)
+            k = SHA3(n)(msg)
+            assert int.from_bytes(k, 'big') == h, f"{n}: {msg}"

@@ -1,5 +1,6 @@
-import pytest
-from random import randint, seed
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from random import randint, seed  # pylint: disable=C0411
 from kryptools import Zmod, GF2, Poly, Matrix
 from kryptools import gen2pchk, Goppa, CyclicCode, ReedSolomonCode
 

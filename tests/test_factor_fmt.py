@@ -1,5 +1,6 @@
-import pytest
-from math import prod
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from math import prod  # pylint: disable=C0411
 from kryptools import is_prime
 from kryptools.factor_fmt import factor_fermat
 

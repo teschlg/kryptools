@@ -1,5 +1,6 @@
-import pytest
-from math import gcd
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from math import gcd  # pylint: disable=C0411
 from kryptools import Zmod, euler_phi, is_prime
 
 
@@ -8,14 +9,14 @@ def test_Zmod_ops():
         Z_n = Zmod(n)
         for a in range(n):
             aa = Z_n(a)
-            bool(aa) == bool(a)
+            bool(aa) == bool(a)  # pylint: disable=W0106
             for i in range(4):
                 assert aa ** i == Z_n(pow(a, i, n))
                 if i == 0 or gcd(a, n) == 1:
                     assert aa ** -i == Z_n(pow(a, -i, n))
                 else:
                     with pytest.raises(ValueError):
-                        aa ** -i
+                        aa ** -i  # pylint: disable=W0104
             if gcd(a, n) == 1:
                 assert aa ** aa.order() == Z_n(1)
             else:
@@ -90,12 +91,11 @@ def test_ZmodP_order():
 def test_ZmodP_sqrt():
     for n in range(1,100):
         ring = Zmod(n)
-        one = ring(1)
         roots = {} # compute a dict of all roots
         for x in ring:
             y = x**2
             if y in roots:
-               roots[y].append(x)
+                roots[y].append(x)
             else:
                 roots[y] = [ x ]
         for x in ring:
@@ -139,4 +139,4 @@ def test_Zmod_generators():
         if Zmod(n).is_cyclic():
             assert len(list(Zmod(n).generators())) == euler_phi(euler_phi(n))
         else:
-            assert list(Zmod(n).generators()) == []
+            assert not list(Zmod(n).generators())

@@ -1,7 +1,8 @@
-import pytest
-from random import randint, seed
-from math import gcd, prod, lcm
-from fractions import Fraction
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from random import randint, seed  # pylint: disable=C0411
+from math import gcd, prod, lcm  # pylint: disable=C0411
+from fractions import Fraction  # pylint: disable=C0411
 from kryptools import sieve_eratosthenes, is_prime
 from kryptools import egcd, crt, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, carmichael_lambda, euler_phi, moebius_mu, is_carmichael_number
 seed(0)
@@ -46,15 +47,15 @@ jacobi_data = (
 
 
 def test_jacobi_symbol():
-    for i in range(len(jacobi_data)):
+    for i, data in enumerate(jacobi_data):
         n = 2 * i + 1
         if is_prime(n):
             for x in range(n+1):
-                assert jacobi_symbol(x, n) == jacobi_data[i][x]
+                assert jacobi_symbol(x, n) == data[x]
                 assert jacobi_symbol(x, n) == legendre_symbol(x, n)
         else:
             for x in range(n+1):
-                assert jacobi_symbol(x, n) == jacobi_data[i][x]
+                assert jacobi_symbol(x, n) == data[x]
 
 
 def test_sqrt_mod():

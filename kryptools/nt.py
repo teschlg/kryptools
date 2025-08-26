@@ -146,7 +146,7 @@ def sqrt_mod(a: int, p: int) -> int|None:
 
 # Euler phi, Carmichael function, Moebius function
 
-from .factor import factorint
+from .factor import factorint  # pylint: disable=C0413
 
 
 def euler_phi(n: int) -> int:

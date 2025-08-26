@@ -1,6 +1,7 @@
-import pytest
-from math import isqrt
-from random import randint, seed
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from math import isqrt  # pylint: disable=C0411
+from random import randint, seed  # pylint: disable=C0411
 from kryptools import sieve_eratosthenes, prime_pi, next_prime, previous_prime, next_safeprime, previous_safeprime, is_prime, is_safeprime, is_blumprime
 from kryptools import miller_rabin_test, lucas_test, random_prime, random_safeprime, random_blumprime, random_strongprime
 seed(0)
@@ -147,7 +148,7 @@ if OEIS_A217255[30] > max_sieve:
 
 def test_lucas():
     for m in range(2, OEIS_A217255[30]+1):
-        if not (lucas_test(m) == prime_test[m]):
+        if not lucas_test(m) == prime_test[m]:
             assert m in OEIS_A217255
 
 

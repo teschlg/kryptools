@@ -1,6 +1,7 @@
-import pytest
-from random import randint, seed
-from math import gcd
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from random import randint, seed  # pylint: disable=C0411
+from math import gcd  # pylint: disable=C0411
 from kryptools import sieve_eratosthenes, factorint
 from kryptools import iroot, ilog, perfect_square, perfect_power, prime_power
 seed(0)
@@ -17,19 +18,19 @@ def test_iroot():
         n = randint(0, 10**10)
         for k in range(2, 12):
             r = iroot(k, n)
-            assert r ** k <= n and (r+1) ** k > n
+            assert r ** k <= n < (r+1) ** k
 
 
 def test_ilog():
     for n in range(1, maxrange):
         for b in range(2, 5):
             l = ilog(b, n)
-            assert b**l <= n and b**(l+1) > n
+            assert b**l <= n < b**(l+1)
     for _ in range(numtests):
         n = randint(1, 10**10)
         for b in range(2, 5):
             l = ilog(b, n)
-            assert b**l <= n and b**(l+1) > n
+            assert b**l <= n < b**(l+1)
 
 
 def test_perfect_square():

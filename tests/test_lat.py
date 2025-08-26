@@ -1,5 +1,6 @@
-import pytest
-from fractions import Fraction
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
+from fractions import Fraction  # pylint: disable=C0411
 from kryptools import Matrix, gram_schmidt, random_unimodular_matrix
 
 

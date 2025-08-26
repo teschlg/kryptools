@@ -1,4 +1,5 @@
-import pytest
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
 
 from kryptools import SHA1
 

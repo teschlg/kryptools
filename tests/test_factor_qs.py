@@ -1,4 +1,5 @@
-import pytest
+# pragma pylint: disable=C0114,C0116
+import pytest  # pylint: disable=W0611
 from kryptools.factor_qs import factor_qs
 
 

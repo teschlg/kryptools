@@ -135,14 +135,14 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
         methods = {_factor_fermat: "fmt", factor_pm1: "pm1", factor_ecm: "ecm"}  #, factor_qs: "qs"}
         while remaining_factors:
             new_factors = {}
-            for method in methods:
+            for method, method_name in methods.items():
                 factors = list(remaining_factors)
                 for m in factors:
-                    if method == _factor_fermat:
+                    if method == _factor_fermat:  # pylint: disable=W0143
                         tmp = _factor_fermat(m, maxsteps=fermat_steps, verbose=max(0, verbose - 1))
-                    elif method == factor_pm1:
+                    elif method == factor_pm1:  # pylint: disable=W0143
                         tmp = factor_pm1(m, pm1_parameters=pm1_parameters, verbose=max(0, verbose - 1))
-                    elif method == factor_ecm:
+                    elif method == factor_ecm:  # pylint: disable=W0143
                         tmp = factor_ecm(m, ecm_parameters=ecm_parameters, verbose=max(0, verbose - 1))
                     else:
                         tmp = method(m, verbose=max(0, verbose - 1))
@@ -160,16 +160,18 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
                                     tmp3.append(x)
                         else:
                             tmp3 = [tmp, tmp2]
-                        if verbose > 0: print(f"Factors found ({methods[method]}): ", tmp3)
+                        if verbose > 0:
+                            print(f"Factors found ({method_name}): ", tmp3)
                         add_factors(m, tmp3)
             if not new_factors:
                 break
-            for m in new_factors:
+            for m, k in new_factors.items():
                 if m in remaining_factors:
-                    remaining_factors[m] += new_factors[m]
+                    remaining_factors[m] += k
                 else:
-                    remaining_factors[m] = new_factors[m]
-            if verbose > 1: print("Remaining: ", remaining_factors)
+                    remaining_factors[m] = k
+            if verbose > 1:
+                print("Remaining: ", remaining_factors)
 
         if len(remaining_factors) == 0:
             return prime_factors
@@ -190,7 +192,7 @@ def divisors(n:int, proper:bool = False) -> int:
     if n <= 1:
         return divisor_list
     facctordict= factorint(n)
-    primes = [p for p in facctordict]
+    primes = list(facctordict)
     nprimes = len(primes)
     multiplicites = [facctordict[p] for p in primes]
 

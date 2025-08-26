@@ -144,16 +144,14 @@ class Poly:
     def _guess_ring(self):
         zero = 0 * self.coeff[0]
         one = zero**0
-        try:
+        if hasattr(zero, "ring"):
             ring = zero.ring  # Zmod
-        except:
-            try:
-                ring = zero.field  # GF2
-            except:
-                try:
-                    ring = type(zero)  # galois
-                except:
-                    ring = None
+        elif hasattr(zero, "field"):
+            ring = zero.field  # GF2
+        elif hasattr(type(zero), "order"):
+            ring = type(zero)  # galois
+        else:
+            ring = None
         return zero, one, ring
 
     def _guess_field(self):

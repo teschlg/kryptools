@@ -166,16 +166,14 @@ class CyclicCode():
         if n < 2:
             raise ValueError(f"Code lenght {n} must be at least 2!")
         zero = 0 * g[0]
-        try:
+        if hasattr(zero, "ring"):
             order = zero.ring.n  # Zmod
-        except:
-            try:
-                order = zero.field.order  # GF2
-            except:
-                try:
-                    order = type(zero).order  # galois
-                except:
-                    raise ValueError("Unknown base filed!")
+        elif hasattr(zero, "field"):
+            order = zero.field.order  # GF2
+        elif hasattr(type(zero), "order"):
+            order = type(zero).order  # galois
+        else:
+            raise ValueError("Unknown base field!")
         self.order = order  # order of the base field
         one = zero**0
         modulus = Poly([-one] + [zero] * (n-1) + [one])
@@ -259,7 +257,7 @@ class ReedSolomonCode(CyclicCode):
     def __init__(self, k:int, gf, alpha = None):
         zero = gf(0)
         one = zero**0
-        self. gf = gf
+        self.gf = gf
         try:
             n = gf.order()
         except:
