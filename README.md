@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/pypi/l/kryptools)](https://pypi.org/project/kryptools)
 [![Pylint](https://github.com/teschlg/kryptools/actions/workflows/pylint.yml/badge.svg)](https://github.com/teschlg/kryptools/actions/workflows/pylint.yml)
 [![Pytest](https://github.com/teschlg/kryptools/actions/workflows/run_test.yml/badge.svg)](https://github.com/teschlg/kryptools/actions/workflows/run_test.yml)
-  
+
 # kryptools
 Gerald Teschl <Gerald.Teschl@univie.ac.at>
 
