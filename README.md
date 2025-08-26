@@ -1,6 +1,6 @@
 [![Pypi](https://img.shields.io/pypi/v/kryptools)](https://pypi.org/project/kryptools)
-[![PyVersion](https://img.shields.io/pypi/pyversions/kryptools)](https://pypi.org/project/kryptools)
-[![License](https://img.shields.io/pypi/l/kryptools)](https://pypi.org/project/kryptools)
+[![PyVersion](https://img.shields.io/pypi/pyversions/kryptools)](https://www.python.org)
+[![License](https://img.shields.io/pypi/l/kryptools)](https://github.com/teschlg/kryptools/blob/main/LICENSE)
 [![Pylint](https://github.com/teschlg/kryptools/actions/workflows/pylint.yml/badge.svg)](https://github.com/teschlg/kryptools/actions/workflows/pylint.yml)
 [![Pytest](https://github.com/teschlg/kryptools/actions/workflows/run_test.yml/badge.svg)](https://github.com/teschlg/kryptools/actions/workflows/run_test.yml)
 
