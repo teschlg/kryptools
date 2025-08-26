@@ -254,24 +254,24 @@ class ReedSolomonCode(CyclicCode):
     [0, 1, 0]
     
     """
-    def __init__(self, k:int, gf, alpha = None):
+    def __init__(self, k:int, gf, alpha = None):  # pylint: disable=W0231
         zero = gf(0)
         one = zero**0
         self.gf = gf
-        try:
-            n = gf.order()
-        except:
-            n = gf.order - 1
+        if hasattr(gf, "n"):
+            n = gf.n - 1  # Zmod
+        else:
+            n = gf.order - 1  # GF2|galois
         self.order = n + 1  # order of the base field
         self.n = n  # lenght
         self.k = k  # dimension
         self.d = n - k - 1  # minimal distance
         self.modulus = Poly([-one] + [zero] * (n-1) + [one])
         if alpha is None:
-            try:
-                alpha = gf.generator()  # Zmod|GF2
-            except:
+            if hasattr(gf, "primitive_element"):
                 alpha = gf.primitive_element  # galois
+            else:
+                alpha = gf.generator()  # Zmod|GF2
         self.alpha = alpha
         self.g = prod([Poly([-alpha**j, one]) for j in range(1,n-k+1)], start = one) # generating polynomial
         self.h = Poly(self.modulus) // self.g  # check polynomial
@@ -281,7 +281,7 @@ class ReedSolomonCode(CyclicCode):
     def __repr__(self):
         return f"Reed-Solomon-Code [{self.n}, {self.k}, {self.d}] over GF({self.n+1})."
 
-    def encode(self, x: list|Poly):
+    def encode(self, x: list|Poly):  # pylint: disable=W0221
         "Encode a given list or polynomial."
         as_list = False
         zero = 0 * self.g[0]
@@ -295,7 +295,7 @@ class ReedSolomonCode(CyclicCode):
             return y + [zero] * (self.n - len(y))
         return Poly(y)
 
-    def decode(self, y: list|Poly):
+    def decode(self, y: list|Poly):  # pylint: disable=W0221
         "Decode a given list or polynomial."
         as_list = False
         zero = 0 * self.g[0]

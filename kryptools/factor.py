@@ -55,21 +55,22 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
         prime_factors[-1] = 1
 
     def add_factors(m: int, mm: tuple) -> None:
+        "Delete m from remaining factors and add its factors mm to the appropriate dict."
         k = remaining_factors[m]
         del remaining_factors[m]
 
-        for m in mm:
-            if m in prime_factors:
-                prime_factors[m] += k
-            elif is_prime(m, trialdivision=False):
-                prime_factors[m] = k
+        for m_i in mm:
+            if m_i in prime_factors:
+                prime_factors[m_i] += k
+            elif is_prime(m_i, trialdivision=False):
+                prime_factors[m_i] = k
             else:
-                if m in remaining_factors:
-                    remaining_factors[m] += k
-                elif m in new_factors:
-                    new_factors[m] += k
+                if m_i in remaining_factors:
+                    remaining_factors[m_i] += k
+                elif m_i in new_factors:
+                    new_factors[m_i] += k
                 else:
-                    new_factors[m] = k
+                    new_factors[m_i] = k
 
     if verbose:
         print(f"Factoring: {n} ({floor(log10(n)) + 1} digits)")
@@ -136,7 +137,7 @@ def factorint(n: int, trial_bnd: int = 2500, verbose: int = 0) -> dict:
         while remaining_factors:
             new_factors = {}
             for method, method_name in methods.items():
-                factors = list(remaining_factors)
+                factors = list(remaining_factors) # make a copy to avoid a runtime error if the dict changes
                 for m in factors:
                     if method == _factor_fermat:  # pylint: disable=W0143
                         tmp = _factor_fermat(m, maxsteps=fermat_steps, verbose=max(0, verbose - 1))

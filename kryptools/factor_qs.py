@@ -9,7 +9,7 @@ from .nt import legendre_symbol, sqrt_mod
 
 def bytexor(a: bytearray, b: bytes) -> bytes:
     """Xor the bytestring `b` to the bytearry `a`."""
-    for i in range(len(a)):
+    for i in range(len(a)):  # pylint: disable=C0200
         a[i] ^= b[i]
 
 

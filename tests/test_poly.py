@@ -61,7 +61,7 @@ def test_rabin():
             a = Poly(c, ring=gf)
             if a.rabin_test():
                 count += 1
-        assert count == sum([moebius_mu(d) * order ** (t // d) for d in divisors(t)]) // t
+        assert count == sum( moebius_mu(d) * order ** (t // d) for d in divisors(t) ) // t
 
 def test_factor():
     for gf, t in [ [Zmod(7), 14], [GF2(4), 9]]:

@@ -35,7 +35,7 @@ class Poly:
 
     def __call__(self, x):
         result = 0 * self.coeff[0]
-        if not type(x) == type(result):
+        if not type(x) == type(result):  # pylint: disable=C0123
             raise ValueError(
                 "Evaluation point must be an element of the ring.")
         # Horner's method
@@ -96,7 +96,7 @@ class Poly:
                     tmp += plus + "- " + prx(i)
                     plus = " + "
                     continue
-            except:
+            except:  # pylint: disable=W0702
                 pass
             try:
                 if plus and s < 0:
@@ -104,7 +104,7 @@ class Poly:
                     if i != 0:
                         tmp += " " + prx(i)
                     continue
-            except:
+            except:  # pylint: disable=W0702
                 pass
             tmp += plus + str(s)
             if i != 0:
@@ -139,7 +139,7 @@ class Poly:
         return self.__class__(list(map(func, self.coeff)), modulus=self.modulus)
 
     def _check_type(self, other):
-        return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])
+        return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])  # pylint: disable=C0123
 
     def _guess_ring(self):
         zero = 0 * self.coeff[0]

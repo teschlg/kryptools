@@ -50,9 +50,9 @@ class BlockCipher:
         "Encrypt using the given mode."
         if mode is None:
             mode = self.mode
-        try:
+        if hasattr(self, "encrypt_" + mode.lower()):
             method = getattr(self, "encrypt_" + mode.lower())
-        except:
+        else:
             raise ValueError("Unsupported encryption mode: ", mode)
         if key:
             self.set_key(key)
@@ -62,9 +62,9 @@ class BlockCipher:
         "Decrypt using the given mode."
         if mode is None:
             mode = self.mode
-        try:
+        if hasattr(self, "decrypt_" + mode):
             method = getattr(self, "decrypt_" + mode)
-        except:
+        else:
             raise ValueError("Unsupported encryption mode: ", mode)
         if key:
             self.set_key(key)
@@ -218,7 +218,7 @@ class BlockCipher:
             key_extra ^= R_b
 
         pad = len(text) % self.__class__.blocksize
-        if pad or not len(text):
+        if pad or not text:
             # Compute key K2
             text += b'\x80' + b'\x00' * (self.__class__.blocksize - pad - 1)
             msb = key_extra >> (self.__class__.blocksize * 8 - 1)

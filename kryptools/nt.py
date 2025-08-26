@@ -279,4 +279,4 @@ def crt(a: list[int], m: list[int], coprime=True) -> int:
     M = prod(m)
     Mi = [M // m[i] for i in range(l)]
     MNi = [Mi[i] * pow(Mi[i], -1, m[i]) % M for i in range(l)]
-    return sum([a[i] * MNi[i] % M for i in range(l)]) % M
+    return sum( a[i] * MNi[i] % M for i in range(l) ) % M
