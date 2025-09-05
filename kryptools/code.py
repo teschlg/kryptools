@@ -102,7 +102,7 @@ class Goppa():
         self.G = gen2pchk(self.H)
 
     def __repr__(self):
-        return f"Binary irreducible Goppa code over GF(2^{self.gf.degree}) with polynomial g(x) = {self.g}."
+        return f"Binary irreducible Goppa [{self.G.cols}, {self.G.rows}] code over GF(2^{self.gf.degree}) with polynomial g(x) = {self.g}."
 
     def encode(self, x: list[int]):
         "Encode a given list of bits."
@@ -246,12 +246,12 @@ class ReedSolomonCode(CyclicCode):
     >>> rsc = ReedSolomonCode(k, gf)
     
     To encode a list of letters (the length must be equal to the dimension k of the code; conversion to the Galois field is done automatically):
-    >>> cc.encode([1, 2, 3])
-    [0, 1, 1, 0]
+    >>> rsc.encode([1, 2, 3])
+    [6, 4, 5, 1, 8, 4, 2, 9, 2, 8, 9, 6]
 
-    Decoding is only implemnted for code words:
-    >>> cc.decode([0, 1, 1, 0], ring = Zmod(2))
-    [0, 1, 0]
+    To decoding use:
+    >>> rsc.decode([1, 4, 4, 0, 8, 4, 2, 9, 2, 0, 9, 6])
+    [1, 2, 3]
     
     """
     def __init__(self, k:int, gf, alpha = None):  # pylint: disable=W0231
@@ -279,9 +279,9 @@ class ReedSolomonCode(CyclicCode):
         assert self.g * self.h == self.modulus
 
     def __repr__(self):
-        return f"Reed-Solomon-Code [{self.n}, {self.k}, {self.d}] over GF({self.n+1})."
+        return f"Reed-Solomon [{self.n}, {self.k}, {self.d}] code over GF({self.n+1})."
 
-    def encode(self, x: list|Poly):  # pylint: disable=W0221
+    def encode(self, x: list|Poly) -> list|Poly:  # pylint: disable=W0221
         "Encode a given list or polynomial."
         as_list = False
         zero = 0 * self.g[0]
@@ -295,7 +295,7 @@ class ReedSolomonCode(CyclicCode):
             return y + [zero] * (self.n - len(y))
         return Poly(y)
 
-    def decode(self, y: list|Poly):  # pylint: disable=W0221
+    def decode(self, y: list|Poly) -> list|Poly:  # pylint: disable=W0221
         "Decode a given list or polynomial."
         as_list = False
         zero = 0 * self.g[0]
