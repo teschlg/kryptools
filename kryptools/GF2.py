@@ -195,18 +195,12 @@ class GF2nPoint:
             raise NotImplementedError("Cannot add elements from different fields.")
         return self.field(self.x ^ other.x)
 
-    def __neg__(self) -> "GF2nPoint":
-        return self
+    __sub__ = __add__
 
     def __pos__(self) -> "GF2nPoint":
         return self
 
-    def __sub__(self, other: "GF2nPoint") -> "GF2nPoint":
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-        if self.field != other.field:
-            raise NotImplementedError("Cannot add elements from different fields.")
-        return self.field(self.x ^ other.x)
+    __neg__ = __pos__
 
     def __mul__(self, other: "GF2nPoint") -> "GF2nPoint":
         if isinstance(other, int):
