@@ -8,8 +8,15 @@ seed(0)
 num_tests = 10
 
 def test_Poly():
+    assert  Poly([0]).weight() == 0
+    assert  Poly([1]).weight() == 1
+    assert  Poly([1]).degree() == 0
     p = Poly([2, 0, 2])
     q = Poly([1, 2, 3, 4])
+    assert p.degree() == 2
+    assert p.weight() == 2
+    assert q.degree() == 3
+    assert q.weight() == 4
     d, m = q.divmod(p)
     assert d * p + m == q
     for _ in range(num_tests):
