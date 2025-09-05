@@ -102,7 +102,7 @@ class Goppa():
         self.G = gen2pchk(self.H)
 
     def __repr__(self):
-        return f"Binary irreducible Goppa code over GF(2^{self.gf.power}) with polynomial g(x) = {self.g}."
+        return f"Binary irreducible Goppa code over GF(2^{self.gf.degree}) with polynomial g(x) = {self.g}."
 
     def encode(self, x: list[int]):
         "Encode a given list of bits."
