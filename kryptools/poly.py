@@ -130,6 +130,10 @@ class Poly:
         "Return the degree."
         return len(self.coeff) - 1
 
+    def weight(self) -> int:
+        "Return the number of nonzero coefficients."
+        return sum(map(bool,self.coeff))
+
     def map(self, func):
         "Apply a given function to all coefficients in place."
         self.coeff = list(map(func, self.coeff))
