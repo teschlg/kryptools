@@ -6,7 +6,7 @@ from math import prod
 from .Zmod import Zmod
 from .GF2 import GF2
 from .poly import Poly, lagrange_interpolation
-from .la import Matrix, eye, zeros
+from .la import Matrix
 
 
 def poly2bits(x: Poly) -> list:
@@ -16,45 +16,13 @@ def poly2bits(x: Poly) -> list:
         out += c.bits()
     return out
 
-def left_standard_form(M: Matrix) -> (Matrix, Matrix):
+def left_standard_form(G: Matrix) -> (Matrix, Matrix):
     "Compute the left standard form of a generator matrix. Return the standard form and the pertmutation matrix."
-    # reduced row echelon form
-    M = M.rref()
-    # purge zero rows
-    for i in range(M.rows-1,-1,-1):
-        if not M[i,:]:
-            M.delete_rows(i)
-    # permute columns to get the identity on the left
-    last = min(M.rows, M.cols)
-    P = eye(M.cols)
-    for i in range(last):
-        if not M[i,i]: # the diagonal entry vanishes
-            # find the index of the pivot and permute
-            j = i + 1
-            while j <= M.cols and not M[i, j]:
-                j += 1
-            P[:,i], P[:,j] = P[:,j], P[:,i]
-            M[:,i], M[:,j] = M[:,j], M[:,i]
-    return M, P
+    return G.left_standard_form()
 
 def gen2pchk(G: Matrix) -> Matrix:
     "Compute the parity check matrix from a given generator matrix (and vice versa)."
-    G, P = left_standard_form(G)
-    d = G.cols - G.rows
-    if d <= 0:
-        raise ValueError("A generator matrix must have more columns than rows!")
-    zero = 0 * G[0]
-    one = zero**0
-    # we start with a zero matrix
-    H = zeros(d, G.cols, zero = zero)
-    # create the identity on the right
-    for i in range(d):
-        H[i,G.rows+i] = one
-    # add minus the transpose of the right part of G as the left part
-    tmp = - G[:,-d:].transpose()
-    for i in range(G.cols - d):
-        H[:, i] = tmp[:, i]
-    return H * P.transpose()
+    return G.kernel().transpose()
 
 def hamming_dist(a: iter, b: iter):
     "Hamming distance of two iterables."

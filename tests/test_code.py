@@ -33,6 +33,7 @@ def test_Goppa():
         alpha = list(gf)
 
         goppa = Goppa(gf, g, alpha)
+        assert not goppa.H * goppa.G.transpose()
         for _ in range(num_tests):
             x = [ randint(0,1) for _ in range(goppa.G.rows) ]
             y = goppa.encode(x)
@@ -45,6 +46,12 @@ def test_Cyclic():
     for gf, n, g in [ [Zmod(2), 4, [1, 1]],  [Zmod(3), 4, [-1, 1]], [Zmod(11), 5, [4, 6, 1]] ]:
         g = Poly(g, ring = gf)
         cc = CyclicCode(n, g)
+        G = cc.generator_matrix()
+        H = cc.check_matrix()
+        assert not H * G.transpose()
+        H2 = gen2pchk(G)
+        assert H2.rows == H.rows
+        assert not H2 * G.transpose()
         for _ in range(num_tests):
             x = [ gf(randint(0, cc.order-1)) for _ in range(cc.k) ]
             y = cc.encode(x)
@@ -53,6 +60,12 @@ def test_Cyclic():
 def test_ReedSolomon():
     for gf, k in [ [Zmod(13), 3],  [GF2(6), 4]]:
         rsc = ReedSolomonCode(k, gf)
+        G = rsc.generator_matrix()
+        H = rsc.check_matrix()
+        assert not H * G.transpose()
+        H2 = gen2pchk(G)
+        assert H2.rows == H.rows
+        assert not H2 * G.transpose()
         t = (rsc.n - rsc.k) // 2
         for _ in range(num_tests):
             x = [ gf(randint(0, rsc.n)) for _ in range(rsc.k) ]

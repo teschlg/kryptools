@@ -41,8 +41,8 @@ def test_Zmod_methods():
     assert Z_5(3).is_generator() is True
     assert list(Z_5.generators()) == Z_5([2, 3])
     assert list(Z_5.star()) == Z_5([1, 2, 3, 4])
-    assert [Z_5(i).sharp() for i in range(Z_5.n)] == [0, 1, 2, -2, -1]
-    assert [abs(Z_5(i)) for i in range(Z_5.n)] == [0, 1, 2, 2, 1]
+    assert [i.sharp() for i in Z_5] == [0, 1, 2, -2, -1]
+    assert [abs(i) for i in Z_5] == [0, 1, 2, 2, 1]
     assert not Z_5(0)
     assert Z_5(1)
     assert Z_5(2) == Z_5(2)
@@ -63,6 +63,9 @@ def test_Zmod_methods():
     assert Z_6(5).is_generator() is True
     assert list(Z_6.generators()) == Z_6([5])
     assert list(Z_6.star()) == Z_6([1, 5])
+    assert [i.sharp() for i in Z_6] == [0, 1, 2, 3, -2, -1]
+    assert [abs(i) for i in Z_6] == [0, 1, 2, 3, 2, 1]
+    assert not Z_6(0)
     assert Z_6(1)
     assert Z_6(2) == Z_6(2)
     assert Z_6(2) != Z_6(3)

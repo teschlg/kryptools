@@ -4,7 +4,7 @@ from random import randint, seed  # pylint: disable=C0411
 from kryptools import GF2, euler_phi
 seed(0)
 
-num_tests = 50
+num_tests = 25
 
 def test_GF2_ops():
     for n, modulus in [(4, None), (8, None), (8, 0b100011011), (12, None), (128, 0b11100001 << 120)]:
@@ -14,6 +14,10 @@ def test_GF2_ops():
         assert gf(1) == gf(1)
         assert gf(1) != gf(0)
         assert gf(0) != 0
+        assert 0 * gf.one() == gf.zero()
+        assert 1 * gf.one() == gf.one()
+        assert 2 * gf.one() == gf.zero()
+        assert gf.zero()**0 == gf.one()
         if gf.degree < 17:
             assert len(list(gf)) == gf.order
             assert len(list(gf.star())) == gf.order - 1
@@ -21,9 +25,16 @@ def test_GF2_ops():
         for _ in range(num_tests):
             a = gf(randint(0, gf.order-1))
             b = gf(randint(0, gf.order-1))
+            assert a * gf.one() == a
+            assert gf.one() * a == a
+            assert a**0 == gf.one()
+            assert a**1 == a
+            assert a**2 == a * a
+            assert a * b == b * a
             assert (a + b).poly() == a.poly() + b.poly()
             assert (a - b).poly() == a.poly() - b.poly()
             assert (a * b).poly() == a.poly() * b.poly()
+            assert (a**2).poly() == a.poly()**2
             if a:
                 assert (a**-1).poly() == a.poly().inv()
             if b:

@@ -169,7 +169,9 @@ class Matrix:
 
     def append_row(self, row: list|tuple, ring = None) -> None:
         "Append a row."
-        if not isinstance(row, list|tuple) or len(row) != self.cols:
+        if not isinstance(row, list|tuple):
+            row = list(row)
+        if len(row) != self.cols:
             raise ValueError("Length does not match the number of columns.")
         if ring:
             row =list(map(ring, row))
@@ -178,7 +180,9 @@ class Matrix:
 
     def append_column(self, col: list|tuple, ring = None) -> None:
         "Append a column."
-        if not isinstance(col, list|tuple) or len(col) != self.rows:
+        if not isinstance(col, list|tuple):
+            col = list(col)
+        if len(col) != self.rows:
             raise ValueError("Length does not match the number of rows.")
         if ring:
             col =list(map(ring, col))
@@ -312,6 +316,43 @@ class Matrix:
                 break
         return R
 
+    def left_standard_form(self) -> ("Matrix", "Matrix"):
+        "Compute the left standard form of a matrix. Return the standard form and the pertmutation matrix."
+        # reduced row echelon form
+        M = self.rref()
+        # purge zero rows
+        for i in range(M.rows-1,-1,-1):
+            if not M[i,:]:
+                M.delete_rows(i)
+        # permute columns to get the identity on the left
+        last = min(M.rows, M.cols)
+        P = M.eye(M.cols)
+        for i in range(last):
+            if not M[i,i]: # the diagonal entry vanishes
+                # find the index of the pivot and permute
+                j = i + 1
+                while j <= M.cols and not M[i, j]:
+                    j += 1
+                P[:,i], P[:,j] = P[:,j], P[:,i]
+                M[:,i], M[:,j] = M[:,j], M[:,i]
+        return M, P
+
+    def kernel(self) -> "Matrix":
+        "Compute a basis for the kernel of a matrix."
+        zero, one = self._guess_zero()
+        def delta(i, j):
+            if i == j:
+                return one
+            return zero
+        M, P = self.left_standard_form()
+        d = M.cols - M.rows
+        if d <= 0:
+            return M.zeros(M.cols, 1)
+        K = - M[:,-d:]
+        for i in range(d):
+            K.append_row([ delta(i,j) for j in range(d)])
+        return P * K
+
     def det(self) -> int:
         "Compute the determinant of a matrix M."
         zero, one = self._guess_zero()
@@ -348,6 +389,10 @@ class Matrix:
             if MM[i,:]:
                 return i+1
         return 0
+
+    def nullity(self) -> int:
+        "Compute the nillity of a matrix M."
+        return self.cols - self.rank()
 
     def inv(self) -> "Matrix":
         "Compute the inverse of a square matrix M."

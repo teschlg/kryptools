@@ -92,7 +92,7 @@ class GF2:
     def one(self) -> bool:
         "Return one."
         if self.bitreversed:
-            return self(self.order - 1)
+            return self(self.order >> 1)
         return self(1)
 
     def random(self, num: int = 0) -> "GF2nPoint":
@@ -256,6 +256,8 @@ class GF2nPoint:
         if not (self.x) and j < 0:
             raise ValueError("Division by zero.")
         if self.field.order == 2:
+            if j == 0:
+                return self.field.one()
             return self
         if self.field.bitreversed:
             res = self.field(self.field.order >> 1)

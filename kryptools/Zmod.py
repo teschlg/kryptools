@@ -247,8 +247,11 @@ class ZmodPoint:
 
     def sharp(self):
         "Returns a symmetric (w.r.t. 0) representative."
-        tmp = (self.ring.n - 1) // 2
-        return (self.x + tmp) % self.ring.n - tmp
+        if self.x <= self.ring.n // 2:
+            return self.x
+        return self.x - self.ring.n
+
+    mods = sharp
 
     def order(self) -> int:
         "Compute the order of the point in the group Z_n^*."
