@@ -29,7 +29,7 @@ The tools contained are:
 * lattices: Hadamard ratio, Babai rounding/nearest plane algorithm, lattice reduction (Lenstra-Lenstra-Lovaz)
 * linear codes: Hamming distance, left standard form, parity check matrix
 
-* Matrix: a class for Matrices (inverse, det, reduced echelon form, etc.)
+* Matrix: a class for Matrices (inverse, det, reduced echelon form, kernel, etc.)
 * Poly: a class for polynomials (division, modulo, factoring and irreducibility test over finite fields, Lagrange interpolation)
 * Zmod: a class for the ring of integers modulo an integer
 * GF2: a class for Galois fields GF(2^n)
