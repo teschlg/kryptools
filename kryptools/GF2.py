@@ -63,10 +63,10 @@ class GF2:
         if isinstance(x, list|tuple|range|map):
             if isinstance(x, bytes | bytearray):
                 return [ GF2nPoint(int.from_bytes(x, byteorder=self.byteorder), self) for xx in x]
-            return [GF2nPoint(int(xx), self) for xx in x]
+            return [GF2nPoint(int(xx) % self.order, self) for xx in x]
         if isinstance(x, bytes | bytearray):
             return GF2nPoint(int.from_bytes(x, byteorder=self.byteorder), self)
-        return GF2nPoint(int(x), self)
+        return GF2nPoint(int(x) % self.order, self)
 
     def __len__(self):
         return self.order
@@ -140,7 +140,7 @@ class GF2nPoint:
     "Represents a point in the Galois field GF(2^n)."
 
     def __init__(self, x: int, field: "GF2"):
-        self.x = x % field.order
+        self.x = x
         self.field = field
 
     def __repr__(self):
@@ -195,7 +195,7 @@ class GF2nPoint:
             return NotImplemented
         if self.field != other.field:
             raise NotImplementedError("Cannot add elements from different fields.")
-        return self.field(self.x ^ other.x)
+        return self.__class__(self.x ^ other.x, self.field)
 
     __sub__ = __add__
 
@@ -208,7 +208,7 @@ class GF2nPoint:
         if isinstance(other, int):
             if other % 2:
                 return self
-            return self.field(0)
+            return self.__class__(0, self.field)
         if not isinstance(other, self.__class__):
             return NotImplemented
         if self.field != other.field:
@@ -234,13 +234,13 @@ class GF2nPoint:
                 y <<= 1
                 if y & bitmap1:
                     y ^= self.field.modulus
-        return self.field(z)
+        return self.__class__(z, self.field)
 
     def __rmul__(self, scalar: int) -> "GF2nPoint":
         if isinstance(scalar, int):
             if scalar % 2:
                 return self
-            return self.field(0)
+            return self.__class__(0, self.field)
         return NotImplemented
 
     def __truediv__(self, other: "GF2nPoint") -> "GF2nPoint":
@@ -257,16 +257,16 @@ class GF2nPoint:
             return NotImplemented
         if not (self.x) and j < 0:
             raise ValueError("Division by zero.")
+        j %= self.field.order - 1
         if self.field.order == 2:
             if j == 0:
                 return self.field.one()
             return self
         if self.field.bitreversed:
-            res = self.field(self.field.order >> 1)
+            res = self.__class__(self.field.order >> 1, self.field)
         else:
-            res = self.field(1)
-        x = self.field(self.x)
-        j %= self.field.order - 1
+            res = self.__class__(1, self.field)
+        x = self.__class__(self.x, self.field)
         while j > 0:
             # If j is odd, multiply with x
             if j & 1:
@@ -280,13 +280,13 @@ class GF2nPoint:
         "Cyclic rotation to the left."
         x = self.x << j
         x = (x % self.field.order) + (x // self.field.order)
-        return self.field(x)
+        return self.__class__(self.x, self.field)
 
     def __rshift__(self, j: int) -> "GF2nPoint":
         "Cyclic rotation to the right."
         x = self.x >> j
         x += (self.field.order >> j) * (self.x % 2**j)
-        return self.field(x)
+        return self.__class__(self.x, self.field)
 
     def sqrt(self) -> "GF2nPoint":
         "Compute the square root."
