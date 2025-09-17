@@ -279,16 +279,19 @@ class ReedSolomonCode(CyclicCode):
             t = (self.n - self.k) // 2
             A = Matrix([[ xx[j - l % self.n] for l in range(1, t+1) ] for j in range(self.k+t, self.k+2*t) ])
             b = [ -xx[self.k + t + l ] for l in range(t) ]
-            lam = Poly([one] + list(A.solve(b)))
+            lam = [one] + list(A.solve(b))
+            # Chien search
             x_coordinates = []
             y_coordinates = []
+            alphai = [ self.alpha**i for i in range(len(lam)) ]
             for j in range(self.n):
+                if sum(lam, start = zero):
+                    x_coordinates.append(self.alpha**j)
+                    y_coordinates.append(y[j])
                 if len(x_coordinates) == self.k:
                     break
-                alphaj = self.alpha**j
-                if lam(alphaj):
-                    x_coordinates.append(alphaj)
-                    y_coordinates.append(y[j])
+                for j in range(len(lam)):  # pylint: disable=C0200
+                    lam[j] *= alphai[j]
             x = lagrange_interpolation(x_coordinates, y_coordinates)
         if as_list:
             return x.coeff + [zero] * (self.k - len(x.coeff))
