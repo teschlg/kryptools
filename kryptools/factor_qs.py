@@ -13,13 +13,13 @@ def bytexor(a: bytearray, b: bytes) -> bytes:
         a[i] ^= b[i]
 
 
-def byteset(a: bytearray, i: int) -> bytes:
+def byteset(a: bytearray, i: int) -> None:
     """Set the i'th bit in the bytearray `a` to 1."""
     i1, i0 = divmod(i, 8)
     a[i1] |= 2**i0
 
 
-def bytetest(a: bytes, i: int) -> bytes:
+def bytetest(a: bytes, i: int) -> bool:
     """Test if the i'th bit in the bytestring `a` is 1."""
     i1, i0 = divmod(i, 8)
     return (a[i1] & 2**i0) != 0

@@ -18,6 +18,7 @@ class Poly:
     """
 
     print_reversed = True  # print the terms in reversed order
+    print_latex = False  # print in latex format
     print_x = "x"  # variable for printing
     print_pow = "^"  # you can change this to "**" if you want it python style
 
@@ -63,16 +64,20 @@ class Poly:
     def __hash__(self):
         return hash(tuple(self.coeff))
 
-    def __repr__(self, latex=False):
+    def __repr__(self, latex=None):
         def prx(i: int) -> str:
             if i == 0:
                 return ""
             if i == 1:
                 return self.__class__.print_x
             if latex:
+                if i < 10:
+                    return self.__class__.print_x + "^" + str(i)
                 return self.__class__.print_x + "^{" + str(i) + "}"
             return self.__class__.print_x + self.__class__.print_pow + str(i)
 
+        if latex is None:
+            latex = self.__class__.print_latex
         if not self:
             return str(self.coeff[0])
         one = self.coeff[0]**0

@@ -43,8 +43,8 @@ class Zmod:
 
     def __call__(self, x: int | list | tuple | range | map):
         if isinstance(x, list|tuple|range|map):
-            return [ZmodPoint(xx, self) for xx in x]
-        return ZmodPoint(x, self)
+            return [ZmodPoint(int(xx), self) for xx in x]
+        return ZmodPoint(int(x), self)
 
     def __iter__(self):
         for x in range(self.n):
@@ -157,7 +157,7 @@ class ZmodPoint:
     "Represents a point in the ring Zmod."
 
     def __init__(self, x: int, ring: "Zmod"):
-        self.x = int(x) % ring.n
+        self.x = x % ring.n
         self.ring = ring
 
     def __repr__(self):

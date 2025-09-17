@@ -61,8 +61,12 @@ class GF2:
 
     def __call__(self, x: int | list | tuple | range | map):
         if isinstance(x, list|tuple|range|map):
-            return [GF2nPoint(xx, self) for xx in x]
-        return GF2nPoint(x, self)
+            if isinstance(x, bytes | bytearray):
+                return [ GF2nPoint(int.from_bytes(x, byteorder=self.byteorder), self) for xx in x]
+            return [GF2nPoint(int(xx), self) for xx in x]
+        if isinstance(x, bytes | bytearray):
+            return GF2nPoint(int.from_bytes(x, byteorder=self.byteorder), self)
+        return GF2nPoint(int(x), self)
 
     def __len__(self):
         return self.order
@@ -80,26 +84,26 @@ class GF2:
         return isinstance(other, GF2nPoint) and self == other.field
 
     def _factors(self) -> dict:
-        "Return the factroization order of the group order of GF(2^n)^*."
+        "Return the factroization of the group order of GF(2^n)^*."
         if not self.factors:
             self.factors = factorint(self.mult_order)
         return self.factors
 
     def zero(self) -> bool:
         "Return zero."
-        return self(0)
+        return GF2nPoint(0, self)
 
     def one(self) -> bool:
         "Return one."
         if self.bitreversed:
-            return self(self.order >> 1)
-        return self(1)
+            return GF2nPoint(self.order >> 1, self)
+        return GF2nPoint(1, self)
 
     def random(self, num: int = 0) -> "GF2nPoint":
         "Return a single random point or a list of random points."
         if num:
-            return([self(randint(0,self.order-1)) for _ in range(num)])
-        return self(randint(0,self.order-1))
+            return([GF2nPoint(randint(0,self.order-1), self) for _ in range(num)])
+        return GF2nPoint(randint(0,self.order-1), self)
 
     def is_cyclic(self) -> bool:
         "GF(2^n)^* is cyclic."
@@ -112,9 +116,9 @@ class GF2:
     def generator(self) -> int | None:
         "Return a generator of the group GF(2^n)^*."
         if self.degree == 1:
-            return self(1)
+            return self.one()
         for a in range(2, self.order):
-            a = self(a)
+            a = GF2nPoint(a, self)
             if a.is_generator():
                 return a
 
@@ -129,16 +133,14 @@ class GF2:
     def star(self) -> list:
         "Return a generator for all elements of the group GF(2^n)n^*."
         for x in range(1, self.order):
-            yield self(x)
+            yield GF2nPoint(x, self)
 
 
 class GF2nPoint:
     "Represents a point in the Galois field GF(2^n)."
 
     def __init__(self, x: int, field: "GF2"):
-        if isinstance(x, bytes | bytearray):
-            x = int.from_bytes(x, byteorder=field.byteorder)
-        self.x = int(x) % field.order
+        self.x = x % field.order
         self.field = field
 
     def __repr__(self):

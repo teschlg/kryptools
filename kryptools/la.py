@@ -339,19 +339,26 @@ class Matrix:
 
     def kernel(self) -> "Matrix":
         "Compute a basis for the kernel of a matrix."
-        zero, one = self._guess_zero()
-        def delta(i, j):
-            if i == j:
-                return one
-            return zero
-        M, P = self.left_standard_form()
-        d = M.cols - M.rows
-        if d <= 0:
-            return M.zeros(M.cols, 1)
-        K = - M[:,-d:]
-        for i in range(d):
-            K.append_row([ delta(i,j) for j in range(d)])
-        return P * K
+        _, one = self._guess_zero()
+        M = self.rref()
+        pivotcols = []
+        nonpivotcols = []
+        j = 0
+        for i in range(0, M.rows):
+            while j < M.cols and not M[i,j]:
+                nonpivotcols.append(j)
+                j += 1
+            if j == M.cols:
+                break
+            pivotcols.append(j)
+            j += 1
+        nonpivotcols += list(range(j, M.cols))
+        K = M.zeros(M.cols, max(1,len(nonpivotcols)))
+        for k, j in enumerate(nonpivotcols):
+            K[j, k] = one
+            for l, i in enumerate(pivotcols):
+                K[i, k] = - M[l, j]
+        return K
 
     def det(self) -> int:
         "Compute the determinant of a matrix M."
