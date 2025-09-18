@@ -135,6 +135,13 @@ class GF2:
         for x in range(1, self.order):
             yield GF2nPoint(x, self)
 
+    def poly(self) -> Poly:
+        "Return the associated irreducible polynomial."
+        coeff = [int(d) for d in str(
+            format(self.modulus, "b"))]
+        if self.bitreversed:
+            return Poly(coeff + [1])
+        return Poly(list(reversed(coeff)))
 
 class GF2nPoint:
     "Represents a point in the Galois field GF(2^n)."
@@ -164,13 +171,11 @@ class GF2nPoint:
 
     def bits(self) -> list:
         "Convert to a list of bits."
+        coeff = [int(d) for d in str(
+            format(self.x, "0" + str(self.field.degree) + "b"))]
         if self.field.bitreversed:
-            coeff = [int(d) for d in str(
-                format(self.x, "0" + str(self.field.degree) + "b"))]
-        else:
-            coeff = reversed([int(d) for d in str(
-                format(self.x, "0" + str(self.field.degree) + "b"))])
-        return list(coeff)
+            return coeff
+        return list(reversed(coeff))
 
     def poly(self) -> "Poly":
         "Convert to a polynomial."
@@ -311,6 +316,17 @@ class GF2nPoint:
     def is_generator(self):
         "Test if the point is a generator of the group GF(2^n)^*."
         return self.field.mult_order == self.order()
+
+    def minpoly(self) -> Poly:
+        "Return the minimal polynomial of an element."
+        aj = self
+        mpoly = Poly([aj, self.field.one()])
+        for _ in range(1, self.field.degree):
+            aj = aj**2  # Frobenius
+            if aj == self:
+                break
+            mpoly *= Poly([aj, self.field.one()])
+        return mpoly
 
     def sbox(self, inv: bool = False) -> "GF2nPoint":
         "Apply the AES sbox."
