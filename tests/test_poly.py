@@ -18,6 +18,7 @@ def test_Poly():
     assert q.degree() == 3
     assert q.weight() == 4
     d, m = q.divmod(p)
+    assert q * p == p.gcd(q) * p.lcm(q)
     assert d * p + m == q
     for _ in range(num_tests):
         p = Poly([randint(0,100) for _ in range(10)])
@@ -33,6 +34,7 @@ def test_Poly():
     q = Poly([1, 2, 3, 4], ring = gf)
     d, m = q.divmod(p)
     assert d * p + m == q
+    assert q * p == p.gcd(q) * p.lcm(q)
     for _ in range(num_tests):
         p = Poly(gf.random(10))
         q = Poly(gf.random(12))

@@ -386,6 +386,10 @@ class Poly:
         r0.modulus = None
         return r0 / r0.coeff[-1]
 
+    def lcm(self, other: "Poly") -> "Poly":
+        "Least common multiple with a given polynomial."
+        return self * other // self.gcd(other)
+
     def egcd(self, other: "Poly") -> ("Poly", "Poly", "Poly"):
         """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that other * x + self * y = gcd."""
         zero, one, _ = self._guess_ring()
