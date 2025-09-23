@@ -2,7 +2,7 @@
 import pytest  # pylint: disable=W0611
 from random import randint, seed  # pylint: disable=C0411
 from kryptools import Zmod, GF2, Poly, Matrix
-from kryptools import gen2pchk, Goppa, CyclicCode, ReedSolomonCode
+from kryptools import gen2pchk, Goppa, CyclicCode, ReedSolomonCode, BCHCode
 
 seed(0)
 Z_2 = Zmod(2)
@@ -74,3 +74,22 @@ def test_ReedSolomon():
                 i = randint(0, rsc.n-1)
                 y[i] += gf(1)
             assert rsc.decode(y) == x
+
+def test_BCH():
+    gf = GF2(1)
+    for n, D in [ [7, 3],  [15, 5]]:
+        bch = BCHCode(n, D)
+        G = bch.generator_matrix()
+        H = bch.check_matrix()
+        assert not H * G.transpose()
+        H2 = gen2pchk(G)
+        assert H2.rows == H.rows
+        assert not H2 * G.transpose()
+        t = (D - 1) // 2
+        for _ in range(num_tests):
+            x = [ gf(randint(0, 1)) for _ in range(bch.k) ]
+            y = bch.encode(x)
+            for _ in range(t):
+                i = randint(0, bch.n-1)
+                y[i] += gf(1)
+            assert bch.decode(y) == x

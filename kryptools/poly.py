@@ -303,7 +303,7 @@ class Poly:
             return self.__class__([zero]), self
         div = [zero] * (sd - od + 1)
         lco = other.coeff[-1]
-        if bool(lco - one):
+        if lco != one:
             tmp = one / lco
             oth = [c * tmp for c in other.coeff]
             rem = [c * tmp for c in self.coeff]
@@ -315,7 +315,7 @@ class Poly:
             div[sd - od - i] = tmp
             for j in range(od + 1):
                 rem[sd - i - j] -= tmp * oth[od - j]
-        if bool(lco - one):
+        if lco != one:
             rem = [c * lco for c in rem]
         return self.__class__(div, modulus=self.modulus), self.__class__(rem, modulus=self.modulus)
 
@@ -332,7 +332,7 @@ class Poly:
         if sd < od:
             return self
         lco = other.coeff[-1]
-        if bool(lco - one):
+        if lco != one:
             tmp = one / lco
             oth = [c * tmp for c in other.coeff]
         else:
@@ -368,12 +368,15 @@ class Poly:
         if r0.degree() != 0:
             raise ValueError(f"{self} is not invertible mod {other}.")
         y0.modulus = self.modulus
+        if r0.coeff[0] == one:
+            return y0
         return y0 / r0.coeff[0]
 
     def gcd(self, other: "Poly") -> "Poly":
         "Greates common divisor with a given polynomial."
         if not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot compute gcd: {other} must be a polynomial.")
+        _, one, _ = self._guess_ring()
         if not self:
             if not other:
                 return Poly([self.coeff[0]])
@@ -384,6 +387,8 @@ class Poly:
         while r1:
             r0, r1 = r1, r0.divmod(r1)[1]
         r0.modulus = None
+        if r0.coeff[-1] == one:
+            return r0
         return r0 / r0.coeff[-1]
 
     def lcm(self, other: "Poly") -> "Poly":
@@ -398,6 +403,8 @@ class Poly:
         if not self:
             if not other:
                 return Poly([zero]), Poly([zero]), Poly([zero])
+            if other.coeff[-1] == one:
+                return other, Poly([zero]), one
             return other / other.coeff[-1], Poly([zero]), one / other.coeff[-1]
         r0, r1 = other, self
         x0, x1 = self.__class__([one]), self.__class__([zero])
@@ -408,6 +415,8 @@ class Poly:
             x0, x1 = x1, x0 - x1 * q
             y0, y1 = y1, y0 - y1 * q
         lcr0 = r0.coeff[-1]
+        if lcr0 == one:
+            return r0, x0, y0
         return r0 / lcr0, x0 / lcr0, y0 / lcr0
 
     def derivative(self) -> "Poly":
