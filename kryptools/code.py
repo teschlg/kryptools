@@ -5,7 +5,7 @@ Linear codes
 from math import prod
 from .Zmod import Zmod
 from .GF2 import GF2
-from .poly import Poly, lagrange_interpolation
+from .poly import Poly
 from .la import Matrix
 
 
@@ -233,6 +233,8 @@ class ReedSolomonCode(CyclicCode):
         self.order = n + 1  # order of the base field
         self.n = n  # lenght
         self.k = k  # dimension
+        if k >= n:
+            raise ValueError(f"Code dimension k = {k} must be smaller than the code lenght n = {self.n}.")
         self.d = n - k - 1  # minimal distance
         self.modulus = Poly([-one] + [zero] * (n-1) + [one])
         if alpha is None:
@@ -279,20 +281,22 @@ class ReedSolomonCode(CyclicCode):
             t = (self.n - self.k) // 2
             A = Matrix([[ xx[j - l % self.n] for l in range(1, t+1) ] for j in range(self.k+t, self.k+2*t) ])
             b = [ -xx[self.k + t + l ] for l in range(t) ]
-            lam = [one] + list(A.solve(b))
+            lam = Poly([one] + list(A.solve(b)))
+            lamp = lam.derivative()
+            s = Poly([x[self.k + j] for j in range(self.n - self.k)])
+            omega = s * lam
+            omega = Poly(omega.coeff[:self.n - self.k])  # mod x^(n-k)
             # Chien search
-            x_coordinates = []
-            y_coordinates = []
+            lam = lam.coeff
             alphai = [ self.alpha**i for i in range(len(lam)) ]
-            for j in range(self.n):
-                if sum(lam, start = zero):
-                    x_coordinates.append(self.alpha**j)
-                    y_coordinates.append(y[j])
-                if len(x_coordinates) == self.k:
-                    break
+            for i in range(self.n):
+                if not sum(lam, start = zero):
+                    # Fornay
+                    ali = self.alpha**i
+                    y[i] -= ali**(self.k-1) * omega(ali) / lamp(ali)
                 for j in range(len(lam)):  # pylint: disable=C0200
                     lam[j] *= alphai[j]
-            x = lagrange_interpolation(x_coordinates, y_coordinates)
+            x = Poly([ -y(self.alpha**(-j)) for j in range(self.n) ])
         if as_list:
             return x.coeff + [zero] * (self.k - len(x.coeff))
         return x
