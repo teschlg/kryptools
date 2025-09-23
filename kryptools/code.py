@@ -185,12 +185,17 @@ class CyclicCode():
             raise ValueError(f"Degree can be at most {self.n-1}.")
         x, r = y.divmod(self.g)
         if r:
-            raise NotImplementedError("Word is no code word! Cannot decode.")
+            y = self.correct(y)
+            x, r = y.divmod(self.g)
         if systematic_form:
             x.coeff = y.coeff[self.g.degree():]
         if as_list:
             return x.coeff + [zero] * (self.k - len(x.coeff))
         return x
+
+    def correct(self, y: Poly):
+        "Correct a given polynomial."
+        raise NotImplementedError("Error correction not implemented.")
 
     def generator_matrix(self):
         "Return the generator matrix of the code."
@@ -217,7 +222,7 @@ class ReedSolomonCode(CyclicCode):
     >>> rsc.encode([1, 2, 3])
     [6, 4, 5, 1, 8, 4, 2, 9, 2, 8, 9, 6]
 
-    To decoding use:
+    To decode use:
     >>> rsc.decode([1, 4, 4, 0, 8, 4, 2, 9, 2, 0, 9, 6])
     [1, 2, 3]
     
@@ -235,7 +240,7 @@ class ReedSolomonCode(CyclicCode):
         self.k = k  # dimension
         if k >= n:
             raise ValueError(f"Code dimension k = {k} must be smaller than the code lenght n = {self.n}.")
-        self.d = n - k - 1  # minimal distance
+        self.d = n - k + 1  # minimal distance
         self.modulus = Poly([-one] + [zero] * (n-1) + [one])
         if alpha is None:
             if hasattr(gf, "primitive_element"):
@@ -279,6 +284,8 @@ class ReedSolomonCode(CyclicCode):
         x = Poly(xx)
         if x.degree() >= self.k: # No codewort
             t = (self.n - self.k) // 2
+            if not t:
+                raise ValueError("This code cannot correct any errors.")
             A = Matrix([[ xx[j - l % self.n] for l in range(1, t+1) ] for j in range(self.k+t, self.k+2*t) ])
             b = [ -xx[self.k + t + l ] for l in range(t) ]
             lam = Poly([one] + list(A.solve(b)))
@@ -300,3 +307,53 @@ class ReedSolomonCode(CyclicCode):
         if as_list:
             return x.coeff + [zero] * (self.k - len(x.coeff))
         return x
+
+    def correct(self, y: Poly):
+        "Correct a given polynomial."
+        x = self.decode(y)
+        return self.encode(x)
+
+class BCHCode(CyclicCode):
+    """
+    Binary narrow sense primitive BCH code.
+
+    Example:
+
+    >>> n = 7 # lenght of the code
+    >>> D = 2 # desired distance
+    >>> bch = BCHCode(k, D)
+    
+    To encode a list of letters (the length must be equal to the dimension k of the code; conversion to the Galois field is done automatically):
+    >>> bch.encode([0, 1, 0, 1])
+    [0, 1, 1, 1, 0, 0, 1]
+
+    To decode use:
+    >>> bch.decode([0, 1, 1, 1, 0, 0, 1])
+    [0, 1, 0, 1]
+    
+    """
+    def __init__(self, n:int, D: int):
+        m = n.bit_length()
+        if 2**m - 1 != n:
+            raise ValueError(f"The codelenght n={n} plus one must be a power of 2.")
+        self.rsc = ReedSolomonCode(n - D + 1, GF2(m))
+        # Compute the generator polynomial
+        aj = self.rsc.alpha
+        g = aj.minpoly()
+        for _ in range(2,D):
+            aj *= self.rsc.alpha
+            mj = aj.minpoly()
+            g = g.lcm(mj)
+        g.map(GF2(1))
+        super().__init__(n, g)
+
+    def __repr__(self):
+        return f"BCH [{self.n}, {self.k}] code over GF({self.order}) with generator polynomial g(x) = {self.g}."
+
+    def correct(self, y: Poly):
+        "Correct a given polynomial."
+        y.map(self.rsc.gf)
+        x = self.rsc.decode(y)
+        y = self.rsc.encode(x)
+        y.map(GF2(1))
+        return y
