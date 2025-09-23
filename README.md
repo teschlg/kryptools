@@ -36,6 +36,7 @@ The tools contained are:
 * Goppa: a class for encoding and decoding Goppa codes
 * CyclicCode: a class for encoding and decoding cyclic codes
 * ReedSolomonCode: a class for encoding and decoding Reed-Solomon codes
+* BCHCode: a class for encoding and decoding primitive narrow sense BCH codes
 
 * BlockCipher: a class implementing the usual modes of operation (ECB, CBC, GCM, etc.)
 * AESCipher: individual AES operations
