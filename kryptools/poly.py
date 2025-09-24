@@ -428,6 +428,10 @@ class Poly:
             tmp = [j * self.coeff[j] for j in range(1, l)]
         return self.__class__(tmp, modulus=self.modulus)
 
+    def reciprocal(self) -> "Poly":
+        "Returns the reciprocal (reversed) polynomial."
+        return self.__class__(reversed(self.coeff), modulus=self.modulus)
+
     def square_free_factors(self) -> dict:
         "Determine the square free factors of a polynomial over a Galois field."
         _, zero, _, q, p = self._guess_field()
