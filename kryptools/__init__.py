@@ -5,7 +5,7 @@ Implemenation of same basic algorithms used in cryptography.
 __author__ = "Gerald Teschl"
 __copyright__ = "Copyright 2024-2025, Gerald Teschl"
 __license__ = "MIT License"
-__version__ = "1.6"
+__version__ = "1.6.1"
 __email__ = "Gerald.Teschl@univie.ac.at"
 
 from .nt import egcd, cf, convergents, legendre_symbol, jacobi_symbol, sqrt_mod, euler_phi, carmichael_lambda, moebius_mu, is_carmichael_number, order, crt
@@ -14,7 +14,7 @@ from .intfuncs import iroot, ilog, perfect_square, perfect_power, prime_power
 from .factor import factorint, divisors
 from .dlp import dlog
 from .ec import EC_Weierstrass
-from .la import Matrix, zeros, eye
+from .la import Matrix, zeros, eye, circulant
 from .lat import gram_det, hadamard_ratio, hermite_nf, gram_schmidt, babai_round_cvp, babai_round_bnd, babai_plane_cvp, babai_plane_bnd, lagrange_lr, lll, random_unimodular_matrix
 from .poly import Poly, lagrange_interpolation
 from .Zmod import Zmod

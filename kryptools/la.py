@@ -496,3 +496,15 @@ def eye(m: int, n: int = None, zero=0, one=1, ring=None) -> "Matrix":
     if n < 1 or m < 1:
         raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
     return Matrix([[delta(i, j) for j in range(n)] for i in range(m)], ring=ring)
+
+def rotate(l: list, n: int) -> list:
+    "Rotate a list cyclically n places to the left."
+    n %= len(l)
+    return l[n:] + l[:n]
+
+def circulant(vector: list|tuple, m: int = None, ring=None) -> "Matrix":
+    "Returns a circulant matrix from the given vector."
+    if m is None:
+        m = len(vector)
+    vector = list(reversed(vector))
+    return Matrix([rotate(vector, -n-1) for n in range(m)], ring=ring)
