@@ -1,7 +1,7 @@
 # pragma pylint: disable=C0114,C0116
 import pytest  # pylint: disable=W0611
 from fractions import Fraction  # pylint: disable=C0411
-from kryptools import Matrix, Zmod, GF2
+from kryptools import Matrix, Zmod, GF2, eye, circulant
 
 
 def test_Matrix():
@@ -13,6 +13,7 @@ def test_Matrix():
     Z[0] = 1
     assert Z
     assert Z != Z.zeros()
+    assert circulant([ 1, 0, 0]) == eye(3)
     assert len(M) == 3 * 3
     assert M[0] == 1
     assert M[:] == [1, 2, 3, 4, 5, 6, 7, 8, 12]

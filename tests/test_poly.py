@@ -2,8 +2,8 @@
 import pytest  # pylint: disable=W0611
 from math import prod  # pylint: disable=C0411
 from random import sample, choices, randint, seed  # pylint: disable=C0411
-from kryptools import Poly, Zmod, GF2, lagrange_interpolation
-from kryptools import divisors, moebius_mu
+from kryptools import Poly, lagrange_interpolation
+from kryptools import Zmod, GF2, divisors, moebius_mu, Matrix, circulant
 seed(0)
 num_tests = 10
 
@@ -28,7 +28,10 @@ def test_Poly():
         assert (p + q)(x) == p(x) + q(x)
         assert (p - q)(x) == p(x) - q(x)
         assert (p*q)(x) == p(x) * q(x)
-
+    modulus = [-1] + 7 * [0] + [1]
+    p = [ randint(0,9) for _ in range(8) ]
+    q = [ randint(0,9) for _ in range(8) ]
+    assert list(circulant(p) * Matrix(q)) == (Poly(p, modulus = modulus) * Poly(q, modulus = modulus)).coeff
     gf = Zmod(5)
     p = Poly([2, 0, 2], ring = gf)
     q = Poly([1, 2, 3, 4], ring = gf)
