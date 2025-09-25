@@ -31,7 +31,7 @@ def sieve_eratosthenes(B: float) -> tuple:
     if B < 2:
         return ()
     if B < 3:
-        return [2]
+        return tuple([2])
     B = floor(B)
     B1 = (isqrt(B) - 1)//2
     B = (B - 1)//2

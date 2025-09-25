@@ -123,6 +123,21 @@ class Poly:
             "text/latex": "$" + self.__repr__(latex=True) + "$"  # pylint: disable=C2801
         }
 
+    def __int__(self):
+        _, _, ring = self._guess_ring()
+        if not ring:
+            raise ValueError(
+                "The polynomial does not seem to be over a known finite ring.")
+        if hasattr(ring, 'n'):  # Zmod
+            n = ring.n
+        else:  # G2 or galois
+            n = ring.order
+        result = 0 * int(self.coeff[0])
+        # Horner's method
+        for c in reversed(self.coeff):
+            result = result * n + int(c)
+        return result
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
@@ -427,6 +442,10 @@ class Poly:
         else:
             tmp = [j * self.coeff[j] for j in range(1, l)]
         return self.__class__(tmp, modulus=self.modulus)
+
+    def reciprocal(self) -> "Poly":
+        "Returns the reciprocal (reversed) polynomial."
+        return self.__class__(reversed(self.coeff), modulus=self.modulus)
 
     def square_free_factors(self) -> dict:
         "Determine the square free factors of a polynomial over a Galois field."
