@@ -150,7 +150,7 @@ class Matrix:
         rows = set(rows)
         if len(rows) >= self.rows:
             raise ValueError("Cannot delete all rows.")
-        for i in reversed(sorted(rows)):
+        for i in sorted(rows, reverse = True):
             del self.matrix[i]
         self.rows -= len(rows)
 
@@ -162,8 +162,8 @@ class Matrix:
         cols = set(cols)
         if len(cols) >= self.cols:
             raise ValueError("Cannot delete all columns.")
-        for i in range(self.rows):
-            for j in reversed(sorted(cols)):
+        for j in sorted(cols, reverse = True):
+            for i in range(self.rows):
                 del self.matrix[i][j]
         self.cols -= len(cols)
 
@@ -390,7 +390,7 @@ class Matrix:
         return D
 
     def rank(self) -> int:
-        "Compute the rank of a matrix M."
+        "Compute the rank of a matrix."
         MM = self.rref()
         for i in range(self.rows-1,-1,-1):
             if MM[i,:]:
@@ -398,7 +398,7 @@ class Matrix:
         return 0
 
     def nullity(self) -> int:
-        "Compute the nillity of a matrix M."
+        "Compute the nullity of a matrix."
         return self.cols - self.rank()
 
     def inv(self) -> "Matrix":
@@ -449,7 +449,7 @@ class Matrix:
             return False
         return all(is_integer(i) for i in self) and self.det()**2 == 1
 
-    def zeros(self, m: int = None, n: int = None):
+    def zeros(self, m: int = None, n: int = None) -> "Matrix":
         "Returns a zero matrix of the same dimension."
         if not m and not n:
             n, m = self.cols, self.rows
@@ -460,7 +460,7 @@ class Matrix:
         zero = self._guess_zero()[0]
         return self.__class__([[zero for j in range(n)] for i in range(m)])
 
-    def eye(self, m: int = None, n: int = None):
+    def eye(self, m: int = None, n: int = None) -> "Matrix":
         "Returns an identity matrix of the same dimension."
         def delta(i, j):
             if i == j:
