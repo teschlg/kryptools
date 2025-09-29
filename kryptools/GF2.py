@@ -35,7 +35,7 @@ class GF2:
     f6
 
     """
-    def __init__(self, n: int, modulus: int | None = None):
+    def __init__(self, n: int, modulus: int | None = None, cached = False):
         if not isinstance(n, int) or n < 1:
             raise ValueError(f"{n} is not a positive integer.")
         if not modulus:
@@ -55,6 +55,11 @@ class GF2:
         self.byteorder: str = "big"  # big|little
         self.mult_order = self.order - 1
         self.factors = {}  # factoring of the group order
+        self.cached = False  # use precomputed log/exp tables to speed up multiplication
+        self.log = None  # precomputed log table
+        self.exp = None  # precomputed exp table
+        if cached:
+            self.cache()
 
     def __repr__(self):
         return f"GF(2^{self.degree})"
@@ -115,6 +120,8 @@ class GF2:
 
     def generator(self) -> int | None:
         "Return a generator of the group GF(2^n)^*."
+        if self.cached:
+            return self.exp[1]
         if self.degree == 1:
             return self.one()
         for a in range(2, self.order):
@@ -142,6 +149,20 @@ class GF2:
         if self.bitreversed:
             return Poly(coeff + [1])
         return Poly(list(reversed(coeff)))
+
+    def cache(self) -> None:
+        "Create a exp/log table to speed up multiplication."
+        if not self.cached:
+            self.exp = [ 0 ] * self.mult_order
+            self.log = [ 0 ] * self.order
+            g = self.generator()
+            gj = self.one()
+            for j in range(self.mult_order):
+                self.exp[j] = gj
+                self.log[gj.x] = j
+                gj *= g
+            self.cached = True
+
 
 class GF2nPoint:
     "Represents a point in the Galois field GF(2^n)."
@@ -217,7 +238,11 @@ class GF2nPoint:
         if not isinstance(other, self.__class__):
             return NotImplemented
         if self.field != other.field:
-            raise NotImplementedError("Cannot add elements from different fields.")
+            raise NotImplementedError("Cannot multiply elements from different fields.")
+        if self.field.cached:
+            if self.x and other.x:
+                return self.field.exp[(self.field.log[self.x] + self.field.log[other.x]) % self.field.mult_order]
+            return self.field.zero()
         z = 0
         y = other.x
         if self.field.bitreversed:
@@ -260,12 +285,16 @@ class GF2nPoint:
     def __pow__(self, j: int) -> "GF2nPoint":
         if not isinstance(j, int):
             return NotImplemented
-        if not (self.x) and j < 0:
-            raise ValueError("Division by zero.")
-        j %= self.field.order - 1
+        if self.x == 0:
+            if j < 0:
+                raise ValueError("Division by zero.")
+            if j:
+                return self
+            return self.field.one()
+        j %= self.field.mult_order
+        if self.field.cached:
+            return self.field.exp[j * self.field.log[self.x] % self.field.mult_order]
         if self.field.order == 2:
-            if j == 0:
-                return self.field.one()
             return self
         if self.field.bitreversed:
             res = self.__class__(self.field.order >> 1, self.field)
@@ -341,7 +370,7 @@ class GF2nPoint:
         raise ValueError("sbox is only availaible for AES/MiniAES field.")
 
 # sbox for AES
-GF2_aes = GF2(8, 0b100011011)  # x^8 + x^4 + x^3 + x + 1 = AES
+GF2_aes = GF2(8, 0b100011011, cached = True)  # x^8 + x^4 + x^3 + x + 1 = AES
 
 aes_sbox = [99, 124, 119, 123, 242, 107, 111, 197, 48, 1, 103, 43, 254, 215, 171, 118,
  202, 130, 201, 125, 250, 89, 71, 240, 173, 212, 162, 175, 156, 164, 114, 192,

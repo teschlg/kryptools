@@ -45,6 +45,20 @@ def test_GF2_ops():
         with pytest.raises(ValueError):
             gf(0)**-1  # pylint: disable=W0106
 
+def test_GF2_cache():
+    for n, modulus in [(4, None), (8, None), (8, 0b100011011), (12, None)]:
+        gf = GF2(n, modulus=modulus)
+        gfc = GF2(n, modulus=modulus, cached = True)
+        for _ in range(num_tests):
+            a = gf(randint(0, gf.order-1))
+            b = gf(randint(0, gf.order-1))
+            ac = gfc(int(a))
+            bc = gfc(int(b))
+            assert a * b == ac * bc
+            j = randint(0, gf.order-1)
+            assert a ** j == ac ** j
+
+
 def test_GF2_order():
     for n in range(1, 8):
         gf = GF2(n)
