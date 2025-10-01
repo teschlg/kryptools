@@ -132,7 +132,7 @@ class Poly:
             n = ring.n
         else:  # G2 or galois
             n = ring.order
-        result = 0 * int(self.coeff[0])
+        result = 0
         # Horner's method
         for c in reversed(self.coeff):
             result = result * n + int(c)
@@ -286,7 +286,7 @@ class Poly:
             raise NotImplementedError(
                 "Coefficients cannot be converted to bits.")
         out = []
-        for c in self.coeff:
+        for c in reversed(self.coeff):
             out += c.bits()
         return out
 
