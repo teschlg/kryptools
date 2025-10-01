@@ -195,8 +195,8 @@ class GF2nPoint:
         coeff = [int(d) for d in str(
             format(self.x, "0" + str(self.field.degree) + "b"))]
         if self.field.bitreversed:
-            return coeff
-        return list(reversed(coeff))
+            coeff.reverse()
+        return coeff
 
     def poly(self) -> "Poly":
         "Convert to a polynomial."
