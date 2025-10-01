@@ -508,3 +508,385 @@ def circulant(vector: list|tuple, m: int = None, ring=None) -> "Matrix":
         m = len(vector)
     vector = list(reversed(vector))
     return Matrix([rotate(vector, -n-1) for n in range(m)], ring=ring)
+
+class BinaryMatrix:
+    """
+    Binary Matrix class.
+
+    Example:
+
+    To define a binary matrix use
+    >>> Matrix([[0, 1], [1, 0]])
+    [01]
+    [10]
+    """
+    def __init__(self, matrix: list, cols: int|None = None):
+        if not (isinstance(matrix, list) and matrix):
+            raise ValueError("`matrix` must be a nonempty list.")
+        if isinstance(matrix[0], list):
+            if cols is None:
+                cols = len(matrix[0])
+            self.matrix = [ self.from_bits(row) for row in matrix]
+        else:
+            if cols is None:
+                cols = max(row.bit_length() for row in matrix)
+                cols = max(1, cols)
+            self.matrix = matrix
+        self.rows = len(self.matrix)
+        self.cols = cols
+        self.pivotcols = None
+        self.nonpivotcols = None
+
+    def __repr__(self):
+        out = ''
+        for row in self.matrix:
+            out += "[" + format(row, f"0{self.cols}b") + "]\n"
+        return out[:-1]
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        if self.rows != other.rows or self.cols != other.cols:
+            return False
+        return self.matrix == other.matrix
+
+    def __bool__(self):
+        return any(bool(row != 0) for row in self.matrix)
+
+    def __getitem__(self, item):
+        if isinstance(item, tuple):
+            i, j = item
+            if isinstance(i, int) and isinstance(j, int):
+                mask = 1 << self.cols - 1 - j
+                if self.matrix[i] & mask:
+                    return 1
+                return 0
+        raise NotImplementedError('Only getting single bits is supported.')
+
+    def __setitem__(self, item, value):
+        if isinstance(item, tuple):
+            i, j = item
+            if isinstance(i, int) and isinstance(j, int):
+                if value:
+                    mask = 1 << self.cols - 1 - j
+                    self.matrix[i] |= mask
+                else:
+                    mask = ~(1 << self.cols - 1 - j)
+                    self.matrix[i] &= mask
+                return
+        raise NotImplementedError('Only setting single bits is supported.')
+
+    def __delitem__(self, item):
+        if isinstance(item, tuple):
+            i, j = item
+            if isinstance(i, int):
+                rows = [i]
+            elif isinstance(i, list):
+                rows = set(i)
+            else:
+                rows = range(self.rows)[i]
+            if isinstance(j, int):
+                cols = [j]
+            elif isinstance(j, list):
+                cols = set(j)
+            else:
+                cols = range(self.cols)[j]
+            if len(cols) == self.cols:
+                self.delete_rows(rows)
+                return
+            if len(rows) == self.rows:
+                self.delete_columns(cols)
+                return
+        raise ValueError("Can only delete entire rows or entire columns!")
+
+    def delete_rows(self, rows: int|list) -> None:
+        "Deletes a row or a list of rows."
+        if isinstance(rows, int):
+            rows = [ rows ]
+        rows = list(map(lambda x: x % self.rows, rows))
+        rows = set(rows)
+        if len(rows) >= self.rows:
+            raise ValueError("Cannot delete all rows.")
+        for i in sorted(rows, reverse = True):
+            del self.matrix[i]
+        self.rows -= len(rows)
+
+    def delete_columns(self, cols: int|list) -> None:
+        "Deletes a column or a list of columns."
+        if isinstance(cols, int):
+            cols = [ cols ]
+        cols = list(map(lambda x: x % self.cols, cols))
+        cols = set(cols)
+        if len(cols) >= self.cols:
+            raise ValueError("Cannot delete all columns.")
+        cols = sorted(cols, reverse = True)
+        l = 0
+        while l < len(cols):
+            end = cols[l] # end index
+            while l < len(cols) - 1 and cols[l] == cols[l+1] + 1:
+                l += 1
+            j = cols[l] # start index
+            k = end - j + 1 # range
+            l += 1
+            mask = (1 << self.cols - k - j) - 1
+            for i in range(self.rows):
+                low = self.matrix[i] & mask
+                self.matrix[i] >>= k
+                self.matrix[i] &= ~mask
+                self.matrix[i] |= low
+        self.cols -= len(cols)
+
+    def __add__(self, other) -> "BinaryMatrix":
+        if isinstance(other, self.__class__):
+            if other.cols != self.cols or other.rows != self.rows:
+                raise NotImplementedError("Matrix dimensions do not match!")
+            return self.__class__([ x ^ y for x, y in zip(self.matrix, other.matrix)], cols = self.cols)
+        return NotImplemented
+
+    __sub__ = __add__
+
+    def __pos__(self) -> "BinaryMatrix":
+        return self
+
+    __neg__ = __pos__
+
+    def __mul__(self, other) -> "BinaryMatrix":
+        if isinstance(other, self.__class__):
+            return self.multiply(other)
+        if isinstance(other, int):
+            if other % 2:
+                return self
+            return self.zeros()
+        return NotImplemented
+
+    def __rmul__(self, other) -> "BinaryMatrix":
+        if isinstance(other, int):
+            if other % 2:
+                return self
+            return self.zeros()
+        return NotImplemented
+
+    def multiply(self, other) -> "BinaryMatrix":
+        "Matrix multiplication."
+        if self.cols != other.rows:
+            raise NotImplementedError("Matrix dimensions do not match!")
+        #raise NotImplementedError("Matrix multiplication not implemented!")
+        mask = 2**(other.cols - 1)
+        result = [0] * self.rows
+        for _ in range(other.cols):
+            b = 0
+            for row in other.matrix:
+                b <<= 1
+                if row & mask:
+                    b |= 1
+            for i, row in enumerate(self.matrix):
+                parity = 0
+                tmp = row & b
+                while tmp:
+                    parity = ~parity
+                    tmp = tmp & (tmp - 1)
+                result[i] <<= 1
+                if parity:
+                    result[i] |= 1
+            mask >>= 1
+        if self.rows == 1 and other.cols == 1:
+            return result[0]
+        return self.__class__(result, cols = other.cols)
+
+    def to_bits(self, n:int, length: int = None) -> list[int]:
+        "Convert an integer to a list of bits"
+        if length is None:
+            length = n.bit_length()
+        return [n >> i & 1 for i in range(length - 1, -1, -1)]
+
+    def from_bits(self, b: list[int]) -> int:
+        "Convert a list of bits to an integer."
+        n = 0
+        for bit in b:
+            n <<= 1
+            n += bit
+        return n
+
+    def bitmatrix(self) -> list[list]:
+        "Return as a matrix of bits."
+        return [ self.to_bits(row, self.cols) for row in self.matrix ]
+
+    def add_column(self, col: list|int) -> None:
+        "Add a column to the matrix"
+        if isinstance(col, int):
+            col = self.to_bits(col, self.rows)
+        if len(col) != self.rows:
+            raise ValueError("The length must equal the number of rows!")
+        self.cols += 1
+        for i, b in enumerate(col):
+            self.matrix[i] <<= 1
+            if b:
+                self.matrix[i] |= 1
+
+    def add_row(self, row: list|int) -> None:
+        "Add a column to the matrix"
+        if isinstance(row, list):
+            if len(row) != self.cols:
+                raise ValueError("The length must equal the number of columns!")
+            row = self.from_bits(row)
+        self.rows += 1
+        self.matrix.append(row)
+
+    def transpose(self) -> "BinaryMatrix":
+        "Transpose of a matrix."
+        return self.__class__([list(i) for i in zip(*self.bitmatrix())])
+
+    def dot(self, x: int|list) -> int|list:
+        "Applies the matrix to a vector (given as list of bits or integer)."
+        if isinstance(x, list):
+            if len(x) != self.cols:
+                raise ValueError("The length must equal the number of columns!")
+            as_list = True
+            x = self.from_bits(x)
+        else:
+            as_list = False
+        res = []
+        for row in self.matrix:
+            tmp = row & x
+            parity = 0
+            while tmp:
+                parity = ~parity
+                tmp = tmp & (tmp - 1)
+            if parity:
+                res.append(1)
+            else:
+                res.append(0)
+        if as_list:
+            return res
+        return self.from_bits(res)
+
+    def rref(self, reduce = True, drop_zero_rows = False):
+        "Row reduced echelon form."
+        rref = [ None ] * self.cols  # store rows accoring to leading bit
+        rows = self.matrix[:]  # copy
+        zerorows = 0  # number of rows equal to zero
+        row = None
+        while (rows or row is not None):
+            if row is None:
+                row = rows.pop()
+            lb = row.bit_length() - 1 # leading bit
+            if lb == -1: # the row is zero
+                zerorows += 1
+                row = None
+            elif rref[lb] is None:  # the row is new
+                rref[lb] = row
+                row = None
+            else:  # reduce with the one we already have
+                row ^= rref[lb]
+        if reduce:  # clear out above pivots
+            for i, row in enumerate(rref):
+                if row is None:
+                    continue
+                mask = 1 << i
+                for j in range(i+1,self.cols):
+                    if rref[j] is None:
+                        continue
+                    if rref[j] & mask:
+                        rref[j] ^= row
+        pivotcols = []
+        nonpivotcols = []
+        for j, row in enumerate(reversed(rref)):  # remove nonexisting rows
+            if row is None:
+                nonpivotcols.append(j)
+                continue
+            pivotcols.append(j)
+            rows.append(row)
+        if not drop_zero_rows:
+            for _ in range(zerorows):  # add zero rows
+                rows.append(0)
+        if not rows:
+            rows = [ 0 ]
+        rref = self.__class__(rows, cols = self.cols)
+        rref.pivotcols = pivotcols
+        rref.nonpivotcols = nonpivotcols
+        return rref
+
+    def det(self) -> int:
+        "Compute the determinant."
+        if self.rows != self.cols:
+            raise ValueError("Matrix must be square!")
+        if self.rows == 1:
+            return self.matrix[0]
+        M = self.rref(drop_zero_rows = True)
+        if M.rows == M.cols:
+            return 1
+        return 0
+
+    def rank(self) -> int:
+        "Compute the rank of a matrix."
+        M = self.rref(drop_zero_rows = True)
+        if not M:
+            return 0
+        return M.rows
+
+    def nullity(self) -> int:
+        "Compute the nullity of a matrix."
+        return self.cols - self.rank()
+
+    def kernel(self) -> "BinaryMatrix":
+        "Compute a basis for the kernel of a matrix."
+        M = self.rref()
+        K = M.zeros(M.cols, max(1,len(M.nonpivotcols)))
+        for k, j in enumerate(M.nonpivotcols):
+            K[j, k] = 1
+            for l, i in enumerate(M.pivotcols):
+                K[i, k] = M[l, j]
+        return K
+
+    def inv(self) -> "BinaryMatrix":
+        "Compute the inverse of a square matrix M."
+        if self.rows != self.cols:
+            raise ValueError("Matrix must be square!")
+        M = self.matrix[:]
+        for j in range(self.cols):
+            for i in range(self.rows):
+                M[i] <<= 1
+                if i == j:
+                    M[i] |= 1
+        M = self.__class__(M, cols = 2 * self.cols).rref()
+        if M.pivotcols[self.cols - 1] != self.cols -1:
+            raise ValueError("Matrix is not invertible!")
+        mask = 2**self.cols - 1
+        for i in range(M.rows):
+            M.matrix[i] &= mask
+        M.cols = self.cols
+        return M
+
+    def solve(self, b: list|int) -> "BinaryMatrix":
+        "Solve the linear system with given inhomogenous vector."
+        A = self.__class__(self.matrix[:], self.cols)
+        A.add_column(b)
+        A = A.rref(drop_zero_rows = True)
+        solution = self.zeros(self.cols, 1)
+        if not A.pivotcols: # A is zero
+            return solution
+        if A.pivotcols[-1] >= self.cols:
+            return None  # Not solvable
+        for i in range(A.rows):
+            solution.matrix[A.pivotcols[i]] = A.matrix[i] & 1
+        return solution
+
+    def zeros(self, m: int = None, n: int = None) -> "BinaryMatrix":
+        "Returns a zero matrix of the same dimension."
+        if not m and not n:
+            n, m = self.cols, self.rows
+        elif not n:
+            n = m
+        if n < 1 or m < 1:
+            raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
+        return self.__class__([ 0 for i in range(m)], cols = n)
+
+    def eye(self, m: int = None, n: int = None) -> "BinaryMatrix":
+        "Returns an identity matrix of the same dimension."
+        if not m and not n:
+            n, m = self.cols, self.rows
+        elif not n:
+            n = m
+        if n < 1 or m < 1:
+            raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
+        return self.__class__([ 1 << n - i - 1 for i in range(m)])

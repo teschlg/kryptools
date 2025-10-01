@@ -14,7 +14,7 @@ from .intfuncs import iroot, ilog, perfect_square, perfect_power, prime_power
 from .factor import factorint, divisors
 from .dlp import dlog
 from .ec import EC_Weierstrass
-from .la import Matrix, zeros, eye, circulant
+from .la import Matrix, zeros, eye, circulant, BinaryMatrix
 from .lat import gram_det, hadamard_ratio, hermite_nf, gram_schmidt, babai_round_cvp, babai_round_bnd, babai_plane_cvp, babai_plane_bnd, lagrange_lr, lll, random_unimodular_matrix
 from .poly import Poly, lagrange_interpolation
 from .Zmod import Zmod
