@@ -174,7 +174,7 @@ class BinaryCode():
             return self.syndrome_table[syndrome]
         raise NotImplementedError("Error beyond correction capability.")
 
-    def minimum_distance(self) -> int:
+    def minimum_distance(self, d_lower = None) -> int:
         "Compute the minimal distance of a code using the Brouwer-Zimmermann algorithm."
         if self.d is not None:
             return self.d
@@ -203,6 +203,9 @@ class BinaryCode():
                     while c:
                         c &= c - 1
                         d += 1
+                    if d_lower and d <= d_lower:  # known lower bound
+                        self.d = d
+                        return d      
                     d_ub = min(d_ub, d)
                     # Gosper's hack
                     c = x & -x
@@ -393,6 +396,12 @@ class GoppaCode(BinaryCode):
         if self.H.apply(e) != syndrome:
             raise ValueError("Decoding failed!")
         return e
+
+    def minimum_distance(self, d_lower = None) -> int:
+        "Compute the minimal distance of a code using the Brouwer-Zimmermann algorithm."
+        if d_lower is None:
+            d_lower = 2 * self.g.degree() + 1  # known lower bound for the minimum distance
+        return super().minimum_distance(d_lower)
 
 class CyclicCode():
     """
