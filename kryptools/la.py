@@ -69,7 +69,7 @@ class Matrix:
         res = "\\begin{pmatrix}\n"
         for row in self.matrix:
             res += " & ".join(map(str, row)) + '\\\\\n'
-        res += '\\end{pmatrix}'
+        res = res[:-3] + '\n\\end{pmatrix}'
         return res
 
     def __len__(self):
