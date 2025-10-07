@@ -2,9 +2,11 @@
 Polynomials
 """
 
-from math import prod
+from math import prod, comb
 from numbers import Number
 from random import randint
+from itertools import combinations
+
 
 class Poly:
     """
@@ -587,6 +589,180 @@ class Poly:
                         factors[fac3] = m
         return dict(sorted(factors.items(), key=lambda item: item[0].degree()))
 
+
+class PolyBinMult():
+    """
+    Represents a binary multivariate polynomial as a list of monomials.
+
+    Example:
+
+    To define a polynomial in 3 variable by a list of coefficients use
+    >>> PolyBinMult([0, 1,0,1, 1,0,1, 1], 3)
+    x_0 + x_2 + x_0 x_1 + x_1 x_2 + x_0 x_1 x_2
+    """
+
+    print_latex = False  # print in latex format
+    print_x = "x"  # variable for printing
+
+    def __init__(self, c: list, m:int) -> list:
+        if not isinstance(m, int) and c >= 0:
+            raise ValueError("The number of variables must be a positive integer.")
+        if not isinstance(c, list):
+            raise ValueError("The argument must be a list of coefficients or a list of monomials.")
+        self.m = m
+        if not c or isinstance(c[0], tuple):
+            self.monomials = c
+            return
+        self.monomials = []
+        lc = len(c)
+        i = 0
+        for j in range(m + 1):
+            for combination in combinations(range(m), j):
+                if i< lc and c[i]:
+                    self.monomials.append(combination)
+                i += 1
+
+    def __repr__(self, latex=None):
+        def prx(i: int) -> str:
+            if len(self.__class__.print_x) >= self.m:
+                return self.__class__.print_x[i]
+            if latex and i > 9:
+                return self.__class__.print_x[0] + "_{" + str(i) + "}"
+            return self.__class__.print_x[0] + "_" + str(i)
+
+        if not self.monomials:
+            return "0"
+        if latex is None:
+            latex = self.__class__.print_latex
+        res = ""
+        for monomial in self.monomials:
+            for i in monomial:
+                res += prx(i) + " "
+            if monomial:
+                res += "+ "
+            else:
+                res += "1 + "
+        return res[:-3]
+
+    def _repr_mimebundle_(self, **kwargs):  # pylint: disable=W0613
+        return {
+            "text/plain": repr(self),
+            "text/latex": "$" + self.__repr__(latex=True) + "$"  # pylint: disable=C2801
+        }
+
+    def index2monomial(self, idx: int) -> tuple|None:
+        "Convert an index to a monomial."
+        if idx < 0:
+            idx %= len(self)
+        k = 0
+        c = 1
+        while idx >= c and k <= self.m:
+            idx -= c
+            k += 1
+            c = comb(self.m, k)
+        if k == self.m and idx > 0:
+            raise ValueError("Index out of range.")
+        return list(combinations(range(self.m), k))[idx]
+
+    def __getitem__(self, item):
+        monomial = self.index2monomial(item)
+        if monomial in self.monomials:
+            return 1
+        return 0
+
+    def __setitem__(self, item, value):
+        monomial = self.index2monomial(item)
+        if monomial in self.monomials:
+            if not value:
+                self.monomials.remvoe(monomial)
+        else:
+            if value:
+                self.monomials.append(monomial)
+
+    def __iter__(self):
+        for j in range(self.m + 1):
+            for combination in combinations(range(self.m), j):
+                if combination in self.monomials:
+                    yield 1
+                else:
+                    yield 0
+
+    def __len__(self):
+        return sum( comb(self.m,j) for j in range(self.m+1) )
+
+    def __call__(self, x: list) -> int:
+        "Evaluate a polynomial at a point."
+        val = 0
+        for monomial in self.monomials:
+            val += prod(x[i] for i in monomial)
+        return val % 2
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return not bool(self + other)
+
+    def __bool__(self):
+        return bool(self.monomials)
+
+    def __add__(self, other) -> "PolyBinMult":
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        if other.m != self.m:
+            raise NotImplementedError("Number of variables do not match!")
+        res = self.__class__(self.monomials[:], self.m)
+        for monomial in other.monomials:
+            if monomial in res.monomials:
+                res.monomials.remove(monomial)
+            else:
+                res.monomials.append(monomial)
+        return res
+
+    __sub__ = __add__
+
+    def __pos__(self) -> "PolyBinMult":
+        return self
+
+    __neg__ = __pos__
+
+    def __mul__(self, other) -> "PolyBinMult":
+        if isinstance(other, self.__class__):
+            return self.multiply(other)
+        if isinstance(other, int):
+            if other % 2:
+                return self
+            return self.__class__([], self.m)
+        return NotImplemented
+
+    def __rmul__(self, other) -> "PolyBinMult":
+        if isinstance(other, int):
+            if other % 2:
+                return self
+            return self.__class__([], self.m)
+        return NotImplemented
+
+    def multiply(self, other) -> "PolyBinMult":
+        "Polynomial Multiplication."
+        res = []
+        for monomials in self.monomials:
+            for monomialo in other.monomials:
+                monomialp = tuple(set(monomials + monomialo))
+                if monomialp in res:
+                    res.remove(monomialp)
+                else:
+                    res.append(monomialp)
+        return self.__class__(res, self.m)
+
+    def clean(self) -> None:
+        "Clean up the internal list of monomials."
+        self.monomials = list(map(tuple, map(set, self.monomials)))
+        self.monomials.sort()
+
+    def degree(self) -> int:
+        "Degree of the polynomial."
+        if not self.monomials:
+            return 0
+        return max(map(len, self.monomials))
 
 def lagrange_interpolation(x_coordinates: list, y_coordinates: list) -> "Poly":
     "Compute the Lagrange interpolation polynomial from a given list of x and y values."

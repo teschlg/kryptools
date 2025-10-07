@@ -2,7 +2,7 @@
 import pytest  # pylint: disable=W0611
 from random import randint, seed  # pylint: disable=C0411
 from kryptools import Zmod, GF2, Poly, Matrix
-from kryptools import gen2pchk, Goppa, CyclicCode, ReedSolomonCode, BCHCode
+from kryptools import gen2pchk, GoppaCode, CyclicCode, ReedSolomonCode, BCHCode
 
 seed(0)
 Z_2 = Zmod(2)
@@ -32,7 +32,7 @@ def test_Goppa():
             found = g.rabin_test()
         alpha = list(gf)
 
-        goppa = Goppa(gf, g, alpha)
+        goppa = GoppaCode(gf, g, alpha)
         assert not goppa.H * goppa.G.transpose()
         for _ in range(num_tests):
             x = [ randint(0,1) for _ in range(goppa.G.rows) ]

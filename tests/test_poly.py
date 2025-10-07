@@ -2,7 +2,7 @@
 import pytest  # pylint: disable=W0611
 from math import prod  # pylint: disable=C0411
 from random import sample, choices, randint, seed  # pylint: disable=C0411
-from kryptools import Poly, lagrange_interpolation
+from kryptools import Poly, PolyBinMult, lagrange_interpolation
 from kryptools import Zmod, GF2, divisors, moebius_mu, Matrix, circulant
 seed(0)
 num_tests = 10
@@ -98,3 +98,20 @@ def test_lagrange():
             assert p.degree() <= len(x_coordinates) - 1
             for x, y in zip(x_coordinates, y_coordinates):
                 assert p(x) == y
+
+def test_PolyBinMult():
+    m = 3
+    c = [0, 1,0,1, 1,0,1, 1]
+    p = PolyBinMult(c, m)
+    def f(x:list) -> int:
+        return (x[0] + x[2] + x[0] * x[1] + x[1] * x[2] + x[0] * x[1] * x[2]) % 2
+    assert  list(p) == c
+    assert  [ p[j] for j in range(len(p)) ] == c
+    assert p
+    assert 1 * p == p
+    assert 2 * p == PolyBinMult([], m)
+    assert not p + p
+    assert p * p == p
+    for x in range(2**m):
+        x = [x >> l & 1 for l in range(m)]
+    assert p(x) == f(x)

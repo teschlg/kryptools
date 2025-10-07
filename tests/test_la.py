@@ -20,8 +20,15 @@ def test_Matrix():
     assert M[:] == [1, 2, 3, 4, 5, 6, 7, 8, 12]
     assert 2 * M - M == M
     M.map(Fraction)
+    assert M.det() == -9
+    assert M.rank() == 3
     Mi = M.inv()
     assert M * Mi == M.eye()
+    M = Matrix([[1, 2, 3], [1, 2, 3], [7, 8, 12]], ring = Fraction)
+    with pytest.raises(ValueError):
+        Mi = M.inv()
+    assert M.det() == 0
+    assert M.rank() == 2
 
     Z_11 = Zmod(11)
     assert 2 * M - M == M
@@ -46,13 +53,6 @@ def test_BinaryMatrix():
     num_tests = 100
     Z_2 = Zmod(2)
     seed(0)
-
-    def matrix2bitmatrix(M: Matrix) -> list:
-        return M.applyfunc(int).matrix
-
-    def Matrix2(M: list) -> Matrix:
-        return Matrix(M.bitmatrix(), ring = Z_2)
-
     n = 5
 
     for _ in range(num_tests):
@@ -60,33 +60,33 @@ def test_BinaryMatrix():
         mat1 = BinaryMatrix([randint(0,2**n-1) for _ in range(m)], cols = n)
         mat2 = BinaryMatrix([randint(0,2**n-1) for _ in range(m)], cols = n)
         mat3 = BinaryMatrix([randint(0,2**m-1) for _ in range(n)], cols = n)
-        Mat1 = Matrix2(mat1)
-        Mat2 = Matrix2(mat2)
-        Mat3 = Matrix2(mat3)
-        assert matrix2bitmatrix(Mat1 + Mat2) == (mat1 + mat2).bitmatrix()
-        assert matrix2bitmatrix(Mat1 - Mat2) == (mat1 + mat2).bitmatrix()
-        assert matrix2bitmatrix(Mat1 * Mat3) == (mat1 * mat3).bitmatrix()
+        Mat1 = Matrix(mat1)
+        Mat2 = Matrix(mat2)
+        Mat3 = Matrix(mat3)
+        assert BinaryMatrix(Mat1 + Mat2) == mat1 + mat2
+        assert BinaryMatrix(Mat1 - Mat2) == mat1 + mat2
+        assert BinaryMatrix(Mat1 * Mat3) == mat1 * mat3
 
     for _ in range(num_tests):
         m = randint(n-1,n+1)
         mat = BinaryMatrix([randint(0,2**n-1) for _ in range(m)], cols = n)
         b = [randint(0,1) for _ in range(m)]
         x = [randint(0,1) for _ in range(n)]
-        Mat = Matrix2(mat)
+        Mat = Matrix(mat)
         X = Matrix(x, ring = Z_2)
-        assert matrix2bitmatrix(Mat.rref()) == mat.rref().bitmatrix()
-        assert matrix2bitmatrix(Mat.kernel()) == mat.kernel().bitmatrix()
-        assert matrix2bitmatrix(Mat.transpose()) == mat.transpose().bitmatrix()
+        assert BinaryMatrix(Mat.rref()) == mat.rref()
+        assert BinaryMatrix(Mat.kernel()) == mat.kernel()
+        assert BinaryMatrix(Mat.transpose()) == mat.transpose()
         if m == n:
             d = mat.det()
             assert int(Mat.det()) == d
             if d:
-                assert matrix2bitmatrix(Mat.inv()) == mat.inv().bitmatrix()
+                assert BinaryMatrix(Mat.inv()) == mat.inv()
         assert Mat.rank() == mat.rank()
         sol = mat.solve(b)
         Sol = Mat.solve(b, ring = Z_2)
-        assert (sol is None and Sol is None) or Sol.applyfunc(int).matrix == sol.bitmatrix()
+        assert (sol is None and Sol is None) or list(Sol.applyfunc(int)) == sol
         if mat.rows == 1:
-            assert int(Mat * X) == mat.dot(x)[0]
+            assert int(Mat * X) == mat.apply(x)[0]
         else:
-            assert list((Mat * X).applyfunc(int)) == mat.dot(x)
+            assert list((Mat * X).applyfunc(int)) == mat.apply(x)

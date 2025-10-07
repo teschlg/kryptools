@@ -2,9 +2,10 @@
 Linear algebra
 """
 
-from math import inf, sqrt, prod
+from math import inf, sqrt
 from numbers import Number
 from fractions import Fraction
+from .Zmod import Zmod
 
 class Matrix:
     """
@@ -22,12 +23,19 @@ class Matrix:
     print_post = " ]"
     print_sep = ", "
 
-    def __init__(self, matrix, ring=None):
-        if not isinstance(matrix[0], list | tuple):
+    def __init__(self, matrix: list|tuple, ring = None):
+        if isinstance(matrix, BinaryMatrix):
+            matrix = matrix.bitmatrix()
+            ring = Zmod(2)
+        elif not (isinstance(matrix, list|tuple) and matrix):
+            raise ValueError("The given `matrix` must be a nonempty list.")
+        elif not isinstance(matrix[0], list|tuple):
             matrix = [[x] for x in matrix]
-        self.matrix = matrix
-        self.cols = len(matrix[0])
-        self.rows = len(matrix)
+        self.matrix = matrix  # the matrix as a list (rows) of lists (column entries)
+        self.cols = len(matrix[0])  # number of columns
+        self.rows = len(matrix)  # number of rows
+        self.nonpivotcols = None  # set during rref
+        self.pivotcols = None  # set during rref
         for i in range(1, self.rows):
             if len(matrix[i]) != self.cols:
                 raise ValueError("All matrix rows must have equal length!")
@@ -190,6 +198,19 @@ class Matrix:
             self.matrix[i].append(col[i])
         self.cols += 1
 
+    def permute_columns(self, permutation) -> None:
+        "Permute columns according to a list of new positions."
+        if len(permutation) != self.cols:
+            raise ValueError(f"The argument must be a list of indices of length {self.cols}.")
+        for i in range(self.rows):
+            self.matrix[i] = [ self.matrix[i][j] for j in permutation]
+
+    def permute_rows(self, permutation) -> None:
+        "Permute rows according to a list of new positions."
+        if len(permutation) != self.rows:
+            raise ValueError(f"The argument must be a list of indices of length {self.rows}.")
+        self.matrix = [ self.matrix[i] for i in permutation]
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
@@ -200,18 +221,19 @@ class Matrix:
     def __bool__(self):
         return any(bool(self[i]) for i in range(self.rows * self.cols))
 
-    def map(self, func):
+    def map(self, func) -> None:
         "Apply a function to all elements in place."
         for row in self.matrix:
             row[:] = map(func, row)
 
-    def applyfunc(self, func):
+    def applyfunc(self, func) -> "Matrix":
         "Apply a function to all elements."
         tmp = self[:, :]
         tmp.map(func)
         return tmp
 
     def _guess_zero(self):
+        "Guess zero and one in the ring of the coefficients."
         zero = 0 * self.matrix[0][0]
         one = zero**0
         return zero, one
@@ -221,7 +243,7 @@ class Matrix:
         return sum(sum(x*x for x in row) for row in self.matrix)
 
     def norm(self, p: int = 2) -> float:
-        "p-norm of a matrix regarded as a vector."
+        "p-norm of the matrix regarded as a vector."
         if p == 2:
             return sqrt(self.norm2())
         if p == 1:
@@ -240,7 +262,7 @@ class Matrix:
         return NotImplemented
 
     def transpose(self) -> "Matrix":
-        "Transpose of a matrix."
+        "Transposed matrix."
         return Matrix([list(i) for i in zip(*self.matrix)])
 
     def multiply(self, other) -> "Matrix":
@@ -290,20 +312,26 @@ class Matrix:
             return self.__class__([[item * other for item in row] for row in self.matrix])
         return NotImplemented
 
-    def rref(self) -> "Matrix":
-        "Compute the reduced echelon form of a matrix M."
+    def rref(self, start = 0, drop_zero_rows = False) -> "Matrix":
+        "Compute the reduced echelon form."
         one = self._guess_zero()[1]
         n, m = self.cols, self.rows
         R = self[:, :]
+        R.pivotcols = []
+        R.nonpivotcols = []
         i = 0
-        for j in range(n):
+        if start >= n:
+            raise ValueError("Start value cannot be beyond the last column.")
+        for j in range(start, n):
             if not R[i, j]:  # search for a nonzero entry in the present column
                 for ii in range(i+1, m):
                     if R[ii, j]:
                         R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
                         break
                 else:
+                    R.nonpivotcols.append(j)
                     continue  # all entries are zero
+            R.pivotcols.append(j)
             if R[i, j] != one:
                 R[i, :] = R[i, j]**-1 * R[i, :]  # make the pivot one
             for ii in range(m):  # remove the column entries above/below the pivot
@@ -314,54 +342,38 @@ class Matrix:
             i += 1
             if i == m:
                 break
+        R.nonpivotcols += list(range(j+1, R.cols))
+        # purge zero rows
+        if drop_zero_rows:
+            l = len(R.pivotcols)
+            if not l:
+                l = 1  # do not delete all rows
+            del R.matrix[l:]
+            R.rows = l
         return R
 
-    def left_standard_form(self) -> ("Matrix", "Matrix"):
-        "Compute the left standard form of a matrix. Return the standard form and the pertmutation matrix."
+    def left_standard_form(self) -> "Matrix":
+        "Compute the left standard form."
         # reduced row echelon form
-        M = self.rref()
-        # purge zero rows
-        for i in range(M.rows-1,-1,-1):
-            if not M[i,:]:
-                M.delete_rows(i)
+        M = self.rref(drop_zero_rows = True)
         # permute columns to get the identity on the left
-        last = min(M.rows, M.cols)
-        P = M.eye(M.cols)
-        for i in range(last):
-            if not M[i,i]: # the diagonal entry vanishes
-                # find the index of the pivot and permute
-                j = i + 1
-                while j <= M.cols and not M[i, j]:
-                    j += 1
-                P[:,i], P[:,j] = P[:,j], P[:,i]
-                M[:,i], M[:,j] = M[:,j], M[:,i]
-        return M, P
+        if M.pivotcols != list(range(min(M.rows, M.cols))):
+            M.permute_columns(M.pivotcols + M.nonpivotcols)
+        return M
 
     def kernel(self) -> "Matrix":
-        "Compute a basis for the kernel of a matrix."
+        "Compute a basis for the kernel."
         _, one = self._guess_zero()
-        M = self.rref()
-        pivotcols = []
-        nonpivotcols = []
-        j = 0
-        for i in range(0, M.rows):
-            while j < M.cols and not M[i,j]:
-                nonpivotcols.append(j)
-                j += 1
-            if j == M.cols:
-                break
-            pivotcols.append(j)
-            j += 1
-        nonpivotcols += list(range(j, M.cols))
-        K = M.zeros(M.cols, max(1,len(nonpivotcols)))
-        for k, j in enumerate(nonpivotcols):
+        M = self.rref(drop_zero_rows = True)
+        K = M.zeros(M.cols, max(1,len(M.nonpivotcols)))
+        for k, j in enumerate(M.nonpivotcols):
             K[j, k] = one
-            for l, i in enumerate(pivotcols):
+            for l, i in enumerate(M.pivotcols):
                 K[i, k] = - M[l, j]
         return K
 
     def det(self) -> int:
-        "Compute the determinant of a matrix M."
+        "Compute the determinant."
         zero, one = self._guess_zero()
         if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
@@ -390,33 +402,32 @@ class Matrix:
         return D
 
     def rank(self) -> int:
-        "Compute the rank of a matrix."
-        MM = self.rref()
-        for i in range(self.rows-1,-1,-1):
-            if MM[i,:]:
-                return i+1
-        return 0
+        "Compute the rank."
+        M = self.rref()
+        return len(M.pivotcols)
 
     def nullity(self) -> int:
-        "Compute the nullity of a matrix."
+        "Compute the nullity."
         return self.cols - self.rank()
 
-    def inv(self) -> "Matrix":
-        "Compute the inverse of a square matrix M."
-        if self.rows != self.cols:
+    def inv(self, left = False) -> "Matrix":
+        "Compute the (left) inverse."
+        if not left and self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         zero, one = self._guess_zero()
         n = self.cols
-        MM = self.__class__([[zero for _ in range(2*n)] for _ in range(n)])
-        for i in range(n):
-            MM[i, n+i] = one
-        MM[:, 0:n] = self
-        MM = MM.rref()
-        if not prod(MM[i, i] for i in range(n)):
+        m = self.rows
+        M = [ [] ] * m
+        for i in range(m):
+            tmp = [ zero ] * m
+            tmp[i] = one
+            M[i] = self.matrix[i][:] + tmp
+        M = self.__class__(M).rref()
+        if not left and M.pivotcols[self.cols - 1] != self.cols -1:
             raise ValueError("Matrix is not invertible!")
-        return MM[:, n:]
+        return M[:, n:]
 
-    def solve(self, b: "Matrix", ring = None) -> "Matrix":
+    def solve(self, b: list|tuple, ring = None) -> "Matrix":
         "Solve the linear system with given inhomogenous vector."
         if isinstance(b, list|tuple):
             b = Matrix(b, ring = ring)
@@ -425,7 +436,7 @@ class Matrix:
         A = self.zeros(self.rows, self.cols + 1) # extended coefficient matrix
         A[:, 0:self.cols] = self
         A[:, self.cols] = b
-        A = A.rref()
+        A = A.rref(drop_zero_rows = True)
         solution = self.zeros(self.cols, 1)
         for i in range(A.rows-1, -1, -1):
             if not any(A.matrix[i][:-1]):
@@ -509,6 +520,7 @@ def circulant(vector: list|tuple, m: int = None, ring=None) -> "Matrix":
     vector = list(reversed(vector))
     return Matrix([rotate(vector, -n-1) for n in range(m)], ring=ring)
 
+
 class BinaryMatrix:
     """
     Binary Matrix class.
@@ -520,22 +532,26 @@ class BinaryMatrix:
     [01]
     [10]
     """
-    def __init__(self, matrix: list, cols: int|None = None):
-        if not (isinstance(matrix, list) and matrix):
-            raise ValueError("`matrix` must be a nonempty list.")
-        if isinstance(matrix[0], list):
+    def __init__(self, matrix: list|tuple|Matrix, cols: int|None = None):
+        if isinstance(matrix, Matrix):
+            matrix = matrix.matrix
+        elif not (isinstance(matrix, list|tuple) and matrix):
+            raise ValueError("The given matrix must be a nonempty list.")
+        if isinstance(matrix[0], list|tuple):  # list of lists
             if cols is None:
                 cols = len(matrix[0])
-            self.matrix = [ self.from_bits(row) for row in matrix]
-        else:
+            matrix = [ self.from_bits(map(bool, row)) for row in matrix]
+        else:  # list of ints
+            if not isinstance(matrix[0], int):
+                raise ValueError("The given matrix must be a list of integers or bits.")
             if cols is None:
                 cols = max(row.bit_length() for row in matrix)
                 cols = max(1, cols)
-            self.matrix = matrix
-        self.rows = len(self.matrix)
-        self.cols = cols
-        self.pivotcols = None
-        self.nonpivotcols = None
+        self.matrix = matrix  # matrix as a list (rows) of integers (columns bits)
+        self.rows = len(self.matrix)  # number of rows
+        self.cols = cols  # number of columns
+        self.pivotcols = None  # set by rref
+        self.nonpivotcols = None  # set by rref
 
     def __repr__(self):
         out = ''
@@ -708,11 +724,11 @@ class BinaryMatrix:
         return n
 
     def bitmatrix(self) -> list[list]:
-        "Return as a matrix of bits."
+        "Return as a matrix (with rows given by the list of columns bits) of bits."
         return [ self.to_bits(row, self.cols) for row in self.matrix ]
 
     def add_column(self, col: list|int) -> None:
-        "Add a column to the matrix"
+        "Add a column to the matrix."
         if isinstance(col, int):
             col = self.to_bits(col, self.rows)
         if len(col) != self.rows:
@@ -724,7 +740,7 @@ class BinaryMatrix:
                 self.matrix[i] |= 1
 
     def add_row(self, row: list|int) -> None:
-        "Add a column to the matrix"
+        "Add a row to the matrix."
         if isinstance(row, list):
             if len(row) != self.cols:
                 raise ValueError("The length must equal the number of columns!")
@@ -732,12 +748,27 @@ class BinaryMatrix:
         self.rows += 1
         self.matrix.append(row)
 
+    def permute_columns(self, permutation) -> None:
+        "Permute columns according to a list of new positions."
+        if len(permutation) != self.cols:
+            raise ValueError(f"The argument must be a list of indices of length {self.cols}.")
+        for i, row in enumerate(self.matrix):
+            bits = self.to_bits(row, self.cols)
+            bits = [ bits[j] for j in permutation]
+            self.matrix[i] = self.from_bits(bits)
+
+    def permute_rows(self, permutation) -> None:
+        "Permute rows according to a list of new positions."
+        if len(permutation) != self.rows:
+            raise ValueError(f"The argument must be a list of indices of length {self.rows}.")
+        self.matrix = [ self.matrix[i] for i in permutation]
+
     def transpose(self) -> "BinaryMatrix":
-        "Transpose of a matrix."
+        "Transposed matrix."
         return self.__class__([list(i) for i in zip(*self.bitmatrix())])
 
-    def dot(self, x: int|list) -> int|list:
-        "Applies the matrix to a vector (given as list of bits or integer)."
+    def apply(self, x: int|list) -> int|list:
+        "Applies the matrix to a vector given as list of bits or integer."
         if isinstance(x, list):
             if len(x) != self.cols:
                 raise ValueError("The length must equal the number of columns!")
@@ -745,6 +776,8 @@ class BinaryMatrix:
             x = self.from_bits(x)
         else:
             as_list = False
+        if x >= 2**self.cols:
+            raise ValueError("The length is larger than the number of columns!")
         res = []
         for row in self.matrix:
             tmp = row & x
@@ -760,18 +793,23 @@ class BinaryMatrix:
             return res
         return self.from_bits(res)
 
-    def rref(self, reduce = True, drop_zero_rows = False):
+    def rref(self, start = 0, reduce = True, drop_zero_rows = False) -> "Matrix":
         "Row reduced echelon form."
         rref = [ None ] * self.cols  # store rows accoring to leading bit
         rows = self.matrix[:]  # copy
-        zerorows = 0  # number of rows equal to zero
+        zerorows = []  # we store zero rows here
+        if start:
+            startmask = (1 << (self.cols - start)) -1
         row = None
         while (rows or row is not None):
             if row is None:
                 row = rows.pop()
-            lb = row.bit_length() - 1 # leading bit
+            if start:
+                lb = (row & startmask).bit_length() - 1 # leading bit
+            else:
+                lb = row.bit_length() - 1 # leading bit
             if lb == -1: # the row is zero
-                zerorows += 1
+                zerorows.append(row)
                 row = None
             elif rref[lb] is None:  # the row is new
                 rref[lb] = row
@@ -792,13 +830,13 @@ class BinaryMatrix:
         nonpivotcols = []
         for j, row in enumerate(reversed(rref)):  # remove nonexisting rows
             if row is None:
-                nonpivotcols.append(j)
+                if  j >= start:
+                    nonpivotcols.append(j)
                 continue
             pivotcols.append(j)
             rows.append(row)
         if not drop_zero_rows:
-            for _ in range(zerorows):  # add zero rows
-                rows.append(0)
+            rows += zerorows
         if not rows:
             rows = [ 0 ]
         rref = self.__class__(rows, cols = self.cols)
@@ -806,30 +844,37 @@ class BinaryMatrix:
         rref.nonpivotcols = nonpivotcols
         return rref
 
+    def left_standard_form(self) -> "BinaryMatrix":
+        "Compute the left standard form."
+        # reduced row echelon form
+        M = self.rref(drop_zero_rows = True)
+        # permute columns to get the identity on the left
+        if M.pivotcols != list(range(min(M.rows, M.cols))):
+            M.permute_columns(M.pivotcols + M.nonpivotcols)
+        return M
+
     def det(self) -> int:
         "Compute the determinant."
         if self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         if self.rows == 1:
             return self.matrix[0]
-        M = self.rref(drop_zero_rows = True)
+        M = self.rref(reduce = False, drop_zero_rows = True)
         if M.rows == M.cols:
             return 1
         return 0
 
     def rank(self) -> int:
-        "Compute the rank of a matrix."
+        "Compute the rank."
         M = self.rref(drop_zero_rows = True)
-        if not M:
-            return 0
-        return M.rows
+        return len(M.pivotcols)
 
     def nullity(self) -> int:
-        "Compute the nullity of a matrix."
+        "Compute the nullity."
         return self.cols - self.rank()
 
     def kernel(self) -> "BinaryMatrix":
-        "Compute a basis for the kernel of a matrix."
+        "Compute a basis for the kernel."
         M = self.rref()
         K = M.zeros(M.cols, max(1,len(M.nonpivotcols)))
         for k, j in enumerate(M.nonpivotcols):
@@ -838,38 +883,53 @@ class BinaryMatrix:
                 K[i, k] = M[l, j]
         return K
 
-    def inv(self) -> "BinaryMatrix":
-        "Compute the inverse of a square matrix M."
-        if self.rows != self.cols:
+    def inv(self, left = False) -> "BinaryMatrix":
+        "Compute the (left) inverse."
+        if not left and self.rows != self.cols:
             raise ValueError("Matrix must be square!")
         M = self.matrix[:]
-        for j in range(self.cols):
-            for i in range(self.rows):
-                M[i] <<= 1
-                if i == j:
-                    M[i] |= 1
-        M = self.__class__(M, cols = 2 * self.cols).rref()
-        if M.pivotcols[self.cols - 1] != self.cols -1:
+        for i in range(self.rows):
+            M[i] <<= self.rows
+            M[i] |= 1 << (self.rows - i -1)
+        M = self.__class__(M, cols = self.cols + self.rows).rref()
+        if not left and M.pivotcols[self.cols - 1] != self.cols -1:
             raise ValueError("Matrix is not invertible!")
-        mask = 2**self.cols - 1
+        mask = 2**self.rows - 1
         for i in range(M.rows):
             M.matrix[i] &= mask
-        M.cols = self.cols
+        M.cols = self.rows
         return M
 
-    def solve(self, b: list|int) -> "BinaryMatrix":
+    def solve(self, b: list|int) -> list|int:
         "Solve the linear system with given inhomogenous vector."
+        as_list = True
+        as_matrix = False
+        if isinstance(b, int):
+            as_list = False
+        elif isinstance(b, self.__class__):
+            if self.rows != b.rows or b.cols != 1:
+                raise ValueError("Matrix dimensions do not match.")
+            as_matrix = True
+            b = b.matrix
+        elif not isinstance(b, list):
+            raise ValueError("The inhomogenous vector must be a list of bits or an integer.")
         A = self.__class__(self.matrix[:], self.cols)
         A.add_column(b)
         A = A.rref(drop_zero_rows = True)
-        solution = self.zeros(self.cols, 1)
+        solution = [ 0 ] * self.cols
         if not A.pivotcols: # A is zero
-            return solution
+            if as_list:
+                return solution
+            return 0
         if A.pivotcols[-1] >= self.cols:
             return None  # Not solvable
         for i in range(A.rows):
-            solution.matrix[A.pivotcols[i]] = A.matrix[i] & 1
-        return solution
+            solution[A.pivotcols[i]] = A.matrix[i] & 1
+        if as_list:
+            if as_matrix:
+                return self.__class__(solution)
+            return solution
+        return self.from_bits(solution)
 
     def zeros(self, m: int = None, n: int = None) -> "BinaryMatrix":
         "Returns a zero matrix of the same dimension."
