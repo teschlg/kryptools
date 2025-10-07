@@ -333,7 +333,7 @@ class GoppaCode(BinaryCode):
     
     """
 
-    def __init__(self, gf: GF2, g: Poly, alpha: list["GF2Point"], systematic: bool = True):
+    def __init__(self, gf: GF2, g: Poly, alpha: list["GF2Point"], systematic: bool = True, minimum_distance = False):
         if not all(map(lambda x: x in gf, alpha)):
             raise ValueError("All elements of alpha must be from the Galois field!")
         if not g.rabin_test():
@@ -346,7 +346,7 @@ class GoppaCode(BinaryCode):
         for x in alpha:
             H.append(int(Poly([-x, one], modulus = g).inv()))
         H = BinaryMatrix(H).transpose()
-        super().__init__(H, systematic = systematic, parity_check = True)
+        super().__init__(H, systematic = systematic, parity_check = True, minimum_distance = minimum_distance)
         if systematic:
             permutation =  self.G.pivotcols + self.G.nonpivotcols
             if permutation != list(range(self.G.cols)):
