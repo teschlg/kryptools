@@ -205,7 +205,7 @@ class BinaryCode():
                         d += 1
                     if d_lower and d <= d_lower:  # known lower bound
                         self.d = d
-                        return d      
+                        return d
                     d_ub = min(d_ub, d)
                     # Gosper's hack
                     c = x & -x
