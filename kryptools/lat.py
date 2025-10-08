@@ -57,9 +57,9 @@ def norm2(v: Matrix) -> float:
 
 def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
     "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
-    M = U.eye()
+    M = U.eye(U.cols)
     Us = U[:, :]
-    for j in range(1, U.rows):
+    for j in range(1, U.cols):
         tmp = U[:, j]
         for i in range(j):
             M[i, j] = U[:, j].dot(Us[:, i]) / norm2(Us[:, i])
@@ -109,7 +109,7 @@ def babai_plane_bnd(U: Matrix, p=2) -> float:
 
 def lagrange_lr(V: Matrix) -> Matrix:
     "Lagrange lattice reduction."
-    if (V.rows, V.cols) != (2, 2):
+    if V.cols != 2:
         raise ValueError("Lagrange lattice reduction requires dimension two.")
     v1, v2 = V[:, 0], V[:, 1]
     if norm2(v1) > norm2(v2):
@@ -130,10 +130,10 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     U.map(int)
     Us = U[:, :]
     Us.map(Fraction)
-    M = U.zeros()
+    M = U.zeros(U.cols)
     M.map(Fraction)
     M[0, 0] = norm2(Us[:, 0])  # we store the squared norms on the diagonal
-    for l in range(1, U.rows):  # Gram-Schmidt decomposition
+    for l in range(1, U.cols):  # Gram-Schmidt decomposition
         tmp = U[:, l]
         for i in range(l):
             M[i, l] = U[:, l].dot(Us[:, i]) / M[i, i]
@@ -141,7 +141,7 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
         Us[:, l] = tmp
         M[l, l] = norm2(Us[:, l])
 
-    while j < U.rows:
+    while j < U.cols:
         for i in range(j - 1, -1, -1):  # reduce the weights of the basis vectors
             r = round(M[i, j])
             if r:
@@ -172,7 +172,7 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
             M[l, j], M[l, j - 1] = M[l, j - 1], M[l, j]
         tmp1 = oldM00 / M[j - 1, j - 1]
         tmp2 = oldM10 * oldM11 / M[j - 1, j - 1]
-        for l in range(j + 1, U.rows):
+        for l in range(j + 1, U.cols):
             M[j - 1, l], M[j, l] = (
                 tmp1 * M[j, l] + tmp2 * M[j - 1, l],
                 M[j - 1, l] - oldM10 * M[j, l],
@@ -180,9 +180,9 @@ def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
         j = max(j - 1, 1)  # redo the last step
 
     if sort:  # sort the vectors according to their norm
-        tmp = [U[:, j] for j in range(U.rows)]
+        tmp = [U[:, j] for j in range(U.cols)]
         tmp.sort(key=norm2)
-        for j in range(U.rows):
+        for j in range(U.cols):
             U[:, j] = tmp[j]
     return U
 
