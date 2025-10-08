@@ -5,7 +5,7 @@ Lattice tools
 from math import prod, floor
 from fractions import Fraction
 from random import choice, sample
-from .la import Matrix, zeros
+from .la import Matrix, eye, zeros
 
 
 def hermite_nf(M: Matrix) -> Matrix:
@@ -204,3 +204,16 @@ def random_unimodular_matrix(n: int, iterations: int = 50, max_val: int = None) 
         if not max_val or max(abs(x) for x in tmp) <= max_val:
             W[:, i] = tmp
     return W
+
+def q_ary_lattice(U: Matrix, lll: bool = False) -> Matrix:  # pylint: disable=W0621
+    "Create a q-ary lattice and (optinally) LLL reduce the basis."
+    if isinstance(U, Matrix) and hasattr(U.matrix[0][0], "ring"):
+        q = U.matrix[0][0].ring.n
+    else:
+        raise ValueError("The matrix does not seem to be over Zmod.")
+    V = eye(U.rows, one = q)
+    V.append_column(U, ring = int)
+    V = hermite_nf(V)
+    if lll:
+        return globals()['lll'](V)
+    return V

@@ -177,26 +177,42 @@ class Matrix:
 
     def append_row(self, row: list|tuple, ring = None) -> None:
         "Append a row."
-        if not isinstance(row, list|tuple):
+        if isinstance(row, self.__class__):
+            row = row.matrix
+        elif not isinstance(row, list|tuple):
             row = list(row)
-        if len(row) != self.cols:
+        if not isinstance(row[0], list|tuple):
+            row = [ row ]
+        if len(row[0]) != self.cols:
             raise ValueError("Length does not match the number of columns.")
         if ring:
-            row =list(map(ring, row))
-        self.matrix.append(row)
-        self.rows += 1
+            for i, r in enumerate(row):
+                row[i] =list(map(ring, r))
+        self.matrix += row
+        self.rows += len(row)
 
     def append_column(self, col: list|tuple, ring = None) -> None:
         "Append a column."
-        if not isinstance(col, list|tuple):
+        if isinstance(col, self.__class__):
+            col = col.matrix
+        elif not isinstance(col, list|tuple):
             col = list(col)
         if len(col) != self.rows:
             raise ValueError("Length does not match the number of rows.")
-        if ring:
-            col =list(map(ring, col))
-        for i in range(self.rows):
-            self.matrix[i].append(col[i])
-        self.cols += 1
+        if isinstance(col[0], list|tuple):
+            for i, c in enumerate(col):
+                if ring:
+                    self.matrix[i] += list(map(ring, c))
+                else:
+                    self.matrix[i] += c
+            self.cols += len(col[0])
+        else:
+            for i, c in enumerate(col):
+                if ring:
+                    self.matrix[i].append(ring(c))
+                else:
+                    self.matrix[i].append(c)
+            self.cols += 1
 
     def permute_columns(self, permutation) -> None:
         "Permute columns according to a list of new positions."

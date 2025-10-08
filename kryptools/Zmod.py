@@ -28,13 +28,14 @@ class Zmod:
     0
     """
 
-    def __init__(self, n: int, short: bool = True):
+    def __init__(self, n: int, short: bool = True, sharp: bool = False):
         if not isinstance(n, int) or n < 1:
             raise ValueError(f"{n} is not a positive integer.")
         self.n = n
         self.isfield = None
         self.n_factors = {} # factoring of n
         self.short = short
+        self.sharp = sharp
         self.group_order = 0 # order of the multiplicative group
         self.factors = {}  # factoring of the multiplicative group order
 
@@ -161,9 +162,13 @@ class ZmodPoint:
         self.ring = ring
 
     def __repr__(self):
+        if self.ring.sharp:
+            x = self.sharp()
+        else:
+            x = self.x
         if self.ring.short:
-            return str(self.x)
-        return f"{self.x} (mod {self.ring.n})"
+            return str(x)
+        return f"{x} (mod {self.ring.n})"
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__) or self.ring != other.ring:
