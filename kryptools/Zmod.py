@@ -32,6 +32,7 @@ class Zmod:
         if not isinstance(n, int) or n < 1:
             raise ValueError(f"{n} is not a positive integer.")
         self.n = n
+        self.n2 = n // 2
         self.isfield = None
         self.n_factors = {} # factoring of n
         self.short = short
@@ -244,7 +245,9 @@ class ZmodPoint:
         return NotImplemented
 
     def __abs__(self) -> int:
-        return abs(self.sharp())
+        if self.x <= self.ring.n2:
+            return self.x
+        return self.ring.n - self.x
 
     def bits(self) -> list:
         "Convert to a list of bits."
@@ -252,7 +255,7 @@ class ZmodPoint:
 
     def sharp(self):
         "Returns a symmetric (w.r.t. 0) representative."
-        if self.x <= self.ring.n // 2:
+        if self.x <= self.ring.n2:
             return self.x
         return self.x - self.ring.n
 

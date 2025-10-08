@@ -45,7 +45,7 @@ def test_Zmod_methods():
     assert [abs(i) for i in Z_5] == [0, 1, 2, 2, 1]
     assert not Z_5(0)
     assert Z_5(1)
-    assert Z_5(2) == Z_5(2)
+    assert Z_5(2) == Z_5(7)
     assert Z_5(2) != Z_5(3)
     assert Z_5(2) != 2
     assert str(Z_5(3)) == "3"
@@ -67,7 +67,7 @@ def test_Zmod_methods():
     assert [abs(i) for i in Z_6] == [0, 1, 2, 3, 2, 1]
     assert not Z_6(0)
     assert Z_6(1)
-    assert Z_6(2) == Z_6(2)
+    assert Z_6(2) == Z_6(8)
     assert Z_6(2) != Z_6(3)
     assert Z_5(2) != Z_6(2)
     assert str(Z_6(3)) == "3"

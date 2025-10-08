@@ -256,7 +256,7 @@ class Matrix:
 
     def norm2(self) -> float:
         "Squared Frobenius/Euclidean norm."
-        return sum(sum(x*x for x in row) for row in self.matrix)
+        return sum(sum(abs(x)**2 for x in row) for row in self.matrix)
 
     def norm(self, p: int = 2) -> float:
         "p-norm of the matrix regarded as a vector."
