@@ -2,7 +2,8 @@
 Linear algebra
 """
 
-from math import inf, sqrt
+# pragma pylint: disable=C0302
+from math import gcd, inf, sqrt
 from numbers import Number
 from fractions import Fraction
 from .Zmod import Zmod
@@ -328,37 +329,45 @@ class Matrix:
             return self.__class__([[item * other for item in row] for row in self.matrix])
         return NotImplemented
 
-    def rref(self, start = 0, drop_zero_rows = False) -> "Matrix":
+    def rref(self, start: int = 0, drop_zero_rows: bool = False) -> "Matrix":
         "Compute the reduced echelon form."
+        if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
+            # the matrix is over a ring (not a field)
+            return self._rref_ring(start = start, drop_zero_rows = drop_zero_rows)
         one = self._guess_zero()[1]
         n, m = self.cols, self.rows
-        R = self[:, :]
-        R.pivotcols = []
-        R.nonpivotcols = []
+        R = [ self.matrix[i][:] for i in range(m) ]
+        pivotcols = []
+        nonpivotcols = []
         i = 0
         if start >= n:
             raise ValueError("Start value cannot be beyond the last column.")
         for j in range(start, n):
-            if not R[i, j]:  # search for a nonzero entry in the present column
-                for ii in range(i+1, m):
-                    if R[ii, j]:
-                        R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
+            if not R[i][j]:  # search for a nonzero entry in the present column
+                for ii in range(i + 1, m):
+                    if R[ii][j]:
+                        R[i], R[ii] = R[ii], R[i]  # swap rows
                         break
                 else:
-                    R.nonpivotcols.append(j)
+                    nonpivotcols.append(j)
                     continue  # all entries are zero
-            R.pivotcols.append(j)
-            if R[i, j] != one:
-                R[i, :] = R[i, j]**-1 * R[i, :]  # make the pivot one
+            pivotcols.append(j)
+            if R[i][j] != one:
+                tmp = R[i][j]**-1
+                for k in range(n):
+                    R[i][k] *= tmp  # make the pivot one
             for ii in range(m):  # remove the column entries above/below the pivot
                 if i == ii:
                     continue
-                tmp = R[ii, j]
-                R[ii, ::] -= tmp * R[i, :]
+                tmp = R[ii][j]
+                for k in range(n):
+                    R[ii][k] -= tmp * R[i][k]
             i += 1
             if i == m:
                 break
-        R.nonpivotcols += list(range(j+1, R.cols))
+        R = Matrix(R)
+        R.pivotcols = pivotcols
+        R.nonpivotcols = nonpivotcols + list(range(j+1, R.cols))
         # purge zero rows
         if drop_zero_rows:
             l = len(R.pivotcols)
@@ -367,6 +376,85 @@ class Matrix:
             del R.matrix[l:]
             R.rows = l
         return R
+
+    def _rref_ring(self, start: int = 0, drop_zero_rows: bool = False) -> "Matrix":
+        "Compute the reduced echelon form if the base ring is Z_n and no field."
+        ring = self.matrix[0][0].ring
+        M = self.applyfunc(int)
+        done = False
+        while not done:
+            M = M.hermite_rnf(start = start, drop_zero_rows = drop_zero_rows)
+            done = True
+            for i, j in enumerate(M.pivotcols):
+                pivot = M.matrix[i][j]
+                if pivot >= ring.n:
+                    done = False
+                    pivot %= ring.n
+                if pivot!=1 and gcd(pivot, ring.n) == 1:  # we can make the pivot one
+                    done = False
+                    M.matrix[i][j] = 1
+                    tmp = pow(pivot, -1, ring.n)
+                    for k in range(j + 1, M.cols):
+                        M.matrix[i][k] *= tmp
+            M.map(lambda x: x % ring.n)
+        M.map(ring)
+        return M
+
+    def hermite_rnf(self, start = 0, drop_zero_rows: bool = False) -> "Matrix":
+        "Compute the Hermite row normal form."
+        n, m = self.cols, self.rows
+        if not isinstance(self.matrix[0][0], int):
+            raise ValueError("Hermite normal form requires integer entries!")
+        H = [ self.matrix[i][:] for i in range(m) ]
+        pivotcols = []
+        nonpivotcols = []
+        i = 0
+        if start >= n:
+            raise ValueError("Start value cannot be beyond the last column.")
+        for j in range(start, n):
+            i0 = i
+            minimum = abs(H[i][j])  # search for the pivot in the present column
+            for ii in range(i + 1, m):
+                tmp = abs(H[ii][j])
+                if tmp > 0 and (tmp < minimum or minimum == 0):
+                    minimum = tmp
+                    i0 = ii
+            if minimum == 0:
+                nonpivotcols.append(j)
+                continue  # all entrjes are zero
+            pivotcols.append(j)
+            if i0 > i:
+                H[i], H[i0] = H[i0], H[i]  # swap rows, to move the pivot jn place
+            if H[i][j] < 0:
+                for k in range(n):
+                    H[i][k] *= -1  # make the pivot positive
+            ii = i + 1
+            while ii < m:  # make the column entries below to the pivot zero
+                tmp = H[ii][j] // H[i][j]
+                for k in range(n):
+                    H[ii][k] -= tmp * H[i][k]
+                if H[ii][j]:
+                    H[i], H[ii] = H[ii], H[i]  # swap rows
+                else:
+                    ii += 1
+            for ii in range(i):  # reduce the column entries above to the pivot
+                tmp = H[ii][j] // H[i][j]
+                for k in range(n):
+                    H[ii][k] -= tmp * H[i][k]
+            i += 1
+            if i >= m:
+                break
+        H = Matrix(H)
+        H.pivotcols = pivotcols
+        H.nonpivotcols = nonpivotcols + list(range(j+1, H.cols))
+        # purge zero rows
+        if drop_zero_rows:
+            l = len(H.pivotcols)
+            if not l:
+                l = 1  # do not delete all rows
+            del H.matrix[l:]
+            H.rows = l
+        return H
 
     def left_standard_form(self) -> "Matrix":
         "Compute the left standard form."
@@ -379,6 +467,8 @@ class Matrix:
 
     def kernel(self) -> "Matrix":
         "Compute a basis for the kernel."
+        if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
+            raise NotImplementedError("The matrix must be over a field, not a ring.")
         _, one = self._guess_zero()
         M = self.rref(drop_zero_rows = True)
         K = M.zeros(M.cols, max(1,len(M.nonpivotcols)))
@@ -390,31 +480,43 @@ class Matrix:
 
     def det(self) -> int:
         "Compute the determinant."
-        zero, one = self._guess_zero()
-        if self.rows != self.cols:
-            raise ValueError("Matrix must be square!")
         n, m = self.cols, self.rows
-        R = self[:, :]
+        if n != m:
+            raise ValueError("Matrix must be square!")
+        if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
+            # the matrix is over a ring (not a field)
+            ring = self.matrix[0][0].ring
+            R = [ list(map(lambda x: Fraction(int(x)), self.matrix[i])) for i in range(m) ]
+            zero, one = ring(0), 1
+        else:
+            ring = None
+            R = [ self.matrix[i][:] for i in range(m) ]
+            zero, one = self._guess_zero()
         D = one
         i = 0
         for j in range(n):
-            if not R[i, j]:  # search for a nonzero entry in the present column
+            if not R[i][j]:  # search for a nonzero entry in the present column
                 for ii in range(i+1, m):
-                    if R[ii, j]:
+                    if R[ii][j]:
                         D *= -one
-                        R[i, :], R[ii, :] = R[ii, :], R[i, :]  # swap rows
+                        R[i], R[ii] = R[ii], R[i]  # swap rows
                         break
-                else:
-                    return zero  # all entries are zero
-            if R[i, j] != one:
-                D *= R[i, j]
-                R[i, :] = R[i, j]**-1 * R[i, :]  # make the pivot one
-            for ii in range(i+1, n):  # remove the column entries below the pivot
+                else:  # all entries are zero
+                    return zero
+            if R[i][j] != one:
+                D *= R[i][j]
+                tmp = R[i][j]**-1
+                for k in range(n):
+                    R[i][k] *= tmp  # make the pivot one
+            for ii in range(i + 1, n):  # remove the column entries below the pivot
                 if i == ii:
                     continue
-                tmp = R[ii, j]
-                R[ii, ::] -= tmp * R[i, :]
+                tmp = R[ii][j]
+                for k in range(n):
+                    R[ii][k] -= tmp * R[i][k]
             i += 1
+        if ring:
+            return ring(D)
         return D
 
     def rank(self) -> int:
@@ -441,12 +543,17 @@ class Matrix:
         M = self.__class__(M).rref()
         if not left and M.pivotcols[self.cols - 1] != self.cols -1:
             raise ValueError("Matrix is not invertible!")
+        if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
+            # the matrix is over a ring (not a field)
+            for i, j in enumerate(M.pivotcols):
+                if M.matrix[i][j] != one:
+                    raise ValueError("Matrix is not invertible!")
         return M[:, n:]
 
-    def solve(self, b: list|tuple, ring = None) -> "Matrix":
+    def solve(self, b: list|tuple) -> "Matrix":
         "Solve the linear system with given inhomogenous vector."
         if isinstance(b, list|tuple):
-            b = Matrix(b, ring = ring)
+            b = Matrix(b)
         if self.rows != b.rows or b.cols != 1:
             raise ValueError("Matrix dimensions do not match.")
         A = self.zeros(self.rows, self.cols + 1) # extended coefficient matrix
@@ -454,15 +561,24 @@ class Matrix:
         A[:, self.cols] = b
         A = A.rref(drop_zero_rows = True)
         solution = self.zeros(self.cols, 1)
+        if not any(A.matrix[-1][:-1]):
+            if A.matrix[-1][-1]:
+                return None  # Not solvable
+        if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
+            # the matrix is over a ring (not a field)
+            ring = self.matrix[0][0].ring
+        else:
+            ring = None
         for i in range(A.rows-1, -1, -1):
-            if not any(A.matrix[i][:-1]):
-                if A.matrix[i][-1]:
-                    return None  # Not solvable
-            else:
-                for j in range(A.cols - 1):
-                    if A.matrix[i][j]:
-                        break # leading nonzero coefficient
-                solution[j]= A.matrix[i][-1]
+            j = A.pivotcols[i]
+            b = A.matrix[i][-1]
+            if ring:
+                for k in range(j + 1, self.cols):
+                    b -= A.matrix[i][k] * solution[k]
+                b = A.matrix[i][j].solve(b)
+                if b is None:
+                    return None
+            solution[j] = b
         return solution
 
     def is_unimodular(self) -> bool:
@@ -536,7 +652,6 @@ def circulant(vector: list|tuple, m: int = None, ring=None) -> "Matrix":
     vector = list(reversed(vector))
     return Matrix([rotate(vector, -n-1) for n in range(m)], ring=ring)
 
-
 class BinaryMatrix:
     """
     Binary Matrix class.
@@ -544,7 +659,7 @@ class BinaryMatrix:
     Example:
 
     To define a binary matrix use
-    >>> Matrix([[0, 1], [1, 0]])
+    >>> BinaryMatrix([[0, 1], [1, 0]])
     [01]
     [10]
     """
@@ -809,7 +924,7 @@ class BinaryMatrix:
             return res
         return self.from_bits(res)
 
-    def rref(self, start = 0, reduce = True, drop_zero_rows = False) -> "Matrix":
+    def rref(self, start: int = 0, reduce: bool = True, drop_zero_rows: bool = False) -> "Matrix":
         "Row reduced echelon form."
         rref = [ None ] * self.cols  # store rows accoring to leading bit
         rows = self.matrix[:]  # copy

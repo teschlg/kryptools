@@ -16,6 +16,7 @@ from .dlp import dlog
 from .ec import EC_Weierstrass
 from .la import Matrix, zeros, eye, circulant, BinaryMatrix
 from .lat import gram_det, hadamard_ratio, hermite_nf, gram_schmidt, babai_round_cvp, babai_round_bnd, babai_plane_cvp, babai_plane_bnd, lagrange_lr, lll, random_unimodular_matrix, q_ary_lattice
+from .lat import svp_lll, cvp_lll, sis_lll, isis_lll, svp_search, cvp_search, sis_search, isis_search
 from .poly import Poly, PolyBinMult, lagrange_interpolation
 from .Zmod import Zmod
 from .GF2 import GF2, GF2_aes, GF2_miniaes, GF2_ghash

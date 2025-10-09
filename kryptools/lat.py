@@ -2,7 +2,8 @@
 Lattice tools
 """
 
-from math import prod, floor
+from math import prod, floor, inf
+from itertools import product
 from fractions import Fraction
 from random import choice, sample
 from .la import Matrix, eye, zeros
@@ -13,7 +14,7 @@ def hermite_nf(M: Matrix) -> Matrix:
     n, m = M.cols, M.rows
     H = M[:, :]
     j = n - 1
-    for i in reversed(range(m)):
+    for i in range(m-1,-1,-1):
         j0 = j
         minimum = abs(H[i, j])  # search for the pivot in the present row
         for jj in range(j):
@@ -24,10 +25,7 @@ def hermite_nf(M: Matrix) -> Matrix:
         if minimum == 0:
             continue  # all entries are zero
         if j0 < j:
-            H[:, j], H[:, j0] = (
-                H[:, j0],
-                H[:, j],
-            )  # swap columns, to move the pivot in place
+            H[:, j], H[:, j0] = H[:, j0], H[:, j]  # swap columns, to move the pivot in place
         if H[i, j] < 0:
             H[:, j] *= -1  # make the pivot positive
         jj = j - 1
@@ -41,7 +39,6 @@ def hermite_nf(M: Matrix) -> Matrix:
         for jj in range(j + 1, n):  # reduce the row entries right to the pivot
             tmp = H[i, jj] // H[i, j]
             H[:, jj] -= tmp * H[:, j]
-        #print(H)
         j -= 1
         if j < 0:
             break
@@ -55,22 +52,32 @@ def norm2(v: Matrix) -> float:
     return sum(map(lambda x: x * x, v))
 
 
-def gram_schmidt(U: Matrix) -> (Matrix, Matrix):
+def gram_schmidt(U: Matrix, drop_dependent: bool = True) -> (Matrix, Matrix):
     "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
     M = U.eye(U.cols)
-    Us = U[:, :]
+    Us = U.zeros()
+    Us[:, 0] = U[:, 0]
+    jj = 0 # offset taking removed vectors into account
     for j in range(1, U.cols):
         tmp = U[:, j]
-        for i in range(j):
-            M[i, j] = U[:, j].dot(Us[:, i]) / norm2(Us[:, i])
-            tmp -= M[i, j] * Us[:, i]
-        Us[:, j] = tmp
+        for i in range(j - jj):
+            M[i, j - jj] = U[:, j].dot(Us[:, i]) / Us[:, i].norm2()
+            tmp -= M[i, j - jj] * Us[:, i]
+        if not tmp:
+            if not drop_dependent:
+                raise ValueError("Vectors are linearly dependent.")
+            jj += 1
+        else:
+            Us[:, j - jj] = tmp
+    if jj:
+        Us = Us[:,:-jj]
+        M = M[:-jj,:-jj]
     return Us, M
 
 
 def gram_det(U: Matrix) -> float:
     "Compute the Gram determinant of a matrix."
-    Us = gram_schmidt(U)[0]
+    Us = gram_schmidt(U, drop_dependent = False)[0]
     return prod([Us[:, i].norm() for i in range(U.rows)])
 
 
@@ -217,3 +224,82 @@ def q_ary_lattice(U: Matrix, lll: bool = False) -> Matrix:  # pylint: disable=W0
     if lll:
         return globals()['lll'](V)
     return V
+
+def svp_lll(U: Matrix) -> Matrix:
+    "Solve the shortest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q."
+    gf = U[0].ring
+    V = q_ary_lattice(U, lll = True)
+    x = V[:, 0]
+    x.map(gf)
+    return x
+
+def cvp_lll(U: Matrix, x: Matrix) -> Matrix:
+    "Solve the closest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q (LWE)."
+    gf = U[0].ring
+    V = q_ary_lattice(U, lll = True)
+    x.map(int)
+    y = babai_plane_cvp(x, V)
+    x.map(gf)
+    return y
+
+def sis_lll(A: Matrix) -> Matrix:
+    "Solve the short integer problem over a finite ring Z_q (SIS)."
+    return svp_lll(A.kernel())
+
+def isis_lll(A: Matrix, b: Matrix) -> Matrix:
+    "Solve the inhomogenous short integer problem over a finite ring Z_q (ISIS)."
+    y = A.solve(b)
+    return y - cvp_lll(A.kernel(), y)
+
+def svp_search(U: Matrix, m: int = 0, p: int = 2) -> Matrix:
+    "Solve the shortest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q."
+    gf = U[0].ring
+    if m:
+        ml, mu = -m, m + 1
+    else:
+        ml, mu = -((gf.n-1)//2), gf.n//2 + 1
+    U.map(int)
+    norm_min = inf
+    c_min = None
+    for j in range(U.cols):
+        for c in product(range(ml, mu), repeat = U.cols-j-1):
+            for cc in range(1, mu):
+                cc = U * Matrix([ 0 ] * j + [ cc ] + list(c))
+                cc.map(gf)
+                norm = cc.norm(p)
+                if norm < norm_min:
+                    norm_min = norm
+                    c_min = cc
+    U.map(gf)
+    return c_min
+
+def cvp_search(U: Matrix, b: Matrix, p: int = 2) -> Matrix:
+    "Solve the closest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q (LWE)."
+    gf = U[0].ring
+    U.map(int)
+    b.map(int)
+    norm_min = inf
+    c_min = None
+    for c in product(range(-((gf.n-1)//2), gf.n//2 + 1), repeat = U.cols):
+        c = U * Matrix(c)
+        d = c - b
+        d.map(gf)
+        norm = d.norm(p)
+        if norm < norm_min:
+            norm_min = norm
+            c.map(gf)
+            c_min = c
+    U.map(gf)
+    b.map(gf)
+    return c_min
+
+def sis_search(A: Matrix, p: int = 2) -> Matrix:
+    "Solve the short integer problem over a finite ring Z_q (SIS)."
+    return svp_search(A.kernel(), p = p)
+
+def isis_search(A: Matrix, b: Matrix, p: int = 2) -> Matrix:
+    "Solve the inhomogenous short integer problem over a finite ring Z_q (ISIS)."
+    y = A.solve(b)
+    if y is None:
+        return None
+    return y - cvp_search(A.kernel(), y, p = p)

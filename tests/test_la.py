@@ -1,7 +1,7 @@
 # pragma pylint: disable=C0114,C0116
 import pytest  # pylint: disable=W0611
-from fractions import Fraction  # pylint: disable=C0411
 from random import randint, seed  # pylint: disable=C0411
+from fractions import Fraction  # pylint: disable=C0411
 from kryptools import Matrix, Zmod, GF2, eye, circulant, BinaryMatrix
 
 
@@ -84,7 +84,7 @@ def test_BinaryMatrix():
                 assert BinaryMatrix(Mat.inv()) == mat.inv()
         assert Mat.rank() == mat.rank()
         sol = mat.solve(b)
-        Sol = Mat.solve(b, ring = Z_2)
+        Sol = Mat.solve(Z_2(b))
         assert (sol is None and Sol is None) or list(Sol.applyfunc(int)) == sol
         if mat.rows == 1:
             assert int(Mat * X) == mat.apply(x)[0]

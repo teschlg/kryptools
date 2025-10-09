@@ -73,7 +73,7 @@ def test_Zmod_methods():
     assert Z_5(2) != Z_6(2)
     assert str(Z_6(3)) == "3"
     assert Z_6(2).solve(4) == Z_6(2)
-    assert Z_6(2).solve(3) == None
+    assert Z_6(2).solve(3) is None
 
 
 def test_Zmod_order():
