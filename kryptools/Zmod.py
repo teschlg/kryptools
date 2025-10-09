@@ -328,6 +328,18 @@ class ZmodPoint:
             roots.append((p**(j//2) * x) % pk)
         return self.ring(crt(roots, powers))
 
+    def solve(self, b):
+        "Find a solution `x` of the linear equation `self * x == b` in Z_n."
+        b = int(b)
+        if not self:
+            if b:
+                return None
+            return self.ring(0)
+        g = gcd(self.x, self.ring.n)
+        if b % g:
+            return None
+        return self.ring(pow(self.x // g, -1, self.ring.n) * (b // g))
+
     def is_generator(self):
         "Test if the point is a generator of the group Z_n^*."
         return self.ring.order() == self.order()

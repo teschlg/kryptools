@@ -49,6 +49,7 @@ def test_Zmod_methods():
     assert Z_5(2) != Z_5(3)
     assert Z_5(2) != 2
     assert str(Z_5(3)) == "3"
+    assert Z_5(2).solve(3) == 3 * Z_5(2)**-1
     Z_5.short = False
     assert str(Z_5(6)) == "1 (mod 5)"
 
@@ -71,6 +72,8 @@ def test_Zmod_methods():
     assert Z_6(2) != Z_6(3)
     assert Z_5(2) != Z_6(2)
     assert str(Z_6(3)) == "3"
+    assert Z_6(2).solve(4) == Z_6(2)
+    assert Z_6(2).solve(3) == None
 
 
 def test_Zmod_order():
