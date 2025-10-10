@@ -1,5 +1,6 @@
 # pragma pylint: disable=C0114,C0116
 import pytest  # pylint: disable=W0611
+from math import gcd  # pylint: disable=C0411
 from random import randint, seed  # pylint: disable=C0411
 from fractions import Fraction  # pylint: disable=C0411
 from kryptools import Matrix, Zmod, GF2, eye, circulant, BinaryMatrix
@@ -35,6 +36,30 @@ def test_Matrix():
     M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 12]], ring=Z_11)
     Mi = M.inv()
     assert M * Mi == M.eye()
+
+def test_Matrix2():
+    num_tests = 100
+    seed(0)
+    for gf in Zmod(7), Zmod(8), Zmod(10):
+        for m,n in ((3, 5), (5, 3), (3, 3)):
+            for _ in range(num_tests):
+                A = Matrix([[gf.random() for _ in range(m)] for _ in range(n)], ring = gf)
+                b = Matrix([gf.random() for _ in range(n)], ring = gf)
+                AA = A.applyfunc(lambda x: Fraction(int(x)))
+                if n == m:
+                    d = A.det()
+                    assert d == gf(AA.det())
+                    if gcd(d.x, gf.n) == 1:
+                        assert A.inv() * A == A.eye()
+                    else:
+                        with pytest.raises(ValueError):
+                            A.inv()
+                x = A.solve(b)
+                if x is not None:
+                    assert A * x == b
+                else:
+                    if n == m:
+                        assert gcd(d.x, gf.n) != 1
 
 def test_kernel():
     for gf in Zmod(2), Zmod(7), GF2(1), GF2(8):

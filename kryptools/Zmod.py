@@ -338,7 +338,8 @@ class ZmodPoint:
         g = gcd(self.x, self.ring.n)
         if b % g:
             return None
-        return self.ring(pow(self.x // g, -1, self.ring.n) * (b // g))
+        m = self.ring.n // g
+        return self.ring(pow(self.x // g, -1, m) * (b // g) % m)
 
     def is_generator(self):
         "Test if the point is a generator of the group Z_n^*."
