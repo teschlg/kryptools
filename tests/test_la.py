@@ -40,16 +40,16 @@ def test_Matrix():
 def test_Matrix2():
     num_tests = 100
     seed(0)
-    for gf in Zmod(7), Zmod(8), Zmod(10):
+    for ring in Zmod(7), Zmod(8), Zmod(10):
         for m,n in ((3, 5), (5, 3), (3, 3)):
             for _ in range(num_tests):
-                A = Matrix([[gf.random() for _ in range(m)] for _ in range(n)], ring = gf)
-                b = Matrix([gf.random() for _ in range(n)], ring = gf)
+                A = Matrix([[ring.random() for _ in range(m)] for _ in range(n)])
+                b = Matrix([ring.random() for _ in range(n)])
                 AA = A.applyfunc(lambda x: Fraction(int(x)))
                 if n == m:
                     d = A.det()
-                    assert d == gf(AA.det())
-                    if gcd(d.x, gf.n) == 1:
+                    assert d == ring(AA.det())
+                    if gcd(d.x, ring.n) == 1:
                         assert A.inv() * A == A.eye()
                     else:
                         with pytest.raises(ValueError):
@@ -59,13 +59,17 @@ def test_Matrix2():
                     assert A * x == b
                 else:
                     if n == m:
-                        assert gcd(d.x, gf.n) != 1
+                        assert gcd(d.x, ring.n) != 1
+                xx = Matrix([ring.random() for _ in range(m)])
+                b = A * xx
+                x = A.solve(b)
+                assert A * x == b
 
 def test_kernel():
     for gf in Zmod(2), Zmod(7), GF2(1), GF2(8):
         for m,n in ((3, 5), (5, 3), (3, 3)):
             for _ in range(25):
-                A = Matrix([[gf.random() for _ in range(m)] for _ in range(n)], ring = gf)
+                A = Matrix([[gf.random() for _ in range(m)] for _ in range(n)])
                 K = A.kernel()
                 assert not A * K
                 assert K.rows == A.cols

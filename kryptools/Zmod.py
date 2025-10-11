@@ -328,19 +328,24 @@ class ZmodPoint:
             roots.append((p**(j//2) * x) % pk)
         return self.ring(crt(roots, powers))
 
-    def solve(self, b):
+    def solve(self, b, all_solutions: bool = False) -> "ZmodPoint":
         "Find a solution `x` of the linear equation `self * x == b` in Z_n."
         b = int(b)
         if not self:
             if b:
                 return None
+            if all_solutions:
+                return list(self.ring)
             return self.ring(0)
         g = gcd(self.x, self.ring.n)
         if b % g:
             return None
         m = self.ring.n // g
-        return self.ring(pow(self.x // g, -1, m) * (b // g) % m)
+        sol = self.ring(pow(self.x // g, -1, m) * (b // g) % m)
+        if all_solutions:
+            return [ sol + j * m for j in range(g) ]
+        return sol
 
-    def is_generator(self):
+    def is_generator(self) -> bool:
         "Test if the point is a generator of the group Z_n^*."
         return self.ring.order() == self.order()

@@ -4,6 +4,7 @@ Linear algebra
 
 # pragma pylint: disable=C0302
 from math import gcd, inf, sqrt
+from itertools import product
 from numbers import Number
 from fractions import Fraction
 from .Zmod import Zmod
@@ -381,26 +382,32 @@ class Matrix:
         "Compute the reduced echelon form if the base ring is Z_n and no field."
         ring = self.matrix[0][0].ring
         M = self.applyfunc(int)
-        done = False
-        while not done:
-            M = M.hermite_rnf(start = start, drop_zero_rows = drop_zero_rows)
-            done = True
+        done = start
+        while done < M.cols:
+            M = M.hrnf(start = start, drop_zero_rows = drop_zero_rows)
+            done = M.cols
             for i, j in enumerate(M.pivotcols):
+                if j < start:
+                    continue
                 pivot = M.matrix[i][j]
                 if pivot >= ring.n:
-                    done = False
+                    done = min(j, done)
                     pivot %= ring.n
-                if pivot!=1 and gcd(pivot, ring.n) == 1:  # we can make the pivot one
-                    done = False
-                    M.matrix[i][j] = 1
+                if pivot:  # find the invertible part
+                    g = gcd(pivot, ring.n)
+                    while g > 1:
+                        pivot //= g
+                        g = gcd(pivot, ring.n)
+                if pivot > 1:  # we can make the pivot smaller
+                    done = min(j, done)
                     tmp = pow(pivot, -1, ring.n)
-                    for k in range(j + 1, M.cols):
+                    for k in range(j, M.cols):
                         M.matrix[i][k] *= tmp
             M.map(lambda x: x % ring.n)
         M.map(ring)
         return M
 
-    def hermite_rnf(self, start = 0, drop_zero_rows: bool = False) -> "Matrix":
+    def hrnf(self, start = 0, drop_zero_rows: bool = False) -> "Matrix":
         "Compute the Hermite row normal form."
         n, m = self.cols, self.rows
         if not isinstance(self.matrix[0][0], int):
@@ -553,32 +560,58 @@ class Matrix:
     def solve(self, b: list|tuple) -> "Matrix":
         "Solve the linear system with given inhomogenous vector."
         if isinstance(b, list|tuple):
-            b = Matrix(b)
+            b = self.__class__(b)
         if self.rows != b.rows or b.cols != 1:
             raise ValueError("Matrix dimensions do not match.")
-        A = self.zeros(self.rows, self.cols + 1) # extended coefficient matrix
-        A[:, 0:self.cols] = self
-        A[:, self.cols] = b
+        A = self[:,:]
+        A.append_column(b)
         A = A.rref(drop_zero_rows = True)
-        solution = self.zeros(self.cols, 1)
-        if not any(A.matrix[-1][:-1]):
-            if A.matrix[-1][-1]:
-                return None  # Not solvable
+        if not any(A.matrix[-1][:-1]) and A.matrix[-1][-1]:
+            return None  # Not solvable
         if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
             # the matrix is over a ring (not a field)
             ring = self.matrix[0][0].ring
-        else:
-            ring = None
-        for i in range(A.rows-1, -1, -1):
-            j = A.pivotcols[i]
-            b = A.matrix[i][-1]
-            if ring:
-                for k in range(j + 1, self.cols):
-                    b -= A.matrix[i][k] * solution[k]
-                b = A.matrix[i][j].solve(b)
-                if b is None:
+            # compute column normal form (TODO implement full Smith normal form)
+            b = A[:,-1]
+
+            A = A[:,:-1].transpose()
+            A.map(int)
+            A.append_column(A.eye(A.rows))
+            A = A.hrnf().transpose()
+            R = A[b.rows:,:b.rows]
+            A = A[:b.rows,:b.rows]
+            A.map(ring)
+
+            solution_nr = [ 0 ] * A.rows
+            solutions_left = True
+            next_solution = False  # start with the first solution
+            while solutions_left:
+                solution = solution = [ None ] * A.rows
+                solutions_left = False
+                for i in range(A.rows):
+                    bi = b[i]
+                    for k in range(i):
+                        bi -= A.matrix[i][k] * solution[k]
+                    c = A.matrix[i][i].solve(bi, all_solutions = True)
+                    if c is None:
+                        solution = None
+                        break
+                    if next_solution and solution_nr[i] < len(c) - 1:
+                        solution_nr[i] += 1
+                        next_solution = False
+                    if solution_nr[i] < len(c) -1:
+                        solutions_left = True
+                    solution[i] = c[solution_nr[i]]
+                if next_solution: # no more solutions left
                     return None
-            solution[j] = b
+                if solution is not None:
+                    return R * Matrix(solution)
+                next_solution = True
+            return None
+        # the matrix is over a field
+        solution = self.zeros(self.cols, 1)
+        for i, j in enumerate(A.pivotcols):
+            solution[j] = A.matrix[i][-1]
         return solution
 
     def is_unimodular(self) -> bool:
