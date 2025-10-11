@@ -4,7 +4,6 @@ Linear algebra
 
 # pragma pylint: disable=C0302
 from math import gcd, inf, sqrt
-from itertools import product
 from numbers import Number
 from fractions import Fraction
 from .Zmod import Zmod
