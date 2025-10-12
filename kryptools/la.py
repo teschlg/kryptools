@@ -6,6 +6,7 @@ Linear algebra
 from math import gcd, inf, sqrt
 from numbers import Number
 from fractions import Fraction
+from .nt import egcd
 from .Zmod import Zmod
 
 class Matrix:
@@ -406,6 +407,7 @@ class Matrix:
         M.map(ring)
         return M
 
+
     def hrnf(self, start = 0, drop_zero_rows: bool = False) -> "Matrix":
         "Compute the Hermite row normal form."
         n, m = self.cols, self.rows
@@ -430,19 +432,17 @@ class Matrix:
                 continue  # all entrjes are zero
             pivotcols.append(j)
             if i0 > i:
-                H[i], H[i0] = H[i0], H[i]  # swap rows, to move the pivot jn place
+                H[i], H[i0] = H[i0], H[i]  # swap rows, to move the pivot in place
             if H[i][j] < 0:
                 for k in range(n):
                     H[i][k] *= -1  # make the pivot positive
-            ii = i + 1
-            while ii < m:  # make the column entries below to the pivot zero
-                tmp = H[ii][j] // H[i][j]
-                for k in range(n):
-                    H[ii][k] -= tmp * H[i][k]
+            for ii in range(i + 1, m):  # make the column entries below to the pivot zero
                 if H[ii][j]:
-                    H[i], H[ii] = H[ii], H[i]  # swap rows
-                else:
-                    ii += 1
+                    g, x, y = egcd(H[i][j], H[ii][j], minimal = True)
+                    xx = H[i][j] // g
+                    yy = H[ii][j] // g
+                    for k in range(n):
+                        H[i][k], H[ii][k] = x * H[i][k] + y * H[ii][k], xx * H[ii][k] - yy * H[i][k]
             for ii in range(i):  # reduce the column entries above to the pivot
                 tmp = H[ii][j] // H[i][j]
                 for k in range(n):

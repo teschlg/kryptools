@@ -9,12 +9,20 @@ seed(0)
 
 
 def test_egcd():
+    sign = lambda x: (1, -1)[x<0]
     maxsize = 100
     for a in range(-maxsize, maxsize):
         for b in range(-maxsize, maxsize):
             g, x, y = egcd(a, b)
             assert g == gcd(a, b)
             assert x * a + y * b == g
+            if a and b:
+                g, x, y = egcd(a, b, minimal = True)
+                assert g == gcd(a, b)
+                assert x * a + y * b == g
+                assert -abs(a) // g < y * sign(b) <= 0
+                assert 1 <= x * sign(a) <= abs(b)//g
+
 
 
 def test_crt():

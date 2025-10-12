@@ -19,12 +19,16 @@ from fractions import Fraction
 # extended Euclid
 
 
-def egcd(a: int, b: int) -> (int, int, int):
+def egcd(a: int, b: int, minimal = False) -> (int, int, int):
     """Perform the extended Euclidean agorithm. Returns `gcd`, `x`, `y` such that `a x + b y = gcd`."""
     if a == 0:
         if b < 0:
             return -b, 0, -1
         return b, 0, 1
+    if b == 0:
+        if a < 0:
+            return -a, -1, 0
+        return a, 1, 0
     if a < 0:
         r0, r1 = -a, b
         x0, x1, y0, y1 = -1, 0, 0, 1
@@ -39,6 +43,19 @@ def egcd(a: int, b: int) -> (int, int, int):
         r0, r1 = r1, r
         x0, x1 = x1, x0 - q * x1
         y0, y1 = y1, y0 - q * y1
+    if minimal:
+        bb = abs(b) // r0
+        if a < 0:
+            x0 *= -1
+        k, x0 = divmod(x0, bb)
+        if x0 == 0:
+            x0 = bb
+            k -= 1
+        if a < 0:
+            x0 *= -1
+        if b < 0:
+            k *= -1
+        y0 += k * abs(a) // r0
     return r0, x0, y0
 
 
