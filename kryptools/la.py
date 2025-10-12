@@ -462,6 +462,102 @@ class Matrix:
             H.rows = l
         return H
 
+    def snf(self, drop_zero_rows: bool = False, drop_zero_columns: bool = False, include_S: bool = True, include_T: bool = True) -> "Matrix":
+        "Computes the Smith normal form D of a matrix A with integer coefficients together with invertible matrices S and T such that D = S * A * T."
+        if not isinstance(self.matrix[0][0], int):
+            raise ValueError("Smith normal form requires integer entries!")
+        m, n = self.rows, self.cols
+        A = self[:,:]
+        if include_T:
+            T = A.eye(n)
+        if include_S:
+            S = A.eye(m)
+        for i in range(min(n,m)):
+            minimum = abs(A[i, i])  # search for the pivot
+            i0, j0 = i, i
+            for ii in range(i, m):
+                for jj in range(i, n):
+                    tmp = abs(A[ii, jj])
+                    if tmp > 0 and (tmp < minimum or minimum == 0):
+                        minimum = tmp
+                        i0, j0 = ii, jj
+            if not minimum:
+                break
+            if j0 != i:  # swap columns, to move the pivot in place
+                if include_T:
+                    T[:, i], T[:, j0] = T[:, j0], T[:, i]
+                A[:, i], A[:, j0] = A[:, j0], A[:, i]
+            if i0 != i:  # swap rows, to move the pivot in place
+                if include_S:
+                    S[i, :], S[i0, :] = S[i0, :], S[i, :]
+                A[i, :], A[i0, :] = A[i0, :], A[i, :]
+            if A[i, i] < 0:  # make the pivot positive
+                if include_S:
+                    S[i, :] *= -1
+                A[i, :] *= -1
+            done = False
+            while not done:
+                for jj in range(i+1, n):
+                    if A[i,jj] == 0:
+                        continue
+                    g, x, y = egcd(A[i,i], A[i,jj], minimal = True)
+                    xx = A[i,i] // g
+                    yy = A[i,jj] // g
+                    if include_T:
+                        T[:, i], T[:, jj] = x * T[:, i] + y * T[:, jj], xx * T[:, jj] - yy * T[:, i]
+                    A[:, i], A[:, jj] = x * A[:, i] + y * A[:, jj], xx * A[:, jj] - yy * A[:, i]
+                for ii in range(i+1, m):
+                    if A[ii,i] == 0:
+                        continue
+                    g, x, y = egcd(A[i,i], A[ii,i], minimal = True)
+                    xx = A[i,i] // g
+                    yy = A[ii,i] // g
+                    if include_S:
+                        S[i, :], S[ii, :] = x * S[i, :] + y * S[ii, :], xx * S[ii, :] - yy * S[i, :]
+                    A[i, :], A[ii, :] = x * A[i, :] + y * A[ii, :], xx * A[ii, :] - yy * A[i, :]
+                done = True
+                for jj in range(i+1, n):
+                    if A[i,jj] != 0:
+                        done = False
+                        break
+        for i in range(min(n,m) - 1):
+            if A[i+1,i+1] % A[i,i]:
+                g, x, y = egcd(A[i,i], A[i+1,i+1], minimal = True)
+                aa= A[i,i] //g
+                bb = A[i+1,i+1]//g
+                if include_T:
+                    T[:, i] += T[:, i + 1]
+                    T[:, i+1] -= bb * y * T[:, i]
+                A[:, i] += A[:, i + 1]
+                A[:, i+1] -= bb * y * A[:, i]
+                if include_S:
+                    S[i,:], S[i+1, :] = x * S[i,:] + y * S[i+1, :], aa * S[i+1,:] - bb * S[i, :]
+                A[i,:], A[i+1, :] = x * A[i,:] + y * A[i+1, :], aa * A[i+1,:] - bb * A[i, :]
+        if drop_zero_rows or drop_zero_columns:
+            for i in range(min(n,m)):
+                if A[i,i] == 0:
+                    break
+            else:
+                i += 1
+            i = max(i, 1)
+        if drop_zero_rows:
+            if i < m:
+                del A[i:, :]
+                if include_S:
+                    del S[i:, :]
+        if drop_zero_columns:
+            if i < n:
+                del A[:, i:]
+                if include_T:
+                    del T[:, i:]
+        if include_S and include_T:
+            return A, S, T
+        if include_S:
+            return A, S
+        if include_T:
+            return A, T
+        return A
+
     def left_standard_form(self) -> "Matrix":
         "Compute the left standard form."
         # reduced row echelon form

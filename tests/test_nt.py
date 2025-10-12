@@ -9,7 +9,8 @@ seed(0)
 
 
 def test_egcd():
-    sign = lambda x: (1, -1)[x<0]
+    def sign(x: int) -> int:
+        return (1, -1)[x<0]
     maxsize = 100
     for a in range(-maxsize, maxsize):
         for b in range(-maxsize, maxsize):
