@@ -216,18 +216,55 @@ class Matrix:
                     self.matrix[i].append(c)
             self.cols += 1
 
-    def permute_columns(self, permutation) -> None:
+    def swap_columns(self, i: int, j: int) -> None:
+        "Swap two columns."
+        for k in range(self.rows):
+            self.matrix[k][i], self.matrix[k][j] = self.matrix[k][j], self.matrix[k][i]
+
+    def swap_rows(self, i: int, j: int) -> None:
+        "Swap two rows."
+        self.matrix[i], self.matrix[j] = self.matrix[j], self.matrix[i]
+
+    def permute_columns(self, permutation: list) -> None:
         "Permute columns according to a list of new positions."
         if len(permutation) != self.cols:
             raise ValueError(f"The argument must be a list of indices of length {self.cols}.")
         for i in range(self.rows):
             self.matrix[i] = [ self.matrix[i][j] for j in permutation]
 
-    def permute_rows(self, permutation) -> None:
+    def permute_rows(self, permutation: list) -> None:
         "Permute rows according to a list of new positions."
         if len(permutation) != self.rows:
             raise ValueError(f"The argument must be a list of indices of length {self.rows}.")
         self.matrix = [ self.matrix[i] for i in permutation]
+
+    def scale_column(self, i: int, a: Number) -> None:
+        "Scale a column."
+        for k in range(self.rows):
+            self.matrix[k][i] *= a
+
+    def scale_row(self, i: int, a: Number) -> None:
+        "Scale a row."
+        for k in range(self.cols):
+            self.matrix[i][k] *= a
+
+    def addto_column(self, i: int, j: int, a: Number|None = None) -> None:
+        "Add a multiple of the first column to the second."
+        if a is None:
+            for k in range(self.rows):
+                self.matrix[k][i] += self.matrix[k][j]
+        else:
+            for k in range(self.rows):
+                self.matrix[k][i] += a * self.matrix[k][j]
+
+    def addto_row(self, i: int, j: int, a: Number|None = None) -> None:
+        "Add a multiple of the first row to the second."
+        if a is None:
+            for k in range(self.cols):
+                self.matrix[i][k] += self.matrix[j][k]
+        else:
+            for k in range(self.cols):
+                self.matrix[i][k] += a * self.matrix[j][k]
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -485,16 +522,16 @@ class Matrix:
                 break
             if j0 != i:  # swap columns, to move the pivot in place
                 if include_T:
-                    T[:, i], T[:, j0] = T[:, j0], T[:, i]
-                A[:, i], A[:, j0] = A[:, j0], A[:, i]
+                    T.swap_columns(i, j0)
+                A.swap_columns(i, j0)
             if i0 != i:  # swap rows, to move the pivot in place
                 if include_S:
-                    S[i, :], S[i0, :] = S[i0, :], S[i, :]
-                A[i, :], A[i0, :] = A[i0, :], A[i, :]
+                    S.swap_rows(i, i0)
+                A.swap_rows(i, i0)
             if A[i, i] < 0:  # make the pivot positive
                 if include_S:
-                    S[i, :] *= -1
-                A[i, :] *= -1
+                    S.scale_row(i, -1)
+                A.scale_row(i, -1)
             done = False
             while not done:
                 for jj in range(i+1, n):
@@ -520,19 +557,20 @@ class Matrix:
                     if A[i,jj] != 0:
                         done = False
                         break
-        for i in range(min(n,m) - 1):
-            if A[i+1,i+1] % A[i,i]:
-                g, x, y = egcd(A[i,i], A[i+1,i+1], minimal = True)
-                aa= A[i,i] //g
-                bb = A[i+1,i+1]//g
-                if include_T:
-                    T[:, i] += T[:, i + 1]
-                    T[:, i+1] -= bb * y * T[:, i]
-                A[:, i] += A[:, i + 1]
-                A[:, i+1] -= bb * y * A[:, i]
-                if include_S:
-                    S[i,:], S[i+1, :] = x * S[i,:] + y * S[i+1, :], aa * S[i+1,:] - bb * S[i, :]
-                A[i,:], A[i+1, :] = x * A[i,:] + y * A[i+1, :], aa * A[i+1,:] - bb * A[i, :]
+        for l in range(min(n,m)-1, 0, -1):
+            for i in range(l):
+                if A[i,i] and A[i+1,i+1] % A[i,i]:
+                    g, x, y = egcd(A[i,i], A[i+1,i+1], minimal = True)
+                    aa= A[i,i] //g
+                    bb = A[i+1,i+1]//g
+                    if include_T:
+                        T[:, i] += T[:, i + 1]
+                        T[:, i+1] -= bb * y * T[:, i]
+                    A[:, i] += A[:, i + 1]
+                    A[:, i+1] -= bb * y * A[:, i]
+                    if include_S:
+                        S[i,:], S[i+1, :] = x * S[i,:] + y * S[i+1, :], aa * S[i+1,:] - bb * S[i, :]
+                    A[i,:], A[i+1, :] = x * A[i,:] + y * A[i+1, :], aa * A[i+1,:] - bb * A[i, :]
         if drop_zero_rows or drop_zero_columns:
             for i in range(min(n,m)):
                 if A[i,i] == 0:
@@ -1007,7 +1045,18 @@ class BinaryMatrix:
         self.rows += 1
         self.matrix.append(row)
 
-    def permute_columns(self, permutation) -> None:
+    def swap_columns(self, i: int, j: int) -> None:
+        "Swap two columns."
+        for k in range(self.rows):
+            b = self.matrix[k]
+            x = ((b >> i) ^ (b >> j)) & 1
+            self.matrix[k] ^= ((x << i) | (x << j))
+
+    def swap_rows(self, i: int, j: int) -> None:
+        "Swap two rows."
+        self.matrix[i], self.matrix[j] = self.matrix[j], self.matrix[i]
+
+    def permute_columns(self, permutation: list) -> None:
         "Permute columns according to a list of new positions."
         if len(permutation) != self.cols:
             raise ValueError(f"The argument must be a list of indices of length {self.cols}.")
@@ -1016,7 +1065,7 @@ class BinaryMatrix:
             bits = [ bits[j] for j in permutation]
             self.matrix[i] = self.from_bits(bits)
 
-    def permute_rows(self, permutation) -> None:
+    def permute_rows(self, permutation: list) -> None:
         "Permute rows according to a list of new positions."
         if len(permutation) != self.rows:
             raise ValueError(f"The argument must be a list of indices of length {self.rows}.")

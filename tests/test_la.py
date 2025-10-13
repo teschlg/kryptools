@@ -95,6 +95,12 @@ def test_BinaryMatrix():
         assert BinaryMatrix(Mat1 + Mat2) == mat1 + mat2
         assert BinaryMatrix(Mat1 - Mat2) == mat1 + mat2
         assert BinaryMatrix(Mat1 * Mat3) == mat1 * mat3
+        Mat1.swap_columns(0,n-1)
+        mat1.swap_columns(0,n-1)
+        assert BinaryMatrix(Mat1) == mat1
+        Mat1.swap_rows(0,m-1)
+        mat1.swap_rows(0,m-1)
+        assert BinaryMatrix(Mat1) == mat1
 
     for _ in range(num_tests):
         m = randint(n-1,n+1)
