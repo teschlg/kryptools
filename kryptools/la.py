@@ -266,6 +266,16 @@ class Matrix:
             for k in range(self.cols):
                 self.matrix[i][k] += a * self.matrix[j][k]
 
+    def maop_row(self, i: int, k: int, a: Number, b: Number, c: Number, d: Number) -> None:
+        "Replaces the i,j and k,j entry by  by using an matrix column operation."
+        for l in range(self.cols):
+            self.matrix[i][l], self.matrix[k][l] = a * self.matrix[i][l] + b * self.matrix[k][l], c * self.matrix[i][l] + d * self.matrix[k][l]
+
+    def maop_column(self, j: int, k: int, a: Number, b: Number, c: Number, d: Number) -> None:
+        "Replaces the i,j and i,k entry by using an matrix column operation."
+        for l in range(self.rows):
+            self.matrix[l][j], self.matrix[l][k] = a * self.matrix[l][j] + b * self.matrix[l][k], c * self.matrix[l][j] + d * self.matrix[l][k]
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
@@ -445,51 +455,45 @@ class Matrix:
         return M
 
 
-    def hrnf(self, start = 0, drop_zero_rows: bool = False) -> "Matrix":
+    def hrnf(self, start = 0, drop_zero_rows: bool = True) -> "Matrix":
         "Compute the Hermite row normal form."
         n, m = self.cols, self.rows
         if not isinstance(self.matrix[0][0], int):
             raise ValueError("Hermite normal form requires integer entries!")
-        H = [ self.matrix[i][:] for i in range(m) ]
-        pivotcols = []
-        nonpivotcols = []
+        H = self[:,:]
+        H.pivotcols = []
+        H.nonpivotcols = []
         i = 0
         if start >= n:
             raise ValueError("Start value cannot be beyond the last column.")
         for j in range(start, n):
             i0 = i
-            minimum = abs(H[i][j])  # search for the pivot in the present column
+            minimum = abs(H.matrix[i][j])  # search for the pivot in the present column
             for ii in range(i + 1, m):
-                tmp = abs(H[ii][j])
+                tmp = abs(H.matrix[ii][j])
                 if tmp > 0 and (tmp < minimum or minimum == 0):
                     minimum = tmp
                     i0 = ii
             if minimum == 0:
-                nonpivotcols.append(j)
+                H.nonpivotcols.append(j)
                 continue  # all entrjes are zero
-            pivotcols.append(j)
+            H.pivotcols.append(j)
             if i0 > i:
-                H[i], H[i0] = H[i0], H[i]  # swap rows, to move the pivot in place
-            if H[i][j] < 0:
-                for k in range(n):
-                    H[i][k] *= -1  # make the pivot positive
+                H.swap_rows(i, i0)  # swap rows, to move the pivot in place
+            if H.matrix[i][j] < 0:
+                H.scale_row(i, -1)  # make the pivot positive
             for ii in range(i + 1, m):  # make the column entries below to the pivot zero
-                if H[ii][j]:
-                    g, x, y = egcd(H[i][j], H[ii][j], minimal = True)
-                    xx = H[i][j] // g
-                    yy = H[ii][j] // g
-                    for k in range(n):
-                        H[i][k], H[ii][k] = x * H[i][k] + y * H[ii][k], xx * H[ii][k] - yy * H[i][k]
+                if H.matrix[ii][j]:
+                    g, x, y = egcd(H.matrix[i][j], H.matrix[ii][j], minimal = True)
+                    xx = H.matrix[i][j] // g
+                    yy = - H.matrix[ii][j] // g
+                    H.maop_row(i, ii, x, y, yy, xx)
             for ii in range(i):  # reduce the column entries above to the pivot
-                tmp = H[ii][j] // H[i][j]
-                for k in range(n):
-                    H[ii][k] -= tmp * H[i][k]
+                H.addto_row(ii, i, -(H.matrix[ii][j] // H.matrix[i][j]))
             i += 1
             if i >= m:
                 break
-        H = Matrix(H)
-        H.pivotcols = pivotcols
-        H.nonpivotcols = nonpivotcols + list(range(j+1, H.cols))
+        H.nonpivotcols += list(range(j+1, H.cols))
         # purge zero rows
         if drop_zero_rows:
             l = len(H.pivotcols)
@@ -497,6 +501,16 @@ class Matrix:
                 l = 1  # do not delete all rows
             del H.matrix[l:]
             H.rows = l
+        return H
+
+    def hnf(self, start: int = 0, drop_zero_columns: bool = True) -> "Matrix":
+        "Compute the Hermite normal form."
+        H = self.transpose()
+        H.permute_columns(range(H.cols-1,-1,-1))
+        H = H.hrnf(start = start, drop_zero_rows = drop_zero_columns)
+        H.permute_columns(range(H.cols-1,-1,-1))
+        H = H.transpose()
+        H.permute_columns(range(H.cols-1,-1,-1))
         return H
 
     def snf(self, drop_zero_rows: bool = False, drop_zero_columns: bool = False, include_S: bool = True, include_T: bool = True) -> "Matrix":
@@ -510,11 +524,11 @@ class Matrix:
         if include_S:
             S = A.eye(m)
         for i in range(min(n,m)):
-            minimum = abs(A[i, i])  # search for the pivot
+            minimum = abs(A.matrix[i][i])  # search for the pivot
             i0, j0 = i, i
             for ii in range(i, m):
                 for jj in range(i, n):
-                    tmp = abs(A[ii, jj])
+                    tmp = abs(A.matrix[ii][jj])
                     if tmp > 0 and (tmp < minimum or minimum == 0):
                         minimum = tmp
                         i0, j0 = ii, jj
@@ -535,23 +549,23 @@ class Matrix:
             done = False
             while not done:
                 for jj in range(i+1, n):
-                    if A[i,jj] == 0:
+                    if A.matrix[i][jj] == 0:
                         continue
-                    g, x, y = egcd(A[i,i], A[i,jj], minimal = True)
-                    xx = A[i,i] // g
-                    yy = A[i,jj] // g
+                    g, x, y = egcd(A.matrix[i][i], A.matrix[i][jj], minimal = True)
+                    xx = A.matrix[i][i] // g
+                    yy = A.matrix[i][jj] // g
                     if include_T:
-                        T[:, i], T[:, jj] = x * T[:, i] + y * T[:, jj], xx * T[:, jj] - yy * T[:, i]
-                    A[:, i], A[:, jj] = x * A[:, i] + y * A[:, jj], xx * A[:, jj] - yy * A[:, i]
+                        T.maop_column(i, jj, x, y, -yy, xx)
+                    A.maop_column(i, jj, x, y, -yy, xx)
                 for ii in range(i+1, m):
-                    if A[ii,i] == 0:
+                    if A.matrix[ii][i] == 0:
                         continue
-                    g, x, y = egcd(A[i,i], A[ii,i], minimal = True)
-                    xx = A[i,i] // g
-                    yy = A[ii,i] // g
+                    g, x, y = egcd(A.matrix[i][i], A.matrix[ii][i], minimal = True)
+                    xx = A.matrix[i][i] // g
+                    yy = -A.matrix[ii][i] // g
                     if include_S:
-                        S[i, :], S[ii, :] = x * S[i, :] + y * S[ii, :], xx * S[ii, :] - yy * S[i, :]
-                    A[i, :], A[ii, :] = x * A[i, :] + y * A[ii, :], xx * A[ii, :] - yy * A[i, :]
+                        S.maop_row(i, ii, x, y, yy, xx)
+                    A.maop_row(i, ii, x, y, yy, xx)
                 done = True
                 for jj in range(i+1, n):
                     if A[i,jj] != 0:
@@ -559,18 +573,19 @@ class Matrix:
                         break
         for l in range(min(n,m)-1, 0, -1):
             for i in range(l):
-                if A[i,i] and A[i+1,i+1] % A[i,i]:
-                    g, x, y = egcd(A[i,i], A[i+1,i+1], minimal = True)
-                    aa= A[i,i] //g
-                    bb = A[i+1,i+1]//g
+                if A.matrix[i][i] and A.matrix[i+1][i+1] % A.matrix[i][i]:
+                    g, x, y = egcd(A.matrix[i][i], A.matrix[i+1][i+1], minimal = True)
+                    aa= A.matrix[i][i] //g
+                    bb = -A.matrix[i+1][i+1]//g
+                    by = bb * y
                     if include_T:
-                        T[:, i] += T[:, i + 1]
-                        T[:, i+1] -= bb * y * T[:, i]
-                    A[:, i] += A[:, i + 1]
-                    A[:, i+1] -= bb * y * A[:, i]
+                        T.addto_column(i, i+1)
+                        T.addto_column(i+1, i, by)
+                    A.addto_column(i, i+1)
+                    A.addto_column(i+1, i, by)
                     if include_S:
-                        S[i,:], S[i+1, :] = x * S[i,:] + y * S[i+1, :], aa * S[i+1,:] - bb * S[i, :]
-                    A[i,:], A[i+1, :] = x * A[i,:] + y * A[i+1, :], aa * A[i+1,:] - bb * A[i, :]
+                        S.maop_row(i, i+1, x, y, bb, aa)
+                    A.maop_row(i, i+1, x, y, bb, aa)
         if drop_zero_rows or drop_zero_columns:
             for i in range(min(n,m)):
                 if A[i,i] == 0:
@@ -710,7 +725,7 @@ class Matrix:
             A = A[:,:-1].transpose()
             A.map(int)
             A.append_column(A.eye(A.rows))
-            A = A.hrnf().transpose()
+            A = A.hrnf(drop_zero_rows = False).transpose()
             R = A[b.rows:,:b.rows]
             A = A[:b.rows,:b.rows]
             A.map(ring)
