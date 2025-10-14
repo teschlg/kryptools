@@ -172,7 +172,7 @@ class ZmodPoint:
         return f"{x} (mod {self.ring.n})"
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__) or self.ring != other.ring:
+        if not isinstance(other, self.__class__) or self.ring.n != other.ring.n:
             return False
         return self.x == other.x
 
