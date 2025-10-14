@@ -114,6 +114,30 @@ def babai_plane_bnd(U: Matrix, p=2) -> float:
     return float(0.5 * min(Us[:, i].norm(p) for i in range(Us.rows)))
 
 
+def kannan_cvp(x: Matrix, U: Matrix, m: int = 1) -> Matrix:
+    "Kannan's embedding algorithm for approximately solving the CVP."
+    V = U[:,:]
+    V.append_column(x)
+    V.append_row(V.zeros(1,V.cols))
+    V[-1,-1]= m
+    V = lll(V)
+    e = None
+    for i in range(V.cols):
+        mm = V.matrix[-1][i]
+        if mm == m:
+            e = V[:-1,i]
+            break
+        if mm == -m:
+            e = -V[:-1,i]
+            break
+    if e is None:
+        return None
+    V = U.applyfunc(Fraction)
+    x = V.solve(x-e)
+    x.map(int)
+    return U * x
+
+
 def lagrange_lr(V: Matrix) -> Matrix:
     "Lagrange lattice reduction."
     if V.cols != 2:
@@ -233,12 +257,18 @@ def svp_lll(U: Matrix) -> Matrix:
     x.map(ring)
     return x
 
-def cvp_lll(U: Matrix, x: Matrix) -> Matrix:
+def cvp_lll(U: Matrix, x: Matrix, babai_plane: bool = True, kannan: bool = True) -> Matrix:
     "Solve the closest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q (LWE)."
     ring = U[0].ring
     V = lll(q_ary_lattice(U, lll = True))
     x.map(int)
-    y = babai_plane_cvp(x, V)
+    y = None
+    if babai_plane:
+        y = babai_plane_cvp(x, V)
+    if kannan:
+        y2 = kannan_cvp(x, V)
+        if y and y2.norm2() < y.norm2():
+            y = y2
     x.map(ring)
     return y
 
