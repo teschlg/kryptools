@@ -755,52 +755,30 @@ class Matrix:
             b = self.__class__(b)
         if self.rows != b.rows or b.cols != 1:
             raise ValueError("Matrix dimensions do not match.")
+        if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
+            # the matrix is over a ring (not a field)
+            ring = self.matrix[0][0].ring
+            A = self.applyfunc(int)
+            D, S, T = A.snf()
+            D.map(ring)
+            S.map(ring)
+            T.map(ring)
+            b = S * b
+            for i in range(min(A.rows, A.cols), A.rows):
+                if b[i]:
+                    return None
+            y = [ ring(0) ] * A.cols
+            for i in range(min(A.rows, A.cols)):
+                y[i] = D[i,i].solve(b[i])
+                if y[i] is None:
+                    return None
+            return T * Matrix(y)
+        # the matrix is over a field
         A = self[:,:]
         A.append_column(b)
         A = A.rref(drop_zero_rows = True)
         if not any(A.matrix[-1][:-1]) and A.matrix[-1][-1]:
             return None  # Not solvable
-        if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
-            # the matrix is over a ring (not a field)
-            ring = self.matrix[0][0].ring
-            # compute column normal form (TODO implement full Smith normal form)
-            b = A[:,-1]
-
-            A = A[:,:-1].transpose()
-            A.map(int)
-            A.append_column(A.eye(A.rows))
-            A = A.hrnf(drop_zero_rows = False).transpose()
-            R = A[b.rows:,:b.rows]
-            A = A[:b.rows,:b.rows]
-            A.map(ring)
-
-            solution_nr = [ 0 ] * A.rows
-            solutions_left = True
-            next_solution = False  # start with the first solution
-            while solutions_left:
-                solution = solution = [ None ] * A.rows
-                solutions_left = False
-                for i in range(A.rows):
-                    bi = b[i]
-                    for k in range(i):
-                        bi -= A.matrix[i][k] * solution[k]
-                    c = A.matrix[i][i].solve(bi, all_solutions = True)
-                    if c is None:
-                        solution = None
-                        break
-                    if next_solution and solution_nr[i] < len(c) - 1:
-                        solution_nr[i] += 1
-                        next_solution = False
-                    if solution_nr[i] < len(c) -1:
-                        solutions_left = True
-                    solution[i] = c[solution_nr[i]]
-                if next_solution: # no more solutions left
-                    return None
-                if solution is not None:
-                    return R * Matrix(solution)
-                next_solution = True
-            return None
-        # the matrix is over a field
         solution = self.zeros(self.cols, 1)
         for i, j in enumerate(A.pivotcols):
             solution[j] = A.matrix[i][-1]

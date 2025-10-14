@@ -80,12 +80,39 @@ def test_hnf():
             H.permute_columns(range(H.cols-1,-1,-1))
             assert H == A.hnf()
 
+def test_solve():
+    seed(0)
+    for gf in Zmod(2), Zmod(7), GF2(1), GF2(8):
+        for m,n in ((3, 5), (5, 3), (3, 3)):
+            for _ in range(25):
+                A = Matrix([[gf.random() for _ in range(n)] for _ in range(m)])
+                b = Matrix([gf.random() for _ in range(m)])
+                x = A.solve(b)
+                if x is not None:
+                    assert A *x == b
+                else:
+                    AA = A[:, :]
+                    AA.append_column(b)
+                    assert AA.rank() > A.rank()
+    for ring in Zmod(4), Zmod(6):
+        for m,n in ((3, 4), (4, 3), (3, 3)):
+            for _ in range(25):
+                A = Matrix([[ring.random() for _ in range(n)] for _ in range(m)])
+                b = Matrix([ring.random() for _ in range(m)])
+                x = A.solve(b)
+                if x is not None:
+                    assert A *x == b
+                else:
+                    for x in product(ring, repeat = A.cols):
+                        x = Matrix(x)
+                        assert A * x != b
+
 def test_kernel():
     seed(0)
     for gf in Zmod(2), Zmod(7), GF2(1), GF2(8):
         for m,n in ((3, 5), (5, 3), (3, 3)):
             for _ in range(25):
-                A = Matrix([[gf.random() for _ in range(m)] for _ in range(n)])
+                A = Matrix([[gf.random() for _ in range(n)] for _ in range(m)])
                 K = A.kernel()
                 assert not A * K
                 assert K.rows == A.cols
@@ -96,7 +123,7 @@ def test_kernel():
     for ring in Zmod(4), Zmod(6):
         for m,n in ((3, 4), (4, 3), (3, 3)):
             for _ in range(25):
-                A = Matrix([[ring.random() for _ in range(m)] for _ in range(n)])
+                A = Matrix([[ring.random() for _ in range(n)] for _ in range(m)])
                 K = A.kernel()
                 assert not A * K
                 kernel = []
