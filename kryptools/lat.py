@@ -212,7 +212,7 @@ def q_ary_lattice(U: Matrix, lll: bool = False) -> Matrix:  # pylint: disable=W0
         raise ValueError("The matrix does not seem to be over Zmod.")
     V = eye(U.rows, one = q)
     V.append_column(U, ring = int)
-    V = hermite_nf(V)
+    V = V.hnf()
     if lll:
         return globals()['lll'](V)
     return V
