@@ -623,7 +623,24 @@ class Matrix:
     def kernel(self) -> "Matrix":
         "Compute a basis for the kernel."
         if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
-            raise NotImplementedError("The matrix must be over a field, not a ring.")
+            ring = self.matrix[0][0].ring
+            M = self.applyfunc(int)
+            D, T = M.snf(include_S=False, drop_zero_rows=True)
+            D.map(ring)
+            T.map(ring)
+            K = D.eye(D.cols)
+            shift = 0
+            for i in range(D.rows):
+                g = gcd(int(D.matrix[i][i]), ring.n)
+                if g == 1:
+                    if shift == D.cols - 1:
+                        K.matrix[i][i - shift] = ring(0)
+                        break
+                    K.delete_columns(i - shift)
+                    shift += 1
+                elif g < ring.n:
+                    K.matrix[i][i-shift] = ring(ring.n // g)
+            return T * K
         _, one = self._guess_zero()
         M = self.rref(drop_zero_rows = True)
         K = M.zeros(M.cols, max(1,len(M.nonpivotcols)))

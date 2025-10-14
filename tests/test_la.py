@@ -3,6 +3,7 @@ import pytest  # pylint: disable=W0611
 from math import gcd  # pylint: disable=C0411
 from random import randint, seed  # pylint: disable=C0411
 from fractions import Fraction  # pylint: disable=C0411
+from itertools import product  # pylint: disable=C0411
 from kryptools import Matrix, Zmod, GF2, eye, circulant, BinaryMatrix
 
 
@@ -66,6 +67,7 @@ def test_Matrix2():
                 assert A * x == b
 
 def test_kernel():
+    seed(0)
     for gf in Zmod(2), Zmod(7), GF2(1), GF2(8):
         for m,n in ((3, 5), (5, 3), (3, 3)):
             for _ in range(25):
@@ -77,6 +79,29 @@ def test_kernel():
                     assert K.cols == A.nullity()
                 else:
                     assert K.cols == 1
+    for ring in Zmod(4), Zmod(6):
+        for m,n in ((3, 4), (4, 3), (3, 3)):
+            for _ in range(25):
+                A = Matrix([[ring.random() for _ in range(m)] for _ in range(n)])
+                K = A.kernel()
+                assert not A * K
+                kernel = []
+                for a in product(ring, repeat = K.cols):
+                    a = K * Matrix(a)
+                    a.map(int)
+                    a = list(a)
+                    if a not in kernel:
+                        kernel.append(a)
+                kernel.sort()
+                kernel2 = []
+                for a in product(ring, repeat = A.cols):
+                    a = Matrix(a)
+                    if not A * a:
+                        a.map(int)
+                        a = list(a)
+                        kernel2.append(a)
+                kernel2.sort()
+                assert kernel2 == kernel
 
 def test_BinaryMatrix():
     num_tests = 100
