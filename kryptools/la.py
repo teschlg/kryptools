@@ -503,14 +503,41 @@ class Matrix:
             H.rows = l
         return H
 
-    def hnf(self, start: int = 0, drop_zero_columns: bool = True) -> "Matrix":
+    def hnf(self, drop_zero_columns: bool = True) -> "Matrix":
         "Compute the Hermite normal form."
-        H = self.transpose()
-        H.permute_columns(range(H.cols-1,-1,-1))
-        H = H.hrnf(start = start, drop_zero_rows = drop_zero_columns)
-        H.permute_columns(range(H.cols-1,-1,-1))
-        H = H.transpose()
-        H.permute_columns(range(H.cols-1,-1,-1))
+        n, m = self.cols, self.rows
+        if not isinstance(self.matrix[0][0], int):
+            raise ValueError("Hermite normal form requires integer entries!")
+        H = self[:,:]
+        j = n - 1
+        for i in range(m-1,-1,-1):
+            j0 = j
+            minimum = abs(H.matrix[i][j])  # search for the pivot in the present row
+            for jj in range(j):
+                tmp = abs(H.matrix[i][jj])
+                if tmp > 0 and (tmp < minimum or minimum == 0):
+                    minimum = tmp
+                    j0 = jj
+            if minimum == 0:
+                continue  # all entries are zero
+            if j0 < j:
+                H.swap_columns(j, j0)  # swap columns, to move the pivot in place
+            if H.matrix[i][j] < 0:
+                H.scale_column(j, -1)  # make the pivot positive
+            for jj in range(j):  # make the row left to the pivot zero
+                if H.matrix[i][jj]:
+                    g, x, y = egcd(H.matrix[i][j], H.matrix[i][jj], minimal = True)
+                    xx = H.matrix[i][j] // g
+                    yy = - H.matrix[i][jj] // g
+                    H.maop_column(j, jj, x, y, yy, xx)
+            for jj in range(j + 1, n):  # reduce the row entries right to the pivot
+                H.addto_column(jj, j, -(H.matrix[i][jj] // H.matrix[i][j]))
+            j -= 1
+            if j < 0:
+                break
+        if drop_zero_columns:
+            while H.cols > 1 and all(not H.matrix[i][0] for i in range(m)):  # remove zero columns
+                H = H[:, 1:]
         return H
 
     def snf(self, drop_zero_rows: bool = False, drop_zero_columns: bool = False, include_S: bool = True, include_T: bool = True) -> "Matrix":

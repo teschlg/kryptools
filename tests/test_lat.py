@@ -1,16 +1,26 @@
 # pragma pylint: disable=C0114,C0116
 import pytest  # pylint: disable=W0611
-from random import seed  # pylint: disable=C0411
+from random import seed, randint  # pylint: disable=C0411
 from fractions import Fraction  # pylint: disable=C0411
 from kryptools import Matrix, gram_schmidt, random_unimodular_matrix
 from kryptools import Zmod, sis_search, sis_lll, isis_search, isis_lll
 
 
 def test_gram_schmidt():
-    V = Matrix([[5, 8], [0, 1]], ring=Fraction)
-    Vs, M = gram_schmidt(V)
-    assert V == Vs * M
-
+    seed(0)
+    for n in range(2, 5):
+        for _ in range(10):
+            found = False
+            while not found:
+                V = Matrix([[ randint(-10,10) for _ in range(n)] for _ in range(n) ], ring=Fraction)
+                found = bool(V.rank() == n)
+            Vs, M = gram_schmidt(V)
+            assert V == Vs * M
+            D = V.eye()
+            for i in range(Vs.cols):
+                assert Vs[:,i].dot(Vs[:,i]) == Vs[:,i].norm2()
+                D[i,i] = Vs[:,i].dot(Vs[:,i])
+            assert Vs.transpose() * Vs == D
 
 def test_random_unimodular_matrix():
     for i in range(2, 5):

@@ -6,43 +6,13 @@ from math import prod, floor, inf
 from itertools import product
 from fractions import Fraction
 from random import choice, sample
+from .nt import egcd
 from .la import Matrix, eye, zeros
 
 
 def hermite_nf(M: Matrix) -> Matrix:
     "Compute the Hermite normal form of a matrix M."
-    n, m = M.cols, M.rows
-    H = M[:, :]
-    j = n - 1
-    for i in range(m-1,-1,-1):
-        j0 = j
-        minimum = abs(H.matrix[i][j])  # search for the pivot in the present row
-        for jj in range(j):
-            tmp = abs(H.matrix[i][jj])
-            if tmp > 0 and (tmp < minimum or minimum == 0):
-                minimum = tmp
-                j0 = jj
-        if minimum == 0:
-            continue  # all entries are zero
-        if j0 < j:
-            H.swap_columns(j, j0)  # swap columns, to move the pivot in place
-        if H[i, j] < 0:
-            H.scale_column(j, -1)  # make the pivot positive
-        jj = j - 1
-        while jj >= 0:  # make the row entries left to the pivot zero
-            H.addto_column(jj, j, -(H.matrix[i][jj] // H.matrix[i][j]))
-            if H.matrix[i][jj]:
-                H.swap_columns(j, jj)  # swap columns
-            else:
-                jj -= 1
-        for jj in range(j + 1, n):  # reduce the row entries right to the pivot
-            H.addto_column(jj, j, -(H.matrix[i][jj] // H.matrix[i][j]))
-        j -= 1
-        if j < 0:
-            break
-    while H.cols > 1 and all(not H.matrix[i][0] for i in range(m)):  # remove zero columns
-        H = H[:, 1:]
-    return H
+    return M.hnf()
 
 
 def norm2(v: Matrix) -> float:
@@ -265,7 +235,7 @@ def cvp_lll(U: Matrix, x: Matrix, babai_plane: bool = True, kannan: bool = True)
         y = babai_plane_cvp(x, V)
     if kannan:
         y2 = kannan_cvp(x, V)
-        if y and y2.norm2() < y.norm2():
+        if y is not None and y2 is not None and y2.norm2() < y.norm2():
             y = y2
     x.map(ring)
     return y

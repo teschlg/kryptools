@@ -66,6 +66,20 @@ def test_Matrix2():
                 x = A.solve(b)
                 assert A * x == b
 
+def test_hnf():
+    num_tests = 5
+    seed(0)
+    for m,n in ((3, 5), (5, 3), (3, 3)):
+        for _ in range(num_tests):
+            A = Matrix([[randint(-10,10) for _ in range(m)] for _ in range(n)])
+            H = A.transpose()
+            H.permute_columns(range(H.cols-1,-1,-1))
+            H = H.hrnf(drop_zero_rows = True)
+            H.permute_columns(range(H.cols-1,-1,-1))
+            H = H.transpose()
+            H.permute_columns(range(H.cols-1,-1,-1))
+            assert H == A.hnf()
+
 def test_kernel():
     seed(0)
     for gf in Zmod(2), Zmod(7), GF2(1), GF2(8):
