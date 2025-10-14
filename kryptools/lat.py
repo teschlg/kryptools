@@ -227,19 +227,19 @@ def q_ary_lattice(U: Matrix, lll: bool = False) -> Matrix:  # pylint: disable=W0
 
 def svp_lll(U: Matrix) -> Matrix:
     "Solve the shortest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q."
-    gf = U[0].ring
-    V = q_ary_lattice(U, lll = True)
+    ring = U[0].ring
+    V = lll(q_ary_lattice(U, lll = True))
     x = V[:, 0]
-    x.map(gf)
+    x.map(ring)
     return x
 
 def cvp_lll(U: Matrix, x: Matrix) -> Matrix:
     "Solve the closest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q (LWE)."
-    gf = U[0].ring
-    V = q_ary_lattice(U, lll = True)
+    ring = U[0].ring
+    V = lll(q_ary_lattice(U, lll = True))
     x.map(int)
     y = babai_plane_cvp(x, V)
-    x.map(gf)
+    x.map(ring)
     return y
 
 def sis_lll(A: Matrix) -> Matrix:
@@ -249,48 +249,47 @@ def sis_lll(A: Matrix) -> Matrix:
 def isis_lll(A: Matrix, b: Matrix) -> Matrix:
     "Solve the inhomogenous short integer problem over a finite ring Z_q (ISIS)."
     y = A.solve(b)
+    if y is None:
+        return None
     return y - cvp_lll(A.kernel(), y)
 
 def svp_search(U: Matrix, m: int = 0, p: int = 2) -> Matrix:
     "Solve the shortest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q."
-    gf = U[0].ring
+    ring = U[0].ring
     if m:
         ml, mu = -m, m + 1
     else:
-        ml, mu = -((gf.n-1)//2), gf.n//2 + 1
-    U.map(int)
+        ml, mu = -((ring.n-1)//2), ring.n//2 + 1
+    U = U.applyfunc(int)
     norm_min = inf
     c_min = None
     for j in range(U.cols):
         for c in product(range(ml, mu), repeat = U.cols-j-1):
             for cc in range(1, mu):
                 cc = U * Matrix([ 0 ] * j + [ cc ] + list(c))
-                cc.map(gf)
+                cc.map(ring)
                 norm = cc.norm(p)
-                if norm < norm_min:
+                if norm and norm < norm_min:
                     norm_min = norm
                     c_min = cc
-    U.map(gf)
     return c_min
 
 def cvp_search(U: Matrix, b: Matrix, p: int = 2) -> Matrix:
     "Solve the closest vector problem in a q-ary lattice associated with a matrix over a finite ring Z_q (LWE)."
-    gf = U[0].ring
-    U.map(int)
-    b.map(int)
+    ring = U[0].ring
+    U = U.applyfunc(int)
+    b = b.applyfunc(int)
     norm_min = inf
     c_min = None
-    for c in product(range(-((gf.n-1)//2), gf.n//2 + 1), repeat = U.cols):
+    for c in product(range(-((ring.n-1)//2), ring.n//2 + 1), repeat = U.cols):
         c = U * Matrix(c)
         d = c - b
-        d.map(gf)
+        d.map(ring)
         norm = d.norm(p)
         if norm < norm_min:
             norm_min = norm
-            c.map(gf)
+            c.map(ring)
             c_min = c
-    U.map(gf)
-    b.map(gf)
     return c_min
 
 def sis_search(A: Matrix, p: int = 2) -> Matrix:
