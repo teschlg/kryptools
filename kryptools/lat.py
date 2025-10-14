@@ -6,7 +6,6 @@ from math import prod, floor, inf
 from itertools import product
 from fractions import Fraction
 from random import choice, sample
-from .nt import egcd
 from .la import Matrix, eye, zeros
 
 
@@ -24,9 +23,8 @@ def gram_schmidt(U: Matrix, drop_dependent: bool = True) -> (Matrix, Matrix):
     "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
     M = U.eye(U.cols)
     Us = U.zeros()
-    Us[:, 0] = U[:, 0]
     jj = 0 # offset taking removed vectors into account
-    for j in range(1, U.cols):
+    for j in range(0, U.cols):
         tmp = U[:, j]
         for i in range(j - jj):
             M[i, j - jj] = U[:, j].dot(Us[:, i]) / Us[:, i].norm2()
@@ -37,6 +35,8 @@ def gram_schmidt(U: Matrix, drop_dependent: bool = True) -> (Matrix, Matrix):
             jj += 1
         else:
             Us[:, j - jj] = tmp
+    if jj == U.cols:
+        raise ValueError("The matrix must be nonzero.")
     if jj:
         Us = Us[:,:-jj]
         M = M[:-jj,:-jj]
