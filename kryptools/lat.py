@@ -16,33 +16,31 @@ def hermite_nf(M: Matrix) -> Matrix:
     j = n - 1
     for i in range(m-1,-1,-1):
         j0 = j
-        minimum = abs(H[i, j])  # search for the pivot in the present row
+        minimum = abs(H.matrix[i][j])  # search for the pivot in the present row
         for jj in range(j):
-            tmp = abs(H[i, jj])
+            tmp = abs(H.matrix[i][jj])
             if tmp > 0 and (tmp < minimum or minimum == 0):
                 minimum = tmp
                 j0 = jj
         if minimum == 0:
             continue  # all entries are zero
         if j0 < j:
-            H[:, j], H[:, j0] = H[:, j0], H[:, j]  # swap columns, to move the pivot in place
+            H.swap_columns(j, j0)  # swap columns, to move the pivot in place
         if H[i, j] < 0:
-            H[:, j] *= -1  # make the pivot positive
+            H.scale_column(j, -1)  # make the pivot positive
         jj = j - 1
         while jj >= 0:  # make the row entries left to the pivot zero
-            tmp = H[i, jj] // H[i, j]
-            H[:, jj] -= tmp * H[:, j]
-            if H[i, jj]:
-                H[:, j], H[:, jj] = H[:, jj], H[:, j]  # swap columns
+            H.addto_column(jj, j, -(H.matrix[i][jj] // H.matrix[i][j]))
+            if H.matrix[i][jj]:
+                H.swap_columns(j, jj)  # swap columns
             else:
                 jj -= 1
         for jj in range(j + 1, n):  # reduce the row entries right to the pivot
-            tmp = H[i, jj] // H[i, j]
-            H[:, jj] -= tmp * H[:, j]
+            H.addto_column(jj, j, -(H.matrix[i][jj] // H.matrix[i][j]))
         j -= 1
         if j < 0:
             break
-    while H.cols > 1 and all(not H[i, 0] for i in range(m)):  # remove zero columns
+    while H.cols > 1 and all(not H.matrix[i][0] for i in range(m)):  # remove zero columns
         H = H[:, 1:]
     return H
 
