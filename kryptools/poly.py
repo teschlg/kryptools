@@ -6,7 +6,9 @@ from math import prod, comb
 from numbers import Number
 from random import randint
 from itertools import combinations
-
+from copy import copy
+from .Zmod import Zmod
+from .nt import crt
 
 class Poly:
     """
@@ -24,17 +26,51 @@ class Poly:
     print_x = "x"  # variable for printing
     print_pow = "^"  # you can change this to "**" if you want it python style
 
-    def __init__(self, coeff: list, ring=None, modulus: list = None):
-        self.coeff = list(coeff)
-        for i in range(len(self.coeff) - 1, 0, -1):  # strip leading zeros
-            if self.coeff[i]:
-                break
-            self.coeff.pop(i)
-        self.modulus = modulus
+    def __init__(self, coeff: list, ring=None, modulus: list = None, cyclic: int = 0, check: bool = True):
+        if not check:
+            self.coeff = coeff
+            self.modulus = modulus
+            self.cyclic = cyclic
+            return
         if ring:
-            self.map(ring)
-        if modulus:
-            self.mod(modulus)
+            self.coeff = list(map(ring, coeff))
+        else:
+            self.coeff = list(coeff)
+        if len(self.coeff) < 1:
+            raise ValueError("The coefficient list must not be empty.")
+        self.strip()
+        self.modulus = None
+        if isinstance(cyclic, int):
+            if cyclic > 0:
+                modulus = [-1] + [0] * (cyclic - 1) + [1]  # x^n - 1
+            elif cyclic < 0:
+                modulus = [1] + [0] * (-cyclic - 1) + [1]  # x^n + 1
+        else:
+            cyclic = 0
+        self.cyclic = cyclic
+        if modulus is None:
+            return
+        if ring:
+            self.modulus = list(map(ring, modulus))
+        else:
+            self.modulus = list(modulus)
+        if len(self.modulus) < 2:
+            raise ValueError("The modulus must have degree at least one.")
+        zero = self.coeff[0] * 0
+        one = zero**0
+        if self.modulus[-1] != one:
+            try:
+                tmp = one / self.modulus[-1]
+            except Exception as exc:
+                raise ValueError("Failed to make the modulus monic.") from exc
+            for i in range(len(self.modulus)):  # pylint: disable=C0200
+                self.modulus[i] *= tmp
+        if all( c == zero for c in self.modulus[1:-1]):
+            if self.modulus[0] == one:
+                self.cyclic = 1 - len(self.modulus)
+            elif self.modulus[0]**2 == one:
+                self.cyclic = len(self.modulus) - 1
+        self.mod()
 
     def __call__(self, x):
         result = 0 * self.coeff[0]
@@ -148,6 +184,13 @@ class Poly:
     def __bool__(self):
         return bool(self.degree()) or bool(self.coeff[0])
 
+    def strip(self) -> None:
+        "Strip leading zeros."
+        for i in range(len(self.coeff) - 1, 0, -1):
+            if self.coeff[i]:
+                break
+            self.coeff.pop(i)
+
     def degree(self) -> int:
         "Return the degree."
         return len(self.coeff) - 1
@@ -156,13 +199,30 @@ class Poly:
         "Return the number of nonzero coefficients."
         return sum(map(bool,self.coeff))
 
-    def map(self, func):
+    def map(self, func, modulus = True):
         "Apply a given function to all coefficients in place."
         self.coeff = list(map(func, self.coeff))
+        self.strip()
+        if modulus and self.modulus is not None:
+            self.modulus = list(map(func, self.modulus))
+            if self.modulus[-1] != self.coeff[0]**0:
+                raise ValueError("The modulus is no longer monic.")
+            if self.cyclic:
+                zero = self.modulus[0] * 0
+                self.cyclic = 0
+                if abs(self.cyclic) > 1 and self.modulus[1] != zero:
+                    return
+                one = zero**0
+                if self.modulus[0] == one:
+                    self.cyclic = 1 - len(self.modulus)
+                elif self.modulus[0]**2 == one:
+                    self.cyclic = len(self.modulus) - 1
 
-    def applyfunc(self, func) -> "Poly":
+    def applyfunc(self, func, modulus = True) -> "Poly":
         "Apply a function to all coefficients."
-        return self.__class__(list(map(func, self.coeff)), modulus=self.modulus)
+        if modulus and self.modulus is not None:
+            return self.__class__(list(map(func, self.coeff)), modulus = list(map(func, self.modulus)))
+        return self.__class__(list(map(func, self.coeff)), modulus = self.modulus, cyclic = self.cyclic)
 
     def _check_type(self, other):
         return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])  # pylint: disable=C0123
@@ -201,21 +261,27 @@ class Poly:
             if self._check_type(other):
                 tmp = self.coeff[:]
                 tmp[0] += other
-                return self.__class__(tmp, modulus=self.modulus)
+                return self.__class__(tmp, modulus = self.modulus, check = False)
             return NotImplemented
         modulus = self.modulus
-        if not modulus and other.modulus:
+        cyclic = self.cyclic
+        if modulus is None and other.modulus is not None:
             modulus = other.modulus
+            cyclic = other.cyclic
         ls, lo = len(self.coeff), len(other.coeff)
         if ls < lo:
-            return self.__class__([s + o for s, o in zip(self.coeff, other.coeff)] + other.coeff[ls:], modulus=modulus)
-        return self.__class__([s + o for s, o in zip(self.coeff, other.coeff)] + self.coeff[lo:], modulus=modulus)
+            ret = [s + o for s, o in zip(self.coeff, other.coeff)] + other.coeff[ls:]
+        else:
+            ret = [s + o for s, o in zip(self.coeff, other.coeff)] + self.coeff[lo:]
+        ret = self.__class__(ret, modulus = modulus, cyclic = cyclic, check = False)
+        ret.strip()
+        return ret
 
     def __radd__(self, other: "Poly") -> "Poly":
         return self + other
 
     def __neg__(self) -> "Poly":
-        return Poly([-s for s in self.coeff], modulus=self.modulus)
+        return self.__class__([-s for s in self.coeff], modulus = self.modulus, cyclic = self.cyclic, check = False)
 
     def __pos__(self) -> "Poly":
         return self
@@ -229,23 +295,50 @@ class Poly:
     def __mul__(self, other: "Poly") -> "Poly":
         if not isinstance(other, self.__class__):
             if self._check_type(other):
-                return Poly([other * s for s in self.coeff], modulus=self.modulus)
+                if not other:
+                    return self.__class__([other], modulus = self.modulus, cyclic = self.cyclic, check = False)
+                return self.__class__([other * s for s in self.coeff], modulus = self.modulus, cyclic = self.cyclic, check = False)
             return NotImplemented
         zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
+        if self.cyclic or other.cyclic:
+            if self.cyclic:
+                cyclic = self.cyclic
+                modulus = self.modulus
+            else:
+                cyclic = other.cyclic
+                modulus = other.modulus
+            n = abs(cyclic)
+            if ls < lo:
+                otherc = other.coeff + [zero] * (n - lo)
+                selfc = self.coeff
+            else:
+                otherc = self.coeff + [zero] * (n - ls)
+                selfc = other.coeff
+                ls = lo
+            if cyclic > 0:
+                coeff = [ sum( (selfc[j] * otherc[(k-j) % n] for j in range(ls)), start = zero) for k in range(n)]
+            else:
+                coeff = [ sum( (selfc[j] * otherc[(k-j) % n] for j in range(min(k,ls))), start = zero) -
+                          sum( (selfc[j] * otherc[(k-j) % n] for j in range(k,ls)), start = zero) for k in range(n)]
+            ret = self.__class__(coeff, modulus = modulus, cyclic = cyclic, check = False)
+            ret.strip()
+            return ret
         coeff = [sum((self.coeff[j] * other.coeff[k - j] for j in range(max(0, k - lo + 1), min(ls, k + 1))), start=zero)
                      for k in range(ls + lo - 1)]
         modulus = self.modulus
         if not modulus and other.modulus:
             modulus = other.modulus
-        return self.__class__(coeff, modulus=modulus)
+        ret = self.__class__(coeff, modulus = modulus, check = False)
+        ret.mod()
+        return ret
 
     def __rmul__(self, other) -> "Poly":
         return self * other
 
     def __truediv__(self, other) -> "Poly":
         if self._check_type(other):
-            return self.__class__([s / other for s in self.coeff], modulus=self.modulus)
+            return self.__class__([s / other for s in self.coeff], modulus = self.modulus, cyclic = self.cyclic, check = False)
         if isinstance(other, self.__class__):
             if not other.modulus:
                 raise NotImplementedError(
@@ -263,7 +356,7 @@ class Poly:
         if not isinstance(j, int):
             return NotImplemented
         one = self.coeff[0]**0
-        res = self.__class__([one], modulus=self.modulus)
+        res = self.__class__([one], modulus = self.modulus, cyclic = self.cyclic, check = False)
         if j < 0:
             if not self.modulus:
                 raise NotImplementedError(
@@ -285,8 +378,7 @@ class Poly:
         "List of bits of all coefficients."
         ring = self.coeff[0].__class__
         if not (hasattr(ring, 'bits') and callable(ring.bits)):
-            raise NotImplementedError(
-                "Coefficients cannot be converted to bits.")
+            raise NotImplementedError("Coefficients cannot be converted to bits.")
         out = []
         for c in reversed(self.coeff):
             out += c.bits()
@@ -310,23 +402,26 @@ class Poly:
         "Polynom division with remainder."
         zero, one, ring = self._guess_ring()
         if isinstance(other, list):
-            other = self.__class__(other, ring=ring)
+            other = self.__class__(other, ring)
         elif not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot divide {self} and {other}.")
         if not other:
             raise ValueError(f"{other} must be nonzero.")
         sd, od = self.degree(), other.degree()
         if sd < od:
-            return self.__class__([zero]), self
+            return self.__class__([zero], check = False), self
         div = [zero] * (sd - od + 1)
         lco = other.coeff[-1]
         if lco != one:
-            tmp = one / lco
+            try:
+                tmp = one / lco
+            except Exception as exc:
+                raise ValueError("The leading coefficient of the divisor must be invertible.") from exc
             oth = [c * tmp for c in other.coeff]
             rem = [c * tmp for c in self.coeff]
         else:
-            oth = other.coeff  # "* 1" is here to make sure we get a copy
-            rem = [c * one for c in self.coeff]
+            oth = other.coeff
+            rem = [c * one for c in self.coeff]  # "* 1" is here to make sure we get a copy
         for i in range(sd - od + 1):
             tmp = rem[sd - i] * one  # "* 1" is here to make sure we get a copy
             div[sd - od - i] = tmp
@@ -334,26 +429,41 @@ class Poly:
                 rem[sd - i - j] -= tmp * oth[od - j]
         if lco != one:
             rem = [c * lco for c in rem]
-        return self.__class__(div, modulus=self.modulus), self.__class__(rem, modulus=self.modulus)
+        return self.__class__(div), self.__class__(rem)
 
-    def mod(self, other: "Poly") -> None:
+    def mod(self, other: "Poly" = None) -> None:
         "Reduce with respect to a given polynomial."
         one, ring = self._guess_ring()[1:]
-        if isinstance(other, list):
-            other = self.__class__(other, ring=ring)
-        elif not isinstance(other, self.__class__):
-            raise NotImplementedError(f"Cannot divide {self} and {other}.")
-        if not other:
-            raise NotImplementedError(f"{other} must be nonzero.")
-        sd, od = self.degree(), other.degree()
-        if sd < od:
-            return self
-        lco = other.coeff[-1]
-        if lco != one:
-            tmp = one / lco
-            oth = [c * tmp for c in other.coeff]
+        if other is None:
+            if self.modulus is None or len(self.coeff) < len(self.modulus):
+                return
+            if self.cyclic:
+                n = abs(self.cyclic)
+                zero = self.coeff[0] * 0
+                if self.cyclic > 0:
+                    self.coeff = [ sum(self.coeff[i::n], start = zero) for i in range(n)]
+                else:
+                    even = [ sum(self.coeff[i::2*n], start = zero) for i in range(n)]
+                    odd = [ sum(self.coeff[i+n::2*n], start = zero) for i in range(n)]
+                    self.coeff = [ c1 - c2 for c1, c2 in zip(even, odd)]
+                self.strip()
+                return
+            oth = self.modulus
         else:
+            if isinstance(other, list):
+                other = self.__class__(other, ring=ring)
+            elif not isinstance(other, self.__class__):
+                raise NotImplementedError(f"Cannot divide {self} and {other}.")
+            if not other:
+                raise NotImplementedError(f"{other} must be nonzero.")
             oth = other.coeff
+            if len(self.coeff) < len(oth):
+                return
+            lco = oth[-1]
+            if lco != one:
+                tmp = one / lco
+                oth = [c * tmp for c in oth]
+        sd, od = len(self.coeff) - 1, len(oth) - 1
         for i in range(sd - od + 1):
             tmp = self.coeff[sd - i] * one  # "* 1" is here to make sure we get a copy
             for j in range(od + 1):
@@ -373,11 +483,37 @@ class Poly:
         elif not isinstance(other, list):
             raise NotImplementedError(
                 f"{other} must be a list of coefficients or a polynomial.")
-        other = Poly(other, ring=ring)
+        other = self.__class__(other, ring=ring)
         if not other:
             raise NotImplementedError(f"{other} must be nonzero.")
+        if ring is not None and hasattr(ring, 'n') and not ring.is_field():  # Zmod; no field
+            inverse = [] # inverse in Z_{p^k} for all primefactors of n
+            primefactors = [] # primefactors of n
+            for p, k in ring.factor_n().items():
+                primefactors.append(p**k)
+                self_p = copy(self)
+                Z_p = Zmod(p)
+                Z_p.isfield = True
+                self_p.map(Z_p)
+                self_p_inv = self_p.inv()
+                if k > 1:
+                    self_p = copy(self)
+                    self_p.map(Zmod(p**k))
+                    self_p_inv.map(Zmod(p**k))
+                    l = 1
+                    while k > l:
+                        self_p_inv = self_p_inv * (2 - self_p * self_p_inv)
+                        l *=2
+                inverse.append(self_p_inv)
+
+            coeff = []
+            for i in range(other.degree()):
+                coeff.append(crt([int(inv[i]) for inv in inverse], primefactors))
+            ret = self.__class__(coeff, ring=ring)
+            ret.modulus = self.modulus
+            return ret
         r0, r1 = other, self
-        y0, y1 = self.__class__([zero]), self.__class__([one])
+        y0, y1 = self.__class__([zero], check = False), self.__class__([one], check = False)
         while r1:
             q, r = r0.divmod(r1)
             r0, r1 = r1, r
@@ -396,7 +532,7 @@ class Poly:
         _, one, _ = self._guess_ring()
         if not self:
             if not other:
-                return Poly([self.coeff[0]])
+                return self.__class__([self.coeff[0]], check = False)
             tmp = other / other.coeff[-1]
             tmp.modulus = None
             return tmp
@@ -419,13 +555,13 @@ class Poly:
             raise NotImplementedError(f"Cannot perform egcd: {other} must be a polynomial.")
         if not self:
             if not other:
-                return Poly([zero]), Poly([zero]), Poly([zero])
+                return self.__class__([zero], check = False), self.__class__([zero], check = False), self.__class__([zero], check = False)
             if other.coeff[-1] == one:
-                return other, Poly([zero]), one
-            return other / other.coeff[-1], Poly([zero]), one / other.coeff[-1]
+                return other, self.__class__([zero], check = False), self.__class__([one], check = False)
+            return other / other.coeff[-1], __class__([zero], check = False), self.__class__([one / other.coeff[-1]], check = False)
         r0, r1 = other, self
-        x0, x1 = self.__class__([one]), self.__class__([zero])
-        y0, y1 = self.__class__([zero]), self.__class__([one])
+        x0, x1 = self.__class__([one], check = False), self.__class__([zero], check = False)
+        y0, y1 = x1, x0
         while r1:
             q, r = r0.divmod(r1)
             r0, r1 = r1, r
@@ -443,11 +579,15 @@ class Poly:
             tmp = 0 * self.coeff[0]
         else:
             tmp = [j * self.coeff[j] for j in range(1, l)]
-        return self.__class__(tmp, modulus=self.modulus)
+        ret = self.__class__(tmp, modulus = self.modulus, check = False)
+        ret.strip()
+        return ret
 
     def reciprocal(self) -> "Poly":
         "Returns the reciprocal (reversed) polynomial."
-        return self.__class__(reversed(self.coeff), modulus=self.modulus)
+        ret = self.__class__(reversed(self.coeff), modulus = self.modulus, check = False)
+        ret.strip()
+        return ret
 
     def square_free_factors(self) -> dict:
         "Determine the square free factors of a polynomial over a Galois field."
@@ -481,7 +621,7 @@ class Poly:
                 root[d] = c.coeff[d * p]**pr
                 d -= 1
             # assert Poly(root)**p == c, root
-            for fac, mult in Poly(root).square_free_factors().items():
+            for fac, mult in self.__class__(root).square_free_factors().items():
                 factors[fac] = p * mult
         return factors
 
@@ -497,7 +637,7 @@ class Poly:
             raise ValueError("The polynomial must be non-constant.")
         factors = {}
         w = self
-        x = Poly([zero, one], modulus=self.coeff)  # x
+        x = self.__class__([zero, one], modulus = self.coeff, check = False)  # x
         b = x
         k = 1
         while k <= w.degree()//2:
@@ -543,8 +683,7 @@ class Poly:
 
         factors = [self]
         while len(factors) < r:
-            g = Poly([randint(0, q-1)
-                     for _ in range(d+1)], ring=field, modulus=self)
+            g = self.__class__([field(randint(0, q-1)) for _ in range(d+1)], modulus = self.coeff)
             if p == 2:  # Gathen-Shoup
                 h = g
                 for _ in range(1, k):
@@ -574,10 +713,10 @@ class Poly:
         "Factors a polynomials over a Galois field."
         if self.degree() < 1:
             return {self: 1}
-        c = Poly([self.coeff[-1]])
+        c = self.coeff[-1]
         one = c**0
         if c != one:
-            factors = {c: 1}
+            factors = {self.__class__([c], check = False): 1}
         else:
             factors = {}
         for fac1, m in self.square_free_factors().items():

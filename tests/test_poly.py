@@ -60,6 +60,10 @@ def test_Poly():
         assert (p - q)(x) == p(x) - q(x)
         assert (p * q)(x) == p(x) * q(x)
 
+    ring = Zmod(24)
+    p = Poly([1, 3, 2, 1], ring = ring, modulus = [-1,0,0,0,0,1])
+    assert p.inv() * p == Poly([ring(1)])
+
 def test_rabin():
     for gf,t in [ [Zmod(7), 4], [GF2(4), 3]]:
         order = len(list(gf))

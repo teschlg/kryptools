@@ -91,6 +91,12 @@ class Zmod:
             self.group_order *= p**k
         return self.group_order
 
+    def factor_n(self) -> bool:
+        "Returns the factorization of n and stores it."
+        if not self.n_factors:
+            self.n_factors = factorint(self.n)
+        return self.n_factors
+
     def is_cyclic(self) -> bool:
         "Test if the group Z_n^* is cyclic."
         n = self.n

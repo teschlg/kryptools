@@ -414,7 +414,7 @@ class CyclicCode():
     >>> cc = CyclicCode(n, g)
     
     To encode a list of letters (the length must be equal to the dimension k of the code):
-    >>> cc.encode([0,1,0])
+    >>> cc.encode([0, 1, 0])
     [0, 1, 1, 0]
 
     Decoding is only implemented for code words:
