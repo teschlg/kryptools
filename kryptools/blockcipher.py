@@ -28,11 +28,11 @@ class BlockCipher:
             self.key = key
 
     def encrypt_block(self, b: bytes) -> bytes:
-        "Decrypt one block."
+        "Encrypt one block."
         return self.cipher.encrypt(b)
 
     def decrypt_block(self, b: bytes) -> bytes:
-        "Encrypt one block."
+        "Decrypt one block."
         return self.cipher.decrypt(b)
 
     def blocksplit(self, text: bytes, padding: bool):
