@@ -185,7 +185,7 @@ class Poly:
         return bool(self.degree()) or bool(self.coeff[0])
 
     def strip(self) -> None:
-        "Strip leading zeros."
+        "Strip leading zeros from the coefficient list."
         for i in range(len(self.coeff) - 1, 0, -1):
             if self.coeff[i]:
                 break

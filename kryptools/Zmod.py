@@ -63,8 +63,8 @@ class Zmod:
     def random(self, num: int = 0) -> "ZmodPoint":
         "Return a single random point or a list of random points."
         if num:
-            return([self(randint(0,self.n-1)) for _ in range(num)])
-        return self(randint(0,self.n-1))
+            return([self(randint(0, self.n-1)) for _ in range(num)])
+        return self(randint(0, self.n-1))
 
     def order(self) -> int:
         "Compute the order of the group Z_n^*."
@@ -266,6 +266,7 @@ class ZmodPoint:
         return self.x - self.ring.n
 
     mods = sharp
+    lift_centered = sharp
 
     def order(self) -> int:
         "Compute the order of the point in the group Z_n^*."

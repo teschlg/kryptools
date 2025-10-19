@@ -25,22 +25,26 @@ class Matrix:
     print_post = " ]"
     print_sep = ", "
 
-    def __init__(self, matrix: list|tuple, ring = None):
+    def __init__(self, matrix: list, ring = None):
         if isinstance(matrix, BinaryMatrix):
             matrix = matrix.bitmatrix()
             ring = Zmod(2)
-        elif not (isinstance(matrix, list|tuple) and matrix):
-            raise ValueError("The given `matrix` must be a nonempty list.")
-        elif not isinstance(matrix[0], list|tuple):
+        elif not isinstance(matrix, list):
+            try:
+                matrix = list(matrix)
+            except Exception as exc:
+                raise ValueError("The given `matrix` cannot be converted to a list.") from exc
+        if not isinstance(matrix[0], list):
             matrix = [[x] for x in matrix]
         self.matrix = matrix  # the matrix as a list (rows) of lists (column entries)
         self.cols = len(matrix[0])  # number of columns
         self.rows = len(matrix)  # number of rows
+        if not self.cols or not self.cols:
+            raise ValueError("Both the number of rows and the number of columns must be nonzero.")
+        if any( len(row) != self.cols for row in self.matrix ):
+            raise ValueError("All matrix rows must have equal length!")
         self.nonpivotcols = None  # set during rref
         self.pivotcols = None  # set during rref
-        for i in range(1, self.rows):
-            if len(matrix[i]) != self.cols:
-                raise ValueError("All matrix rows must have equal length!")
         if ring:
             self.map(ring)
 
@@ -281,10 +285,10 @@ class Matrix:
             return False
         if self.rows != other.rows or self.cols != other.cols:
             return False
-        return all(self[i] == other[i] for i in range(self.rows * self.cols))
+        return all(self.matrix[i][j] == other.matrix[i][j] for i in range(self.rows) for j in range(self.cols))
 
     def __bool__(self):
-        return any(bool(self[i]) for i in range(self.rows * self.cols))
+        return any( bool(x) for row in self.matrix for x in row)
 
     def map(self, func) -> None:
         "Apply a function to all elements in place."
@@ -293,15 +297,21 @@ class Matrix:
 
     def applyfunc(self, func) -> "Matrix":
         "Apply a function to all elements."
-        tmp = self[:, :]
-        tmp.map(func)
-        return tmp
+        return self.__class__([ list(map(func, row)) for row in self.matrix ])
 
     def _guess_zero(self):
         "Guess zero and one in the ring of the coefficients."
         zero = 0 * self.matrix[0][0]
         one = zero**0
         return zero, one
+
+    def is_integer(self, convert: bool = False):
+        "Test if all coefficients are integers and convert integer valued fractions if requested."
+        if all( isinstance(x, int) or (isinstance(x, Fraction) and x.denominator == 1) for row in self.matrix for x in row):
+            if convert:
+                self.map(int)
+            return True
+        return False
 
     def norm2(self) -> float:
         "Squared Frobenius/Euclidean norm."
@@ -382,9 +392,12 @@ class Matrix:
         if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
             # the matrix is over a ring (not a field)
             return self._rref_ring(start = start, drop_zero_rows = drop_zero_rows)
-        one = self._guess_zero()[1]
         n, m = self.cols, self.rows
-        R = [ self.matrix[i][:] for i in range(m) ]
+        if self.is_integer():
+            R = [ list(map(Fraction, row)) for row in self.matrix ]
+        else:
+            R = [ row[:] for row in self.matrix ]
+        one = self._guess_zero()[1]
         pivotcols = []
         nonpivotcols = []
         i = 0
@@ -428,15 +441,15 @@ class Matrix:
     def _rref_ring(self, start: int = 0, drop_zero_rows: bool = False) -> "Matrix":
         "Compute the reduced echelon form if the base ring is Z_n and no field."
         ring = self.matrix[0][0].ring
-        M = self.applyfunc(int)
+        R = self.applyfunc(int)
         done = start
-        while done < M.cols:
-            M = M.hrnf(start = start, drop_zero_rows = drop_zero_rows)
-            done = M.cols
-            for i, j in enumerate(M.pivotcols):
+        while done < R.cols:
+            R = R.hrnf(start = start, drop_zero_rows = drop_zero_rows)
+            done = R.cols
+            for i, j in enumerate(R.pivotcols):
                 if j < start:
                     continue
-                pivot = M.matrix[i][j]
+                pivot = R.matrix[i][j]
                 if pivot >= ring.n:
                     done = min(j, done)
                     pivot %= ring.n
@@ -448,17 +461,17 @@ class Matrix:
                 if pivot > 1:  # we can make the pivot smaller
                     done = min(j, done)
                     tmp = pow(pivot, -1, ring.n)
-                    for k in range(j, M.cols):
-                        M.matrix[i][k] *= tmp
-            M.map(lambda x: x % ring.n)
-        M.map(ring)
-        return M
+                    for k in range(j, R.cols):
+                        R.matrix[i][k] *= tmp
+            R.map(lambda x: x % ring.n)
+        R.map(ring)
+        return R
 
 
     def hrnf(self, start = 0, drop_zero_rows: bool = True) -> "Matrix":
         "Compute the Hermite row normal form."
         n, m = self.cols, self.rows
-        if not isinstance(self.matrix[0][0], int):
+        if not self.is_integer(convert = True):
             raise ValueError("Hermite normal form requires integer entries!")
         H = self[:,:]
         H.pivotcols = []
@@ -506,7 +519,7 @@ class Matrix:
     def hnf(self, drop_zero_columns: bool = True) -> "Matrix":
         "Compute the Hermite normal form."
         n, m = self.cols, self.rows
-        if not isinstance(self.matrix[0][0], int):
+        if not self.is_integer(convert = True):
             raise ValueError("Hermite normal form requires integer entries!")
         H = self[:,:]
         j = n - 1
@@ -542,7 +555,7 @@ class Matrix:
 
     def snf(self, drop_zero_rows: bool = False, drop_zero_columns: bool = False, include_S: bool = True, include_T: bool = True) -> "Matrix":
         "Computes the Smith normal form D of a matrix A with integer coefficients together with invertible matrices S and T such that D = S * A * T."
-        if not isinstance(self.matrix[0][0], int):
+        if not self.is_integer(convert = True):
             raise ValueError("Smith normal form requires integer entries!")
         m, n = self.rows, self.cols
         A = self[:,:]
@@ -685,11 +698,15 @@ class Matrix:
         if hasattr(self.matrix[0][0], "ring") and not self.matrix[0][0].ring.is_field():
             # the matrix is over a ring (not a field)
             ring = self.matrix[0][0].ring
-            R = [ list(map(lambda x: Fraction(int(x)), self.matrix[i])) for i in range(m) ]
+            R = [ list(map(lambda x: Fraction(int(x)), row)) for row in self.matrix ]
             zero, one = ring(0), 1
+        elif self.is_integer():
+            ring = None
+            R = [ list(map(Fraction, row)) for row in self.matrix ]
+            zero, one = 0, 1
         else:
             ring = None
-            R = [ self.matrix[i][:] for i in range(m) ]
+            R = [ row[:] for row in self.matrix ]
             zero, one = self._guess_zero()
         D = one
         i = 0
