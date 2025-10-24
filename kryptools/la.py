@@ -328,7 +328,7 @@ class Matrix:
         tmp = sum(sum(abs(x)**p for x in row) for row in self.matrix)
         return tmp**(1/p)
 
-    def dot(self, other) -> int:
+    def dot(self, other) -> Number:
         "Dot product of two vectors."
         if self.rows == 1 and other.rows == 1 and self.cols == other.cols:
             return sum(x * y for x, y in zip(self.matrix[0], other.matrix[0]))
