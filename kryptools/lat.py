@@ -136,7 +136,8 @@ class Lattice():
     def weight_reduce(self) -> bool:
         "Pairwise reducte all weights of the basis vectors."
         reduced = False
-        for j in range(1, self.len):
+        j = 1
+        while j < self.len:
             for i in range(j - 1, -1, -1):
                 r = round(self.Mu[j][i])
                 if not r:
@@ -150,13 +151,15 @@ class Lattice():
                 Nuj = self.norm2(self.U[j])
                 if not Nuj:
                     self.delete_vector(j)
-                    continue
+                    break
                 if self.fraction:
                     Nuj = Fraction(Nuj)
                 for k in range(self.len):
                     if j != k:
                         self.Mu[k][j] = (self.Nu[j] * self.Mu[k][j] - r * self.Nu[i] * self.Mu[k][i]) / Nuj
                 self.Nu[j] = Nuj
+            else:
+                j += 1
         return reduced
 
     def hermite(self) -> None:

@@ -4,8 +4,7 @@ Lattice tools 2
 
 from math import prod, floor, inf
 from itertools import product
-from random import choice, sample
-from .la import Matrix, eye, zeros
+from .la import Matrix, eye
 from .lat import Lattice
 
 
@@ -78,7 +77,7 @@ def babai_plane_bnd(U: Matrix, p=2) -> float:
 def lll(V: Matrix, delta: float = 0.75, sort: bool = True) -> Matrix:
     "LLL algorithm for lattice reduction."
     lat = Lattice(V)
-    lat.lll()
+    lat.lll(delta = delta)
     if sort:
         lat.sort()
     return lat.basis()
