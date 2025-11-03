@@ -7,7 +7,7 @@ from numbers import Number
 from fractions import Fraction
 from random import choice, sample
 from .la import Matrix, eye, zeros
-
+from .nt import egcd
 
 
 class Lattice():
@@ -25,27 +25,32 @@ class Lattice():
     """
 
     def __init__(self, U: Matrix, fraction: bool = True):
-        if not isinstance(U, Matrix):
+        if isinstance(U, Matrix):
+            if hasattr(U.matrix[0][0], "ring"):  # Create a q-ary lattice
+                q = U.matrix[0][0].ring.n
+                V = eye(U.rows, one = q)
+                V.append_column(U, ring = int)
+                U = V
+            self.U = [row for row in U.transpose().matrix if any(x for x in row)]  # the basis
+            if U.is_integer():
+                self.fraction = fraction
+            else:
+                self.fraction = False
+        elif isinstance(U, list):
+            self.U = U
+            self.fraction = fraction
+        else:
             raise ValueError("The basis must be given as a matrix containing the basis vectors as columns.")
-        if hasattr(U.matrix[0][0], "ring"):  # Create a q-ary lattice
-            q = U.matrix[0][0].ring.n
-            V = eye(U.rows, one = q)
-            V.append_column(U, ring = int)
-            U = V.hnf()
-        self.U = U.transpose().matrix  # the basis
-        self.len = U.cols  # the number of basis vectors
-        self.dim = U.rows  # the dimension of the space
-        self.rank = U.rank()  # the dimension of the lattice
+        self.len = len(self.U)  # the number of basis vectors
+        self.dim = len(self.U[0])  # the dimension of the space
+        self.myrank = None  # the dimension of the lattice
         self.Us = None  # Gram-Schmidt basis
+        self.Us_end = 0  # Gram-Schmidt decomposition is correct below this index
         self.M = None  # Gram-Schmidt weights
         self.N = None  # Gram-Schmidt squared norms
         self.Mu = None  # Weights
         self.Nu = None  # Squared norms
         self.Uhnf = None  # Hermite normal form for checking equality
-        if U.is_integer():
-            self.fraction = fraction
-        else:
-            self.fraction = False
 
     def __repr__(self) -> str:
         return repr(self.basis())
@@ -68,13 +73,25 @@ class Lattice():
         return self.basis() * k
 
     def __contains__(self, x: "Matrix") -> bool:
-        c = self.coordinates(x)
+        rank = self.rank()
+        if rank < self.len:
+            if self.Uhnf is None:
+                self.Uhnf = self.basis().hnf().matrix
+            U = Matrix(self.Uhnf)
+        else:
+            U = self.basis()
+        if self.fraction:
+            U.map(Fraction)
+        c = U.solve(x)
         if c is None:
             return False
         return c.is_integer()
 
     def coordinates(self, x: "Matrix") -> Matrix:
         "Return the lattice coordinates of a point."
+        rank = self.rank()
+        if rank < self.len:
+            raise NotImplementedError("Computation of coordinates requires a linear independent basis.")
         U = self.basis()
         if self.fraction:
             U.map(Fraction)
@@ -88,6 +105,15 @@ class Lattice():
     def basis(self) -> Matrix:
         "Return the current basis."
         return Matrix(self.U).transpose()
+
+    def rank(self) -> Matrix:
+        "Return the rank."
+        if self.myrank is None:
+            if self.Us is not None and self.Us_end == self.len - 1:
+                self.myrank = sum(bool(i) for i in self.N)
+            else:
+                self.myrank = Matrix(self.U).rank()
+        return self.myrank
 
     def dot(self, u: list, v: list) -> Number:
         "Dot product of two vectors u and v."
@@ -103,12 +129,14 @@ class Lattice():
             raise ValueError("Cannot delete all basis vectors!")
         del self.U[l]
         self.len -= 1
-        if self.M is not None:
+        if self.Us is not None:
+            del self.Us[l]
             del self.M[l]
             for row in self.M:
                 del row[l]
             del self.N[l]
-            self.gsd(l)
+            if l < self.Us_end:
+                self.Us_end -= 1
         if self.Mu is not None:
             del self.Mu[l]
             for row in self.Mu:
@@ -126,8 +154,6 @@ class Lattice():
             self.Nu[l] = self.norm2(self.U[l])
             if self.fraction:
                 self.Nu[l] = Fraction(self.Nu[l])
-            if not self.Nu[l]:
-                self.delete_vector(l)
         for l in range(start, self.len):
             for i in range(start, self.len):
                 if i != l:
@@ -162,18 +188,24 @@ class Lattice():
                 j += 1
         return reduced
 
-    def hermite(self) -> None:
+    def hermite(self, verbose = False) -> None:
         "Hermite algorithm for a weight reduced basis."
         self.Us = None
         if self.Mu is None:
             self.compute_weights()
+        if verbose:
+            print("Starting Hermite")
+        steps = 0
         reduced = True
         while reduced:
+            steps += 1
             self.sort()
             reduced = self.weight_reduce()
+        if verbose:
+            print(f"Total number of steps: {steps}")
 
     def hnf(self) -> None:
-        "Transforms the basis into Hermite normal form.."
+        "Transform the basis into Hermite normal form.."
         if self.Uhnf is None:
             self.Uhnf = self.basis().hnf().matrix
             self.Us = None
@@ -182,34 +214,32 @@ class Lattice():
         self.U = [list(i) for i in zip(*self.Uhnf)]
         self.len = len(self.U)
 
-    def gsd(self, start: int = 0) -> None:
-        "Gram-Schmit decomposition."
+    def gsd(self, end: int = -1) -> None:
+        "Compute the Gram-Schmit decomposition up to (including) index `end`."
         if self.Us is None:
             self.Us = [[ 0 for _ in range(self.dim) ] for _ in range(self.len) ]
-            self.M = [[ int(i == j) for i in range(self.len) ] for j in range(self.len) ]
+            self.M = [[ int(i==j) for i in range(self.len) ] for j in range(self.len) ]
             self.N = [ 0 ] * self.len  # squared norms
-            start = 0
-        for l in range(start, self.len):  # Gram-Schmidt decomposition
-            self.Us[l] = self.U[l][:]
-            for i in range(l):
-                self.M[l][i] = self.dot(self.U[l], self.Us[i]) / self.N[i]
-                for j in range(self.dim):
-                    self.Us[l][j] -= self.M[l][i] * self.Us[i][j]
-            self.N[l] = self.norm2(self.Us[l])
+            self.Us_end = 0
+        if end < 0:
+            end = self.len - 1
+        if self.Us_end > end:
+            return
+        for j in range(self.Us_end, end + 1):  # Gram-Schmidt decomposition
+            self.Us[j] = self.U[j][:]
+            for i in range(j):
+                if self.N[i]:
+                    self.M[j][i] = self.dot(self.U[j], self.Us[i]) / self.N[i]
+                for l in range(self.dim):
+                    self.Us[j][l] -= self.M[j][i] * self.Us[i][l]
+            self.N[j] = self.norm2(self.Us[j])
             if self.fraction:
-                self.N[l] = Fraction(self.N[l])
-            if not self.N[l]:
-                raise ValueError("Basis is not linearly independent!")
+                self.N[j] = Fraction(self.N[j])
+        self.Us_end = end + 1
 
-    def size_reduce(self) -> bool:
-        "Size reduction step at all columns."
-        reduced = False
-        for j in range(1, self.len):
-            reduced = self.size_reduce_column(j)
-        return reduced
-
-    def size_reduce_column(self, j:int) -> bool:
-        "Size reduction step at column j."
+    def size_reduce(self, j: int) -> bool:
+        "Size reduction at index `j`."
+        self.gsd(j)
         reduced = False
         for i in range(j - 1, -1, -1):  # reduce the weights of the basis vectors
             r = round(self.M[j][i])
@@ -222,7 +252,7 @@ class Lattice():
         return reduced
 
     def swap(self, j:int, newN1 = None) -> None:
-        "Swap columns j and j-1."
+        "Swap columns j and j-1 and update the Gram-Schmidt decomposition."
         self.U[j - 1], self.U[j] = self.U[j], self.U[j - 1]
         # update the Gram-Schmidt decomposition
         if newN1 is None:
@@ -234,37 +264,146 @@ class Lattice():
         for l in range(self.dim):
             self.Us[j - 1][l] = self.Us[j][l] + self.M[j][j - 1] * self.Us[j - 1][l]
         self.N[j - 1] = newN1
-        self.M[j][j - 1] *= oldN1 / newN1
+        if newN1:
+            self.M[j][j - 1] *= oldN1 / newN1
+        else:
+            self.M[j][j - 1] = 0
         for l in range(self.dim):
             self.Us[j][l] = oldUs[l] - self.M[j][j - 1] * self.Us[j - 1][l]
         self.N[j] = oldN1 - self.M[j][j - 1]**2 * self.N[j - 1]
         for l in range(j - 1):
             self.M[j][l], self.M[j - 1][l] = self.M[j - 1][l], self.M[j][l]
-        tmp1 = oldN0 / self.N[j - 1]
-        tmp2 = oldM10 * oldN1 / self.N[j - 1]
-        for l in range(j + 1, self.len):
+        if self.Us_end <= j + 1:
+            return
+        if self.N[j - 1]:
+            tmp1 = oldN0 / self.N[j - 1]
+            tmp2 = oldM10 * oldN1 / self.N[j - 1]
+        else:
+            tmp1 = 0
+            tmp2 = 0
+        for l in range(j + 1, self.Us_end):
             self.M[l][j - 1], self.M[l][j] = tmp1 * self.M[l][j] + tmp2 * self.M[l][j - 1],  self.M[l][j - 1] - oldM10 * self.M[l][j]
 
-
-    def lll(self, delta: float = 0.75, sort = True) -> None:
+    def lll(self, start: int = 1, delta: float = 0.75, sort = True, deep = False, verbose = False) -> None:
         "LLL algorithm for lattice reduction."
-        self.Mu = None
-        self.Nu = None
         if not 0 < delta <= 1:
             raise ValueError(f"LLL reqires 0 < delta={delta} <= 1")
-        if self.Us is None:
-            self.gsd()
-        j = 1
+        self.Mu = None
+        self.Nu = None
+        j = start
+        if verbose:
+            print(f"Starting LLL at index {j}")
+        steps = 0
         while j < self.len:
-            self.size_reduce_column(j)
-            newN1 = self.N[j] + self.M[j][j - 1]**2 * self.N[j - 1]  # new norm N[j-1] if we swap
-            if delta * self.N[j - 1] <= newN1:  # Lovasz condition
-                j += 1  # move on
+            steps += 1
+            if self.size_reduce(j) and verbose:
+                print(f"Reduced basis vector {j}")
+            if all(self.U[j][l] == 0 for l in range(self.dim)):
+                self.delete_vector(j)
                 continue
-            self.swap(j, newN1) # swap vectors
-            j = max(j - 1, 1)  # redo the last step
+            if deep:
+                newN = self.norm2(self.U[j])  # new norm if we insert at k = 0
+                k = 0
+                while delta * self.N[k] <= newN and k < j:  # Deep LLL test
+                    newN -= self.M[j][k]**2 * self.N[k]  # new norm if we insert at k + 1
+                    k += 1
+            else:
+                newN = self.N[j] + self.M[j][j - 1]**2 * self.N[j - 1]  # new norm N[j-1] if we swap
+                k = j
+                if delta * self.N[j - 1] > newN:  # Lovasz condition
+                    k -= 1  # swap
+            if k == j:
+                j += 1
+                continue
+            if k == j-1:
+                if verbose:
+                    print(f"Swaping basis vectors {j} <-> {j-1}")
+                self.swap(j, newN) # swap vectors
+            else:
+                if verbose:
+                    print(f"Deep insertion of basis vector {j} at {k}")
+                self.U[k:j+1] = [self.U[j]] + self.U[k:j]
+                self.Us_end = k
+            j = max(k, 1)
+        if verbose:
+            print(f"Total number of steps: {steps}")
         if sort:
             self.sort()
+
+    def project(self, start: int, end: int|None = None) -> "Lattice":
+        "Project the lattice onto the span of the given range of Gram-Schmidt vectors."
+        if end is None:
+            end = self.len
+        self.gsd(end-1)
+        Uss = [ self.Us[start][:] ]
+        for j in range(start + 1, end):
+            usj =  self.Us[j][:]
+            for i in range(start, j):
+                for l in range(self.dim):
+                    usj[l] += self.M[j][i] * self.Us[i][l]
+            Uss.append(usj)
+        lat = Lattice(Uss)
+        lat.fraction = self.fraction
+        if self.myrank == self.len:
+            lat.myrank = lat.len
+        if self.Us is not None:
+            lat.Us = [ self.Us[j] for j in range(start, end) ]
+            lat.N = [ self.N[j] for j in range(start, end) ]
+            lat.M = [ self.M[j][start:end] for j in range(start, end) ]
+            lat.Us_end = lat.len
+            if lat.myrank is None:
+                lat.myrank = sum(bool(i) for i in lat.N)
+        return lat
+
+    def bkz_round(self, blocksize: int = 3, delta = 0.99, verbose = False) -> "Lattice":
+        "Perform one full BKZ round with given blocksize."
+        changed = False
+        if verbose:
+            print(f"Starting BKZ round with blocksize {blocksize}.")
+        for start in range(self.len):
+            end = min(start + blocksize, self.len)
+            # project the lattice
+            if verbose:
+                print(f"Solving SVP in the projected sublattice {start} - {end-1}.")
+            lat = self.project(start, end)
+            # solve the SVP
+            c = lat.svp_enum(coordinates = True)
+            uu = lat.basis() * c
+            if uu.norm2() == lat.norm2(lat.U[0]):
+                if self.size_reduce(start):
+                    changed = True
+                continue
+            # the new vector is shorter
+            if verbose:
+                print("Inserting the new vector.")
+            changed = True
+            # insert the new short vector
+            u = Matrix(self.U[start:end]).transpose() * c
+            self.U = self.U[:start] + [ list(u) ] + self.U[start:]
+            self.len += 1
+            self.Us.append([0] * lat.dim)
+            self.M.append([0] * (lat.len -1 ) + [1])
+            self.N.append(0)
+            self.Us_end = start
+            # run LLL
+            self.lll(start = start, delta = delta, verbose = verbose)
+        return changed
+
+    def bkz(self, blocksize: int = 3, maxrounds = inf, delta = 0.99, verbose = False) -> "Lattice":
+        "Perform a BKZ reduction of the basis."
+        self.lll(delta = delta, verbose = verbose)
+        rounds = 0
+        changed = True
+        while changed and rounds < maxrounds:
+            rounds += 1
+            if verbose:
+                print(f"Performing BKZ reduction round {round}.")
+            changed = self.bkz_round(blocksize = blocksize, delta = delta, verbose = verbose)
+
+    def hkz(self, verbose = False) -> "Lattice":
+        "Perform a HKZ reduction of the basis."
+        self.lll(delta = 1, deep = True, verbose = verbose)
+        self.bkz_round(blocksize = self.len, delta = 1, verbose = verbose)
 
     def sort(self) -> bool:
         "Sort according to length."
@@ -281,15 +420,40 @@ class Lattice():
         self.U = [self.U[i] for i in sort_idx]
         self.Nu = [self.Nu[i] for i in sort_idx]
         if self.Us is not None:
-            self.gsd(start = j)
+            self.Us_end = j
         if self.Mu is not None:
             self.Mu = [[self.Mu[i][j] for j in sort_idx] for i in sort_idx]
         return True
 
+    def replace_basis_vector(self, u: Matrix, coordinates: bool = False) -> Matrix:
+        "Returns a unimodular matrix which makes the smallest vector parallel to the given one the first basis vector."
+        if not coordinates:
+            k = self.coordinates(u)
+        else:
+            k = u
+        W = eye(self.len)
+        kmin = inf
+        jmin = 0
+        for j, kj in enumerate(k):
+            if abs(kj) > 0 and abs(kj) < kmin:
+                kmin = kj
+                jmin = j
+        if kmin == inf:
+            raise ValueError("Cannot use the zero vector as new basis vector.")
+        if kmin < 0:
+            k[jmin] *= -1
+            W[jmin,jmin] = -1
+        k[0], k[jmin] = k[jmin], k[0]
+        W[:,0], W[:,jmin] = W[:,jmin], W[:,0]
+        for j in range(1,self.len):
+            if k[j] != 0:
+                k[0], a, b = egcd(k[0], k[j])
+                W[:,0], W[:,j] = k[0] * W[:,0] + k[j] * W[:,j], b * W[:,0] - a * W[:,j]
+        return W
+
     def gram_det(self) -> float:
         "Compute the Gram determinant of the current basis."
-        if self.Us is None:
-            self.gsd()
+        self.gsd()
         return sqrt(prod(self.N))
 
     def hadamard_ratio(self) -> float:
@@ -299,28 +463,31 @@ class Lattice():
     def svp(self, method: str = 'all', delta: float = 0.75) -> Matrix:
         "Solve the SVP (approximately) using a given method."
         method = method.lower()
-        if method not in ('all', 'hermite', 'lll', 'search'):
-            raise ValueError("Supported methods are: all, hermite, lll, search")
+        if method not in ('all', 'hermite', 'lll', 'enum'):
+            raise ValueError("Supported methods are: all, hermite, lll, enum")
         if method in ('all', 'hermite'):
             self.hermite()
-        if self.len == self.rank and method in ('all', 'lll'):
+        if method in ('all', 'lll'):
             self.lll(delta = delta)
-        if method == 'search':
-            return self.svp_search()
+        if method == 'enum':
+            return self.svp_enum()
         self.sort()
         return Matrix(self.U[0])
 
-    def svp_search(self) -> (float, Matrix):
+    def svp_enum(self, coordinates: bool = False) -> Matrix:
         "Solve the SVP exactly using branch & bound."
         # wet try to improve the basis as much as possible
         self.hermite()
-        if self.len == self.rank:
-            self.lll(delta = 1)
-        lam = self.N[0]  # current guess for the shortest length
-        k, lam = self.search_bb([], lam , 0)
+        self.lll(delta = 0.99, sort = False)
+        self.gsd()
+        self.Nu = list(map(self.norm2, self.U))
+        lam = min(self.Nu)  # current guess for the shortest length
+        k, lam = self.enum_bb([], lam , 0)
+        if coordinates:
+            return Matrix(k)
         return self.basis() * Matrix(k)
 
-    def search_bb(self, k:list, lam: float, C: float, beta: list|None = None, b: Matrix|None = None) -> (list, float):
+    def enum_bb(self, k:list, lam: float, C: float, beta: list|None = None, b: Matrix|None = None) -> (list, float):
         "Branch and bound step for SVP and CVP."
         j = self.len - len(k) - 1
         if j == -1:
@@ -347,7 +514,7 @@ class Lattice():
             Cj = C + (kj + cj)**2 * normj
             if abs(kj + cj) <= 1.01 * bound and Cj <= 1.01 * lam:
                 k_try = [kj] + k
-                k_new, lam_new = self.search_bb(k_try, lam, Cj, beta, b)
+                k_new, lam_new = self.enum_bb(k_try, lam, Cj, beta, b)
                 if lam_new < lam or (k_best is None and lam_new == lam):
                     lam = lam_new
                     k_best = k_new
@@ -365,7 +532,7 @@ class Lattice():
         "Solve the CVP (approximately) using a given method."
         if hermite:
             self.hermite()
-        if self.len == self.rank and lll:
+        if lll:
             self.lll(delta = delta)
         method = method.lower()
         if method == 'lll':
@@ -373,11 +540,17 @@ class Lattice():
         if hasattr(self, "cvp_" + method):
             method = getattr(self, "cvp_" + method)
         else:
-            raise ValueError("Supported methods are: babai_round, babai_plane, kannan, search")
+            raise ValueError("Supported methods are: babai_round, babai_plane, kannan, enum")
         return method(x)
 
     def cvp_babai_round(self, x: Matrix) -> Matrix:
         "Babai's rounding algorithm for approximately solving the CVP."
+        rank = self.rank()
+        if rank < self.dim:
+            self.gsd()
+            xi = list(Matrix(self.Us) * x)
+            xi = [ x / n for x, n in zip(xi, self.N) ]
+            x = Matrix(self.Us).transpose() * Matrix(xi) # we approximate the projection
         c = self.coordinates(x)
         if c is None:
             return None
@@ -385,8 +558,7 @@ class Lattice():
 
     def cvp_babai_plane(self, x: Matrix) -> Matrix:
         "Babai's closest plane algorithm for approximately solving the CVP."
-        if self.Us is None:
-            self.gsd()
+        self.gsd()
         y = list(x)
         for k in range(self.len - 1, -1, -1):
             m = round( self.dot(y, self.Us[k]) / self.N[k] )
@@ -416,19 +588,22 @@ class Lattice():
             return None
         return self.basis() * self.coordinates(x - e)
 
-    def cvp_search(self, x: Matrix) -> Matrix:
+    def cvp_enum(self, x: Matrix) -> Matrix:
         "Solve the CVP exactly using branch & bound."
         # wet try to improve the basis as much as possible
         self.hermite()
         lam = inf
-        if self.len == self.rank:
-            self.lll(delta = 1)
-            a = self.cvp_kannan(x)
-            if a is not None:
-                lam = (x - self.cvp_kannan(x)).norm2()  # current guess for the distance
+        self.lll(delta = 0.99, sort = False)
+        self.gsd()
+        a = self.cvp_kannan(x)
+        if a is not None:
+            lam = (x - self.cvp_kannan(x)).norm2()  # current guess for the distance
         xi = list(Matrix(self.Us) * x)
         xi = [ x / n for x, n in zip(xi, self.N) ]
-        k, lam = self.search_bb([], lam , 0, xi, x)
+        rank = self.rank()
+        if rank < self.dim:
+            x = Matrix(self.Us).transpose() * Matrix(xi) # we approximate the projection
+        k, lam = self.enum_bb([], lam , 0, xi, x)
         return self.basis() * Matrix(k)
 
 

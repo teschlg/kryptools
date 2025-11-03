@@ -313,6 +313,14 @@ class Matrix:
             return True
         return False
 
+    def is_rational(self, convert: bool = False):
+        "Test if all coefficients are rational and convert to fractions if requested."
+        if all( isinstance(x, (Fraction, int)) for row in self.matrix for x in row):
+            if convert:
+                self.map(Fraction)
+            return True
+        return False
+
     def norm2(self) -> float:
         "Squared Frobenius/Euclidean norm."
         return sum(sum(abs(x)**2 for x in row) for row in self.matrix)
@@ -393,7 +401,7 @@ class Matrix:
             # the matrix is over a ring (not a field)
             return self._rref_ring(start = start, drop_zero_rows = drop_zero_rows)
         n, m = self.cols, self.rows
-        if self.is_integer():
+        if self.is_rational():
             R = [ list(map(Fraction, row)) for row in self.matrix ]
         else:
             R = [ row[:] for row in self.matrix ]

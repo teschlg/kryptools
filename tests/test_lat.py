@@ -30,6 +30,10 @@ def test_random_unimodular_matrix():
 
 def check(self, j: int = 0) -> bool:
     "Check Gram-Schmit decomposition and weigts."
+    if self.Nu is None:
+        self.Nu = list(map(self.norm2, self.U))
+    if not all( n > 0 for n in self.Nu):
+        raise ValueError(f"Zero vector in basis {j}")
     if self.Mu is not None:
         oldMu = self.Mu
         oldNu = self.Nu
@@ -40,6 +44,7 @@ def check(self, j: int = 0) -> bool:
         if self.Nu != oldNu:
             raise ValueError(f"Inconsistent Nu {j}")
     if self.Us is not None:
+        self.gsd()
         oldUs = self.Us
         oldM = self.M
         oldN = self.N
@@ -79,12 +84,12 @@ def test_Lattice():
             M = Matrix(lat2.M).transpose()
             assert Us * M == lat2.basis()
             s1 = lat2.svp().norm2()
-            s2 = lat2.svp(method = 'search').norm2()
+            s2 = lat2.svp(method = 'enum').norm2()
             assert s1 >= s2
-            a0 = lat2.cvp(b, method = 'search')
+            a0 = lat2.cvp(b, method = 'enum')
             assert a0 in lat
             n2 = (b-a0).norm2()
-            for method in ('babai_round', 'babai_round', 'kannan'):
+            for method in ('babai_round', 'babai_plane', 'kannan'):
                 a = lat2.cvp(b, method = method)
                 if a is not None:
                     assert a in lat
