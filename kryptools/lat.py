@@ -391,7 +391,7 @@ class Lattice():
 
     def bkz(self, blocksize: int = 3, maxrounds = inf, delta = 0.99, verbose = False) -> "Lattice":
         "Perform a BKZ reduction of the basis."
-        self.lll(delta = delta, verbose = verbose)
+        self.lll(delta = delta, deep = True, verbose = verbose)
         rounds = 0
         changed = True
         while changed and rounds < maxrounds:
@@ -478,7 +478,7 @@ class Lattice():
         "Solve the SVP exactly using branch & bound."
         # wet try to improve the basis as much as possible
         self.hermite()
-        self.lll(delta = 0.99, sort = False)
+        self.lll(delta = 1, deep = True, sort = False)
         self.gsd()
         self.Nu = list(map(self.norm2, self.U))
         lam = min(self.Nu)  # current guess for the shortest length
@@ -567,14 +567,14 @@ class Lattice():
         y = Matrix(y)
         return (x - y).applyfunc(round)
 
-    def cvp_kannan(self, x: Matrix, m: int = 1, delta: float = 0.75) -> Matrix:
+    def cvp_kannan(self, x: Matrix, m: int = 1, delta: float = 0.99, deep: bool = True) -> Matrix:
         "Kannan's embedding algorithm for approximately solving the CVP."
         V = self.basis()
         V.append_column(x)
         V.append_row(V.zeros(1,V.cols))
         V[-1,-1]= m
         lat = Lattice( V )
-        lat.lll(delta = delta)
+        lat.lll(delta = delta, deep = deep)
         e = None
         for i in range(lat.len):
             mm = lat.U[i][-1]
@@ -593,9 +593,9 @@ class Lattice():
         # wet try to improve the basis as much as possible
         self.hermite()
         lam = inf
-        self.lll(delta = 0.99, sort = False)
+        self.lll(delta = 1, deep = True, sort = False)
         self.gsd()
-        a = self.cvp_kannan(x)
+        a = self.cvp_kannan(x, deep = True)
         if a is not None:
             lam = (x - self.cvp_kannan(x)).norm2()  # current guess for the distance
         xi = list(Matrix(self.Us) * x)
