@@ -229,7 +229,7 @@ class Lattice():
             self.Us[j] = self.U[j][:]
             for i in range(j):
                 if self.N[i]:
-                    self.M[j][i] = self.dot(self.U[j], self.Us[i]) / self.N[i]
+                    self.M[j][i] = self.dot(self.Us[j], self.Us[i]) / self.N[i]
                 for l in range(self.dim):
                     self.Us[j][l] -= self.M[j][i] * self.Us[i][l]
             self.N[j] = self.norm2(self.Us[j])
@@ -299,6 +299,8 @@ class Lattice():
             if self.size_reduce(j) and verbose:
                 print(f"Reduced basis vector {j}")
             if all(self.U[j][l] == 0 for l in range(self.dim)):
+                if verbose:
+                    print(f"Deleting vector {j}")
                 self.delete_vector(j)
                 continue
             if deep:
@@ -367,7 +369,7 @@ class Lattice():
                 print(f"Solving SVP in the projected sublattice {start} - {end-1}.")
             lat = self.project(start, end)
             # solve the SVP
-            c = lat.svp_enum(coordinates = True)
+            c = lat.svp_enum(coordinates = True, reduce = False)
             uu = lat.basis() * c
             if uu.norm2() == lat.norm2(lat.U[0]):
                 if self.size_reduce(start):
@@ -377,32 +379,35 @@ class Lattice():
             if verbose:
                 print("Inserting the new vector.")
             changed = True
-            # insert the new short vector
+            # lift the solution
             u = Matrix(self.U[start:end]).transpose() * c
+            # insert the new short vector
             self.U = self.U[:start] + [ list(u) ] + self.U[start:]
             self.len += 1
-            self.Us.append([0] * lat.dim)
-            self.M.append([0] * (lat.len -1 ) + [1])
+            self.Us.append([0] * self.dim)
+            for row in self.M:
+                row += [ 0 ]
+            self.M.append([0] * (self.len -1 ) + [1])
             self.N.append(0)
             self.Us_end = start
             # run LLL
-            self.lll(start = start, delta = delta, verbose = verbose)
+            self.lll(start = start, delta = delta, sort = False, verbose = verbose)
         return changed
 
     def bkz(self, blocksize: int = 3, maxrounds = inf, delta = 0.99, verbose = False) -> "Lattice":
         "Perform a BKZ reduction of the basis."
-        self.lll(delta = delta, deep = True, verbose = verbose)
+        self.lll(delta = delta, deep = True, sort = False, verbose = verbose)
         rounds = 0
         changed = True
         while changed and rounds < maxrounds:
             rounds += 1
             if verbose:
-                print(f"Performing BKZ reduction round {round}.")
+                print(f"Performing BKZ reduction round {rounds}.")
             changed = self.bkz_round(blocksize = blocksize, delta = delta, verbose = verbose)
 
     def hkz(self, verbose = False) -> "Lattice":
         "Perform a HKZ reduction of the basis."
-        self.lll(delta = 1, deep = True, verbose = verbose)
+        self.lll(delta = 1, deep = True, sort = False, verbose = verbose)
         self.bkz_round(blocksize = self.len, delta = 1, verbose = verbose)
 
     def sort(self) -> bool:
@@ -474,11 +479,11 @@ class Lattice():
         self.sort()
         return Matrix(self.U[0])
 
-    def svp_enum(self, coordinates: bool = False) -> Matrix:
+    def svp_enum(self, coordinates: bool = False, reduce = False) -> Matrix:
         "Solve the SVP exactly using branch & bound."
         # wet try to improve the basis as much as possible
-        self.hermite()
-        self.lll(delta = 1, deep = True, sort = False)
+        if reduce:
+            self.lll(delta = 1, deep = True, sort = False)
         self.gsd()
         self.Nu = list(map(self.norm2, self.U))
         lam = min(self.Nu)  # current guess for the shortest length
