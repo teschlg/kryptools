@@ -26,11 +26,12 @@ The tools contained are:
 * integer factorization (Fermat, Pollard p-1, Pollard rho, Lenstra's ECM, Dixon, basic quadratic sieve)
 * elliptic curves (Weierstrass form), group operations, order, discrete logarithms
 * linear algebra: Hermite normal form, Smith normal form, Gram-Schmidt
-* lattices: Hadamard ratio, Babai rounding/nearest plane algorithm, lattice reduction (Lenstra-Lenstra-Lovaz), SIS, ISIS, LWE
+* lattices: Hadamard ratio, Babai rounding/nearest plane algorithm, lattice reduction (Hermite, Lenstra-Lenstra-Lovaz, BKZ), SIS, ISIS, LWE
 * linear codes: Hamming distance, left standard form, parity check matrix
 
 * Matrix: a class for Matrices (inverse, det, reduced echelon form, kernel, solving linear systems, etc.)
 * BinaryMatrix: a class for Matrices with binary entries (for much faster row operations)
+* Lattice: a class for lattices (SVP, CPV, LLL, BKZ, HKZ)
 * Poly: a class for polynomials (division, modulo, factoring and irreducibility test over finite fields, Lagrange interpolation)
 * Zmod: a class for the ring of integers modulo an integer
 * GF2: a class for Galois fields GF(2^n)
