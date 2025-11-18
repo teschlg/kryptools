@@ -1079,7 +1079,7 @@ class BinaryMatrix:
         n = 0
         for bit in b:
             n <<= 1
-            n += bit
+            n += int(bit)
         return n
 
     def bitmatrix(self) -> list[list]:

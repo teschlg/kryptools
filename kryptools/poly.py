@@ -142,6 +142,8 @@ class Poly:
             except:  # pylint: disable=W0702
                 pass
             try:
+                if hasattr(s, "ring") and hasattr(s.ring, "sharp") and s.ring.sharp:
+                    s = s.sharp()
                 if plus and s < 0:
                     tmp += " - " + str(-s)
                     if i != 0:
@@ -225,9 +227,11 @@ class Poly:
         return self.__class__(list(map(func, self.coeff)), modulus = self.modulus, cyclic = self.cyclic)
 
     def _check_type(self, other):
+        "Check if self and other can be added/multiplied."
         return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])  # pylint: disable=C0123
 
     def _guess_ring(self):
+        "Try to guess from which the ring the coefficients are."
         zero = 0 * self.coeff[0]
         one = zero**0
         if hasattr(zero, "ring"):
@@ -241,6 +245,7 @@ class Poly:
         return zero, one, ring
 
     def _guess_field(self):
+        "Try to guess from which field the coefficients are."
         zero, one, field = self._guess_ring()
         if not field:
             raise ValueError(
@@ -251,7 +256,7 @@ class Poly:
             if not field.is_field():
                 raise ValueError(
                     "The polynomial does not seem to be over a finite field.")
-        else:  # G2 or galois
+        else:  # GF2 or galois
             p = field.characteristic
             q = field.order
         return field, zero, one, q, p
@@ -293,13 +298,13 @@ class Poly:
         return (- self) + other
 
     def __mul__(self, other: "Poly") -> "Poly":
+        zero = 0 * self.coeff[0]
         if not isinstance(other, self.__class__):
             if self._check_type(other):
                 if not other:
-                    return self.__class__([other], modulus = self.modulus, cyclic = self.cyclic, check = False)
+                    return self.__class__([zero], modulus = self.modulus, cyclic = self.cyclic, check = False)
                 return self.__class__([other * s for s in self.coeff], modulus = self.modulus, cyclic = self.cyclic, check = False)
             return NotImplemented
-        zero = 0 * self.coeff[0]
         ls, lo = len(self.coeff), len(other.coeff)
         if self.cyclic or other.cyclic:
             if self.cyclic:
@@ -319,8 +324,8 @@ class Poly:
             if cyclic > 0:
                 coeff = [ sum( (selfc[j] * otherc[(k-j) % n] for j in range(ls)), start = zero) for k in range(n)]
             else:
-                coeff = [ sum( (selfc[j] * otherc[(k-j) % n] for j in range(min(k,ls))), start = zero) -
-                          sum( (selfc[j] * otherc[(k-j) % n] for j in range(k,ls)), start = zero) for k in range(n)]
+                coeff = [ sum( (selfc[j] * otherc[k - j] for j in range(min(k+1,ls))), start = zero) -
+                          sum( (selfc[j] * otherc[n + k - j] for j in range(k+1,ls)), start = zero) for k in range(n)]
             ret = self.__class__(coeff, modulus = modulus, cyclic = cyclic, check = False)
             ret.strip()
             return ret
@@ -521,6 +526,7 @@ class Poly:
         if r0.degree() != 0:
             raise ValueError(f"{self} is not invertible mod {other}.")
         y0.modulus = self.modulus
+        y0.cyclic = self.cyclic
         if r0.coeff[0] == one:
             return y0
         return y0 / r0.coeff[0]

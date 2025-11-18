@@ -21,17 +21,24 @@ def test_Poly():
     assert q * p == p.gcd(q) * p.lcm(q)
     assert d * p + m == q
     for _ in range(num_tests):
-        p = Poly([randint(0,100) for _ in range(10)])
-        q = Poly([randint(0,100) for _ in range(12)])
-        x = randint(0,100)
+        p = Poly([randint(-100,100) for _ in range(10)])
+        q = Poly([randint(-100,100) for _ in range(12)])
+        x = randint(-100,100)
         assert p(x) == sum((c * x**j for j, c in enumerate(p.coeff)), start=0)
         assert (p + q)(x) == p(x) + q(x)
         assert (p - q)(x) == p(x) - q(x)
         assert (p*q)(x) == p(x) * q(x)
-    modulus = [-1] + 7 * [0] + [1]
-    p = [ randint(0,9) for _ in range(8) ]
-    q = [ randint(0,9) for _ in range(8) ]
-    assert list(circulant(p) * Matrix(q)) == (Poly(p, modulus = modulus) * Poly(q, modulus = modulus)).coeff
+    n = 8
+    modulus = [-1] + (n-1) * [0] + [1]
+    for _ in range(num_tests):
+        p = [ randint(-9,9) for _ in range(n) ]
+        q = [ randint(-9,9) for _ in range(n) ]
+        assert list(circulant(p) * Matrix(q)) == (Poly(p, modulus = modulus) * Poly(q, modulus = modulus)).coeff
+    modulus = [1] + (n-1) * [0] + [1]
+    for _ in range(num_tests):
+        p = [ randint(-9,9) for _ in range(n) ]
+        q = [ randint(-9,9) for _ in range(n) ]
+        assert Poly(p) * Poly(q) % Poly(modulus) == (Poly(p, modulus = modulus) * Poly(q, modulus = modulus))
     gf = Zmod(5)
     p = Poly([2, 0, 2], ring = gf)
     q = Poly([1, 2, 3, 4], ring = gf)
