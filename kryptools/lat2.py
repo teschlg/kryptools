@@ -12,7 +12,6 @@ def hermite_nf(M: Matrix) -> Matrix:
     "Compute the Hermite normal form of a matrix M."
     return M.hnf()
 
-
 def gram_schmidt(U: Matrix, drop_dependent: bool = True) -> (Matrix, Matrix):
     "Compute the Gram-Schmidt orthogonalization of the column vectors of a matrix M."
     M = U.eye(U.cols)
@@ -36,29 +35,21 @@ def gram_schmidt(U: Matrix, drop_dependent: bool = True) -> (Matrix, Matrix):
         M = M[:-jj,:-jj]
     return Us, M
 
-
 def gram_det(U: Matrix) -> float:
     "Compute the Gram determinant of a matrix."
     Us = gram_schmidt(U, drop_dependent = False)[0]
     return prod([Us[:, i].norm() for i in range(U.rows)])
-
 
 def hadamard_ratio(M: Matrix) -> float:
     "Compute the Hadamard ratio of a matrix."
     m = M.rows
     return (gram_det(M) / prod([M[:, i].norm() for i in range(m)])) ** (1 / m)
 
-
 def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
     "Babai's rounding algorithm for approximately solving the CVP."
     s = U.inv() * x
     k = s.applyfunc(round)
     return U * k
-
-def babai_round_bnd(U: Matrix) -> float:
-    "Bound for Babai's rounding algorithm for solving the CVPwith respect to the sup norm."
-    return floor(1 / (2 * max(U.inv()[i, :].norm(1) for i in range(U.rows))))
-
 
 def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
     "Babai's closest plane algorithm for approximately solving the CVP."
@@ -67,7 +58,6 @@ def babai_plane_cvp(x: Matrix, U: Matrix) -> Matrix:
     for k in range(U.cols - 1, -1, -1):
         y = y - round(y.dot(Us[:, k]) / Us[:, k].norm2()) * U[:, k]
     return (x - y).applyfunc(round)
-
 
 def babai_plane_bnd(U: Matrix, p=2) -> float:
     "Bound for Babai's closest plane algorithm for solving the CVP with respect to the Euclidean norm (p=2) or sup norm (p=inf)."

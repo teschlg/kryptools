@@ -205,7 +205,7 @@ class Lattice():
             print(f"Total number of steps: {steps}")
 
     def hnf(self) -> None:
-        "Transform the basis into Hermite normal form.."
+        "Transform the basis into Hermite normal form."
         if self.Uhnf is None:
             self.Uhnf = self.basis().hnf().matrix
             self.Us = None
@@ -237,7 +237,7 @@ class Lattice():
                 self.N[j] = Fraction(self.N[j])
         self.Us_end = end + 1
 
-    def size_reduce(self, j: int) -> bool:
+    def size_reduce_one(self, j: int) -> bool:
         "Size reduction at index `j`."
         self.gsd(j)
         reduced = False
@@ -249,6 +249,14 @@ class Lattice():
                     self.U[j][l] -= r * self.U[i][l]
                 for k in range(i+1):
                     self.M[j][k] -= r * self.M[i][k]
+        return reduced
+
+    def size_reduce(self) -> bool:
+        "Size reduction at all indices."
+        reduced = False
+        for j in range(self.len):
+            if self.size_reduce_one(j):
+                reduced = True
         return reduced
 
     def swap(self, j:int, newN1 = None) -> None:
@@ -296,7 +304,7 @@ class Lattice():
         steps = 0
         while j < self.len:
             steps += 1
-            if self.size_reduce(j) and verbose:
+            if self.size_reduce_one(j) and verbose:
                 print(f"Reduced basis vector {j}")
             if all(self.U[j][l] == 0 for l in range(self.dim)):
                 if verbose:
@@ -372,7 +380,7 @@ class Lattice():
             c = lat.svp_enum(coordinates = True, reduce = False)
             uu = lat.basis() * c
             if uu.norm2() == lat.norm2(lat.U[0]):
-                if self.size_reduce(start):
+                if self.size_reduce_one(start):
                     changed = True
                 continue
             # the new vector is shorter

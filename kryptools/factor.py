@@ -209,8 +209,7 @@ def divisors(n:int, proper:bool = False) -> int:
             i = 0
         d = prod(primes[i] ** exponents[i] for i in range(nprimes))
         if d == n:
-            if proper:
-                return divisor_list
-            divisor_list.append(n)
+            if not proper:
+            	divisor_list.append(n)
             return divisor_list
         divisor_list.append(d)
