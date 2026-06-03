@@ -2,7 +2,7 @@
 Lattice tools 2
 """
 
-from math import prod, floor, inf
+from math import prod, inf
 from itertools import product
 from .la import Matrix, eye
 from .lat import Lattice
