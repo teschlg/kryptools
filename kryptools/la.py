@@ -868,17 +868,19 @@ def eye(m: int, n: int = None, zero=0, one=1, ring=None) -> "Matrix":
         raise ValueError(f"Matrix dimensions {m}x{n} must be positive!")
     return Matrix([[delta(i, j) for j in range(n)] for i in range(m)], ring=ring)
 
-def rotate(l: list, n: int) -> list:
+def rotate(l: list, n: int, skew=False) -> list:
     "Rotate a list cyclically n places to the left."
     n %= len(l)
+    if skew:
+        return l[n:] + [ -a for a in l[:n] ]
     return l[n:] + l[:n]
 
-def circulant(vector: list|tuple, m: int = None, ring=None) -> "Matrix":
-    "Returns a circulant matrix from the given vector."
+def circulant(vector: list|tuple, m: int = None, ring=None, skew=False) -> "Matrix":
+    "Returns a (skew) circulant matrix from the given vector."
     if m is None:
         m = len(vector)
     vector = list(reversed(vector))
-    return Matrix([rotate(vector, -n-1) for n in range(m)], ring=ring)
+    return Matrix([rotate(vector, -n-1, skew=skew) for n in range(m)], ring=ring)
 
 class BinaryMatrix:
     """
