@@ -473,6 +473,18 @@ class Lattice():
         "Compute the Hadamard ratio of the current basis."
         return (self.gram_det() / prod(map(self.norm2, self.U)) ) ** (1 / self.len)
 
+    def hermite_factor(self) -> float:
+        "Compute the Hermit factor of the current basis."
+        if self.Nu is not None:
+            norm = self.Nu[0] ** (1/2)
+        else:
+            norm = self.norm2(self.U[0]) ** (1/2)
+        return norm / (self.gram_det() ** (1 / self.len))
+
+    def root_hermite_factor(self) -> float:
+        "Compute the root Hermit factor of the current basis."
+        return self.hermite_factor() ** (1 / (self.len - 1))
+
     def svp(self, method: str = 'all', delta: float = 0.75) -> Matrix:
         "Solve the SVP (approximately) using a given method."
         method = method.lower()

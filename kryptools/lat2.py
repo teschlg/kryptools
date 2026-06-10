@@ -45,6 +45,14 @@ def hadamard_ratio(M: Matrix) -> float:
     m = M.rows
     return (gram_det(M) / prod([M[:, i].norm() for i in range(m)])) ** (1 / m)
 
+def hermite_factor(M: Matrix) -> float:
+    "Compute the Hermite factor of the current basis."
+    return M[:, 0].norm() / (gram_det(M) ** (1 / M.rows))
+
+def root_hermite_factor(M: Matrix) -> float:
+    "Compute the Hermite root factor of the current basis."
+    return hermite_factor(M) ** (1 / (M.rows - 1))
+
 def babai_round_cvp(x: Matrix, U: Matrix) -> Matrix:
     "Babai's rounding algorithm for approximately solving the CVP."
     s = U.inv() * x
