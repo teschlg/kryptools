@@ -2,7 +2,8 @@
 Polynomials
 """
 
-from math import prod, comb
+from math import prod, gcd, lcm, comb
+from fractions import Fraction
 from numbers import Number
 from random import randint
 from itertools import combinations
@@ -132,25 +133,17 @@ class Poly:
                 tmp += plus + prx(i)
                 plus = " + "
                 continue
-            try:
-                if not s + one and i != 0:
-                    if plus:
-                        plus = " "
-                    tmp += plus + "- " + prx(i)
-                    plus = " + "
-                    continue
-            except:  # pylint: disable=W0702
-                pass
-            try:
-                if hasattr(s, "ring") and hasattr(s.ring, "sharp") and s.ring.sharp:
-                    s = s.sharp()
-                if plus and s < 0:
-                    tmp += " - " + str(-s)
-                    if i != 0:
-                        tmp += " " + prx(i)
-                    continue
-            except:  # pylint: disable=W0702
-                pass
+            if not s + one and i != 0 and str(s)[0] == '-':
+                if plus:
+                    plus = " "
+                tmp += plus + "- " + prx(i)
+                plus = " + "
+                continue
+            if plus and str(s)[0] == '-':
+                tmp += " - " + str(-s)
+                if i != 0:
+                    tmp += " " + prx(i)
+                continue
             tmp += plus + str(s)
             if i != 0:
                 tmp += " " + prx(i)
@@ -397,6 +390,18 @@ class Poly:
         "Sum of the absolute value of all coefficients."
         return sum(abs(c) for c in self.coeff)
 
+    def content(self) -> int:
+        "Return the content, the gcd of all coefficients, of a polynomial."
+        if not all(map(lambda _: isinstance(_, int), self.coeff)):
+            raise ValueError("Content requires integer coefficients.")
+        return gcd(*self.coeff)
+
+    def primitive_part(self) -> int:
+        "Return the primitive part of a polynomial."
+        if not all(map(lambda _: isinstance(_, int), self.coeff)):
+            raise ValueError("Primitive part requires integer coefficients.")
+        return self // gcd(*self.coeff)
+
     def __floordiv__(self, other: "Poly") -> "Poly":
         return self.divmod(other)[0]
 
@@ -554,18 +559,24 @@ class Poly:
         "Least common multiple with a given polynomial."
         return self * other // self.gcd(other)
 
-    def egcd(self, other: "Poly") -> ("Poly", "Poly", "Poly"):
+    def egcd(self, other: "Poly", integer:bool = False) -> ("Poly", "Poly", "Poly"):
         """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that other * x + self * y = gcd."""
         zero, one, _ = self._guess_ring()
         if not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot perform egcd: {other} must be a polynomial.")
+        if integer:
+            if not( all(map(lambda _: isinstance(_, int), self.coeff)) and all(map(lambda _: isinstance(_, int), other.coeff)) ):
+                raise ValueError(f"The option 'integer' requires integer coefficients.")
         if not self:
             if not other:
                 return self.__class__([zero], check = False), self.__class__([zero], check = False), self.__class__([zero], check = False)
-            if other.coeff[-1] == one:
+            if other.coeff[-1] == one or integer:
                 return other, self.__class__([zero], check = False), self.__class__([one], check = False)
             return other / other.coeff[-1], __class__([zero], check = False), self.__class__([one / other.coeff[-1]], check = False)
-        r0, r1 = other, self
+        if integer:
+            r0, r1 = other.applyfunc(Fraction), self.applyfunc(Fraction)
+        else:
+            r0, r1 = other, self
         x0, x1 = self.__class__([one], check = False), self.__class__([zero], check = False)
         y0, y1 = x1, x0
         while r1:
@@ -574,9 +585,16 @@ class Poly:
             x0, x1 = x1, x0 - x1 * q
             y0, y1 = y1, y0 - y1 * q
         lcr0 = r0.coeff[-1]
-        if lcr0 == one:
-            return r0, x0, y0
-        return r0 / lcr0, x0 / lcr0, y0 / lcr0
+        if lcr0 != one:
+            r0, x0, y0 = r0 / lcr0, x0 / lcr0, y0 / lcr0
+        if integer:
+            lcmx = lcm(*map(lambda _: _.denominator, x0.coeff))
+            lcmy = lcm(*map(lambda _: _.denominator, y0.coeff))
+            lcmxy = lcm(lcmx,lcmy)
+            r0, x0, y0 = lcmxy * r0, lcmxy * x0, lcmxy * y0
+            x0.map(int)
+            y0.map(int)
+        return r0, x0, y0
 
     def derivative(self) -> "Poly":
         "Returns the formal derivative."

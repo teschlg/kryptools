@@ -709,7 +709,7 @@ class Matrix:
             R = [ list(map(lambda x: Fraction(int(x)), row)) for row in self.matrix ]
             zero, one = ring(0), 1
         elif self.is_integer():
-            ring = None
+            ring = int
             R = [ list(map(Fraction, row)) for row in self.matrix ]
             zero, one = 0, 1
         else:
