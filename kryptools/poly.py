@@ -308,7 +308,7 @@ class Poly:
             cyclic = other.cyclic
             modulus = other.modulus
         if (ls == 1 and not self.coeff[0]) or (lo == 1 and not other.coeff[0]):
-                return self.__class__([zero], modulus = modulus, cyclic = cyclic, check = False)
+            return self.__class__([zero], modulus = modulus, cyclic = cyclic, check = False)
         if cyclic:
             if self.cyclic:
                 cyclic = self.cyclic
