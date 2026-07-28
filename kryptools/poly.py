@@ -2,7 +2,7 @@
 Polynomials
 """
 
-from math import prod, gcd, lcm, comb
+from math import prod, gcd, lcm, comb, sqrt
 from fractions import Fraction
 from numbers import Number
 from random import randint
@@ -10,6 +10,7 @@ from itertools import combinations
 from copy import copy
 from .Zmod import Zmod
 from .nt import crt
+from .la import Matrix, zeros
 
 class Poly:
     """
@@ -174,7 +175,7 @@ class Poly:
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return not bool(self - other)
+        return self.coeff == other.coeff
 
     def __bool__(self):
         return bool(self.degree()) or bool(self.coeff[0])
@@ -390,6 +391,10 @@ class Poly:
         "Sum of the absolute value of all coefficients."
         return sum(abs(c) for c in self.coeff)
 
+    def norm(self) -> int:
+        "Euclidean norm of the coefficients."
+        return sqrt(sum(abs(c)**2 for c in self.coeff))
+
     def content(self) -> int:
         "Return the content, the gcd of all coefficients, of a polynomial."
         if not all(map(lambda _: isinstance(_, int), self.coeff)):
@@ -560,13 +565,13 @@ class Poly:
         return self * other // self.gcd(other)
 
     def egcd(self, other: "Poly", integer:bool = False) -> ("Poly", "Poly", "Poly"):
-        """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that other * x + self * y = gcd."""
+        """Perform the extended Euclidean agorithm for polynomials. Returns gcd, x, y such that self * x + other * y = gcd."""
         zero, one, _ = self._guess_ring()
         if not isinstance(other, self.__class__):
             raise NotImplementedError(f"Cannot perform egcd: {other} must be a polynomial.")
         if integer:
             if not( all(map(lambda _: isinstance(_, int), self.coeff)) and all(map(lambda _: isinstance(_, int), other.coeff)) ):
-                raise ValueError(f"The option 'integer' requires integer coefficients.")
+                raise ValueError("The option 'integer' requires integer coefficients.")
         if not self:
             if not other:
                 return self.__class__([zero], check = False), self.__class__([zero], check = False), self.__class__([zero], check = False)
@@ -574,9 +579,9 @@ class Poly:
                 return other, self.__class__([zero], check = False), self.__class__([one], check = False)
             return other / other.coeff[-1], __class__([zero], check = False), self.__class__([one / other.coeff[-1]], check = False)
         if integer:
-            r0, r1 = other.applyfunc(Fraction), self.applyfunc(Fraction)
+            r0, r1 = self.applyfunc(Fraction), other.applyfunc(Fraction)
         else:
-            r0, r1 = other, self
+            r0, r1 = self, other
         x0, x1 = self.__class__([one], check = False), self.__class__([zero], check = False)
         y0, y1 = x1, x0
         while r1:
@@ -592,6 +597,7 @@ class Poly:
             lcmy = lcm(*map(lambda _: _.denominator, y0.coeff))
             lcmxy = lcm(lcmx,lcmy)
             r0, x0, y0 = lcmxy * r0, lcmxy * x0, lcmxy * y0
+            r0.map(int)
             x0.map(int)
             y0.map(int)
         return r0, x0, y0
@@ -785,7 +791,7 @@ class PolyBinMult():
                     self.monomials.append(combination)
                 i += 1
 
-    def __repr__(self, latex=None):
+    def __repr__(self, latex: bool = False):
         def prx(i: int) -> str:
             if len(self.__class__.print_x) >= self.m:
                 return self.__class__.print_x[i]
@@ -810,7 +816,7 @@ class PolyBinMult():
     def _repr_mimebundle_(self, **kwargs):  # pylint: disable=W0613
         return {
             "text/plain": repr(self),
-            "text/latex": "$" + self.__repr__(latex=True) + "$"  # pylint: disable=C2801
+            "text/latex": "$" + self.__repr__(latex = True) + "$"  # pylint: disable=C2801
         }
 
     def index2monomial(self, idx: int) -> tuple|None:
@@ -860,7 +866,7 @@ class PolyBinMult():
             val += prod(x[i] for i in monomial)
         return val % 2
 
-    def __eq__(self, other):
+    def __eq__(self, other: "PolyBinMult"):
         if not isinstance(other, self.__class__):
             return False
         return not bool(self + other)
@@ -868,7 +874,7 @@ class PolyBinMult():
     def __bool__(self):
         return bool(self.monomials)
 
-    def __add__(self, other) -> "PolyBinMult":
+    def __add__(self, other: "PolyBinMult") -> "PolyBinMult":
         if not isinstance(other, self.__class__):
             return NotImplemented
         if other.m != self.m:
@@ -888,7 +894,7 @@ class PolyBinMult():
 
     __neg__ = __pos__
 
-    def __mul__(self, other) -> "PolyBinMult":
+    def __mul__(self, other: "PolyBinMult") -> "PolyBinMult":
         if isinstance(other, self.__class__):
             return self.multiply(other)
         if isinstance(other, int):
@@ -897,14 +903,14 @@ class PolyBinMult():
             return self.__class__([], self.m)
         return NotImplemented
 
-    def __rmul__(self, other) -> "PolyBinMult":
+    def __rmul__(self, other: "PolyBinMult") -> "PolyBinMult":
         if isinstance(other, int):
             if other % 2:
                 return self
             return self.__class__([], self.m)
         return NotImplemented
 
-    def multiply(self, other) -> "PolyBinMult":
+    def multiply(self, other: "PolyBinMult") -> "PolyBinMult":
         "Polynomial Multiplication."
         res = []
         for monomials in self.monomials:
@@ -947,3 +953,28 @@ def lagrange_interpolation(x_coordinates: list, y_coordinates: list) -> "Poly":
         poly += (y /
                  prod([x - xx for xx in x_coordinates if xx != x], start=one)) * L
     return poly
+
+def sylvester(p: "Poly", q: "Poly") -> "Matrix":
+    "Sylvester matrix of the given polynomials."
+    n = q.degree()
+    m = p.degree()
+    S = zeros(m + n)
+    k = 0
+    for i in range(n):
+        j = k
+        for c in p.coeff:
+            S[j, i] = c
+            j += 1
+        k = k + 1
+    k = 0
+    for i in range(n, m + n):
+        j = k
+        for c in q.coeff:
+            S[j, i] = c
+            j += 1
+        k = k + 1
+    return S
+
+def resultant(p: "Poly", q: "Poly") -> int:
+    "Resultant of the given polynomials."
+    return sylvester(p,q).det()
