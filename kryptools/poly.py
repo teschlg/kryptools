@@ -104,7 +104,7 @@ class Poly:
     def __hash__(self):
         return hash(tuple(self.coeff))
 
-    def __repr__(self, latex=None):
+    def __repr__(self, latex: bool|None = None):
         def prx(i: int) -> str:
             if i == 0:
                 return ""
@@ -118,7 +118,7 @@ class Poly:
 
         if latex is None:
             latex = self.__class__.print_latex
-        if not self:
+        if len(self.coeff) == 1:
             return str(self.coeff[0])
         one = self.coeff[0]**0
         plus = ""
@@ -300,7 +300,16 @@ class Poly:
                 return self.__class__([other * s for s in self.coeff], modulus = self.modulus, cyclic = self.cyclic, check = False)
             return NotImplemented
         ls, lo = len(self.coeff), len(other.coeff)
-        if self.cyclic or other.cyclic:
+        modulus = self.modulus
+        if not modulus and other.modulus:
+            modulus = other.modulus
+        cyclic = self.cyclic
+        if not self.cyclic and other.cyclic:
+            cyclic = other.cyclic
+            modulus = other.modulus
+        if (ls == 1 and not self.coeff[0]) or (lo == 1 and not other.coeff[0]):
+                return self.__class__([zero], modulus = modulus, cyclic = cyclic, check = False)
+        if cyclic:
             if self.cyclic:
                 cyclic = self.cyclic
                 modulus = self.modulus
@@ -791,7 +800,7 @@ class PolyBinMult():
                     self.monomials.append(combination)
                 i += 1
 
-    def __repr__(self, latex: bool = False):
+    def __repr__(self, latex: bool|None = None):
         def prx(i: int) -> str:
             if len(self.__class__.print_x) >= self.m:
                 return self.__class__.print_x[i]
