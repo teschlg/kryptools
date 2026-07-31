@@ -9,7 +9,7 @@ from random import randint
 def factor_rho(n: int, x: int = 2, maxinit: int = 10, maxiter: int = 1000, brent: bool = True, verbose: int = 0) -> int | None:
     """Factor `n` using the Pollard's rho method with start value `x`."""
     if not maxiter:
-        maxiter = 10 * isqrt(n)  # stop iterating and try a different start value
+        maxiter = 3 * isqrt(isqrt(n))  # stop iterating and try a different start value
 
     def f(x: int) -> int:
         return (pow(x, 2, n) + 2) % n
