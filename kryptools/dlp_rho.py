@@ -12,6 +12,11 @@ def dlog_rho(a: int, b: int, n: int, m: int = None, brent=0) -> int:
     b %= n
     if not m:
         m = n - 1
+    else:
+        if pow(a, m, n) != 1:
+            raise ValueError("Incorrect order.")
+        if pow(b, m, n) != 1:
+            raise ValueError("DLP not solvable.")
     trys = 10
     max_iter = 10 * isqrt(m)  # stop iterating and try a different start value
 
