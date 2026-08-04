@@ -62,9 +62,10 @@ class Zmod:
         return isinstance(other, ZmodPoint) and self.n == other.ring.n
 
     def decompress(self, x: int, d: int) -> "ZmodPoint":
-        "Decompress an integer."
-        if not isinstance(d, int) or d <= 0 or d > self.n.bit_length():
+        "Decompress an integer `x` with at most `d` bits to Z_n."
+        if not isinstance(d, int) or d <= 0 or d >= self.n.bit_length():
             raise ValueError("The number of bits must be between 1 and the bit length of the modulus.")
+        x %= 2**d
         return ZmodPoint( floor(Fraction(x * self.n, 2**d) + Fraction(1, 2) ), self)
 
     def random(self, num: int = 0) -> "ZmodPoint":
