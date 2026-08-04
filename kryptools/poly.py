@@ -220,6 +220,12 @@ class Poly:
             return self.__class__(list(map(func, self.coeff)), modulus = list(map(func, self.modulus)))
         return self.__class__(list(map(func, self.coeff)), modulus = self.modulus, cyclic = self.cyclic)
 
+    def compress(self, d: int) -> list:
+        "Retun a list of compressed coefficients."
+        if not hasattr(self.coeff[0], "compress"):
+            raise ValueError("The unerlying ring does not seem to support compression.")
+        return [ c.compress(d) for c in self.coeff ]
+
     def _check_type(self, other):
         "Check if self and other can be added/multiplied."
         return isinstance(other, int) or (isinstance(other, Number) and isinstance(self.coeff[0], Number)) or type(other) == type(self.coeff[0])  # pylint: disable=C0123

@@ -2,8 +2,9 @@
 Ring of intergers modulo `n`.
 """
 
-from math import gcd
+from math import gcd, floor
 from random import randint
+from fractions import Fraction
 from .factor import factorint
 from .primes import is_prime
 from .nt import sqrt_mod, crt
@@ -59,6 +60,12 @@ class Zmod:
 
     def __contains__(self, other: "ZmodPoint") -> bool:
         return isinstance(other, ZmodPoint) and self.n == other.ring.n
+
+    def decompress(self, x: int, d: int) -> "ZmodPoint":
+        "Decompress an integer."
+        if not isinstance(d, int) or d <= 0 or d > self.n.bit_length():
+            raise ValueError("The number of bits must be between 1 and the bit length of the modulus.")
+        return ZmodPoint( floor(Fraction(x * self.n, 2**d) + Fraction(1, 2) ), self)
 
     def random(self, num: int = 0) -> "ZmodPoint":
         "Return a single random point or a list of random points."
@@ -255,8 +262,14 @@ class ZmodPoint:
             return self.x
         return self.ring.n - self.x
 
+    def compress(self, d: int) -> list:
+        "Returns the value compressed to `d` bits."
+        if not isinstance(d, int) or d <= 0 or d > self.ring.n.bit_length():
+            raise ValueError("The number of bits must be between 1 and the bit length of the modulus.")
+        return floor(Fraction(self.x * 2**d, self.ring.n) + Fraction(1, 2) ) % 2**d
+
     def bits(self) -> list:
-        "Convert to a list of bits."
+        "Returns a list of bits."
         return [int(d) for d in str(format(self.x, "0" + str(int.bit_length(self.ring.n - 1)) + "b"))]
 
     def sharp(self):
