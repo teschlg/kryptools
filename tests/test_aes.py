@@ -46,26 +46,28 @@ def test_AES():
 
     # AES-128-CTR
     k = bytes.fromhex('AE6852F8121067CC4BF7A5765577F39E')
-    iv = bytes.fromhex('00000030000000000000000000000001')
+    nonce = bytes.fromhex("00000030")
+    iv = bytes.fromhex('0000000000000000')
     m = bytes.fromhex('53696E676C6520626C6F636B206D7367')
     c = bytes.fromhex('E4095D4FB7A7B3792D6175A3261311B8')
 
     aes.set_key(k)
-    res = aes.encrypt_ctr(m, iv=iv)
-    assert res[16:] == c
-    assert aes.decrypt_ctr(res) == m
+    res = aes.encrypt_ctr(m, nonce=nonce, iv=iv)
+    assert res[len(nonce) + len(iv):] == c
+    assert aes.decrypt_ctr(res, aes.blocksize - len(nonce) - len(iv)) == m
 
     k = bytes.fromhex('7691BE035E5020A8AC6E618529F9A0DC')
-    iv = bytes.fromhex('00E0017B27777F3F4A1786F000000001')
+    nonce = bytes.fromhex("00E0017B")
+    iv = bytes.fromhex('27777F3F4A1786F0')
     m = bytes.fromhex(
         '000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20212223')
     c = bytes.fromhex(
         'C1CF48A89F2FFDD9CF4652E9EFDB72D74540A42BDE6D7836D59A5CEAAEF3105325B2072F')
 
     aes.set_key(k)
-    res = aes.encrypt_ctr(m, iv=iv)
-    assert res[16:] == c
-    assert aes.decrypt_ctr(res) == m
+    res = aes.encrypt_ctr(m, nonce=nonce, iv=iv)
+    assert res[len(nonce) + len(iv):] == c
+    assert aes.decrypt_ctr(res,aes.blocksize - len(nonce) - len(iv)) == m
 
     # AES-128-GCM
     k = bytes.fromhex('00000000000000000000000000000000')
@@ -79,6 +81,9 @@ def test_AES():
     res = aes.encrypt_gcm(m, aad=aad, iv=iv)
     assert res[12:-16] == c and res[-16:] == mac
     assert aes.decrypt_gcm(res, aad=aad) == m
+    with pytest.raises(AssertionError):
+        assert aes.decrypt_gcm(res, aad= b'\x00') == m
+
 
     k = bytes.fromhex('00000000000000000000000000000000')
     iv = bytes.fromhex('000000000000000000000000')

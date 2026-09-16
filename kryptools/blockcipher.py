@@ -142,6 +142,7 @@ class BlockCipher:
         if iv is None:
             z = randbytes(self.__class__.blocksize)  # iv
         else:
+            assert len(iv) == self.__class__.blocksize, "Length of IV must be equal to the block length."
             z = iv
         ctext.extend(z)  # add iv as first block of the cipher text
         for b in self.blocksplit(text, False):
@@ -159,40 +160,60 @@ class BlockCipher:
             text.extend(bytexor(b, z))
         return bytes(text)
 
-    def adv_ctr(self, z: bytes, s: int) -> bytes:
+    def adv_ctr(self, z: bytearray, ctrlen: int) -> bytes:
         "Advance the counter."
-        zz = bytearray(z)
-        for i in range(self.__class__.blocksize-1, self.__class__.blocksize-s-1, -1):
+        for i in range(self.__class__.blocksize-1, self.__class__.blocksize-ctrlen-1, -1):
             c = z[i]+1
             if c < 256:
-                zz[i] = c
+                z[i] = c
                 break
-            zz[i] = 0
-        return zz
+            z[i] = 0
+        return z
 
-    def encrypt_ctr(self, text: bytes, iv: bytes | None = None) -> bytes:
+    def encrypt_ctr(self, text: bytes, ctrlen: int = 0, nonce: bytes = b'', iv: bytes | None = None) -> bytes:
         "Encrypt using CTR mode."
         ctext = bytearray(b'')
+        assert 0 <= ctrlen <= self.__class__.blocksize, "Counter too long."
+        assert len(nonce) + ctrlen <= self.__class__.blocksize, "Nonce too long."
         if iv is None:
-            ctr = randbytes(self.__class__.blocksize)  # iv
-        else:
-            ctr = iv
-        ctext.extend(ctr)  # add iv as first block of the cipher text
+            iv = randbytes(self.__class__.blocksize - ctrlen - len(nonce))# iv
+        iv = nonce + iv
+        assert len(iv) + ctrlen <= self.__class__.blocksize, "IV too long."
+        if ctrlen == 0 and len(iv) < self.__class__.blocksize:
+            ctrlen = self.__class__.blocksize - len(iv)
+        assert len(iv) + ctrlen == self.__class__.blocksize, "Length of nonce + iv + ctr do not match the blocksize."
+        ctr = bytearray(iv + b"\x00" * ctrlen)
+        if ctrlen == 0:
+            ctrlen = self.__class__.blocksize
+
+        ctext.extend(iv)  # add nonce+iv as first block of the cipher text
         for b in self.blocksplit(text, False):
+            ctr = self.adv_ctr(ctr, ctrlen)
             z = self.encrypt_block(ctr)
             ctext.extend(bytexor(b, z))
-            ctr = self.adv_ctr(ctr, self.__class__.blocksize)
         return bytes(ctext)
 
-    def decrypt_ctr(self, ctext: bytes) -> bytes:
+    def decrypt_ctr(self, ctext: bytes, ctrlen: int = 0, nonce: bytes = b'', iv: bytes | None = None) -> bytes:
         "Decrypt using CTR mode."
+        assert 0 <= ctrlen <= self.__class__.blocksize, "Counter too long."
+        assert len(nonce) + ctrlen <= self.__class__.blocksize, "Nonce too long."
+        if iv is None:
+            iv = ctext[:self.__class__.blocksize - ctrlen - len(nonce)]
+            ctext = ctext[self.__class__.blocksize - ctrlen - len(nonce):]  # remove iv
+        iv = nonce + iv
+        assert len(iv) +ctrlen <= self.__class__.blocksize, "IV too long."
+        if ctrlen == 0 and len(iv) < self.__class__.blocksize:
+            ctrlen = self.__class__.blocksize - len(iv)
+        assert len(iv) + ctrlen == self.__class__.blocksize, "Length of nonce + iv + ctr do not match the blocksize."
+        ctr = bytearray(iv + b"\x00" * ctrlen)
+        if ctrlen == 0:
+            ctrlen = self.__class__.blocksize
+
         text = bytearray(b'')
-        ctr = ctext[:self.__class__.blocksize]  # iv
-        ctext = ctext[self.__class__.blocksize:]  # remove iv
         for b in self.blocksplit(ctext, False):
+            ctr = self.adv_ctr(ctr, ctrlen)
             z = self.encrypt_block(ctr)
             text.extend(bytexor(b, z))
-            ctr = self.adv_ctr(ctr, self.__class__.blocksize)
         return bytes(text)
 
     def mac_cbc(self, text: bytes, padding: bool = True) -> bytes:
@@ -286,21 +307,21 @@ class BlockCipher:
         "Encrypt using Galois CTR mode."
         assert self.__class__.blocksize == 16, "GHASH requires a blocksize of 16 bytes."
         ctext = bytearray(b'')
-        len_ctr = self.__class__.blocksize // 4
+        ctrlen = self.__class__.blocksize // 4
         if iv is None:
-            iv = randbytes(self.__class__.blocksize - len_ctr)
+            iv = randbytes(self.__class__.blocksize - ctrlen)
         else:
             assert len(iv) + \
-                len_ctr == self.__class__.blocksize, "IV has inappropriate length!"
-        ctr = iv + (len_ctr - 1) * b'\x00' + b'\x01'
-        ctr0 = ctr
+                ctrlen == self.__class__.blocksize, "IV has inappropriate length!"
+        ctr = bytearray(iv + (ctrlen - 1) * b'\x00' + b'\x01')
+        ctr0 = bytes(ctr)
         ctext.extend(iv)
         h, len_block, tag = self._aad_helper(len(text), aad)
         for b in self.blocksplit(text, 0):
-            ctr = self.adv_ctr(ctr, len_ctr)
+            ctr = self.adv_ctr(ctr, ctrlen)
             z = self.encrypt_block(ctr)
             ctext.extend(bytexor(b, z))
-        tag = self.ghash(ctext[self.__class__.blocksize - len_ctr:], h, init=tag)
+        tag = self.ghash(ctext[self.__class__.blocksize - ctrlen:], h, init=tag)
         tag = self.ghash(len_block, h, init=tag).to_bytes(
             self.__class__.blocksize, byteorder="big")
         z = self.encrypt_block(ctr0)
@@ -311,11 +332,11 @@ class BlockCipher:
         "Decrypt using Galois CTR mode."
         assert self.__class__.blocksize == 16, "GHASH requires a blocksize of 16 bytes."
         text = bytearray(b'')
-        len_ctr = self.__class__.blocksize // 4
-        iv = ctext[:self.__class__.blocksize - len_ctr]  # iv
-        ctr = iv + (len_ctr - 1) * b'\x00' + b'\x01'
+        ctrlen = self.__class__.blocksize // 4
+        iv = ctext[:self.__class__.blocksize - ctrlen]  # iv
+        ctr = bytearray(iv + (ctrlen - 1) * b'\x00' + b'\x01')
         mac = ctext[-self.__class__.blocksize:]  # mac
-        ctext = ctext[self.__class__.blocksize - len_ctr:-self.__class__.blocksize]
+        ctext = ctext[self.__class__.blocksize - ctrlen:-self.__class__.blocksize]
         h, len_block, tag = self._aad_helper(len(ctext), aad)
         tag = self.ghash(ctext, h, init=tag)
         tag = self.ghash(len_block, h, init=tag).to_bytes(
@@ -324,7 +345,7 @@ class BlockCipher:
         tag = bytexor(tag, z)
         assert tag == mac, "Incorrect MAC!"
         for b in self.blocksplit(ctext, 0):
-            ctr = self.adv_ctr(ctr, len_ctr)
+            ctr = self.adv_ctr(ctr, ctrlen)
             z = self.encrypt_block(ctr)
             text.extend(bytexor(b, z))
         return bytes(text)
