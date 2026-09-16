@@ -13,10 +13,11 @@ class BlockCipher:
 
     blocksize: int = 1 # blocksize in bytes
 
-    def __init__(self, key: bytes|int = None, mode: str|None = None):
+    def __init__(self, key: bytes|int = None, mode: str|None = None, ctrlen: int | None = None):
         self.key = None  # here we store the key (if any)
         self.cipher = None  # here we can store an instance of the cipher initialized with the key
         self.mode = mode # here we store the default en/decryption mode
+        self.ctrlen = ctrlen # default counter length for CTR mode
         if key:
             self.set_key(key)
 
@@ -170,9 +171,15 @@ class BlockCipher:
             z[i] = 0
         return z
 
-    def encrypt_ctr(self, text: bytes, ctrlen: int = 0, nonce: bytes = b'', iv: bytes | None = None) -> bytes:
+    def encrypt_ctr(self, text: bytes, ctrlen: int | None = None, nonce: bytes = b'', iv: bytes | None = None) -> bytes:
         "Encrypt using CTR mode."
-        ctext = bytearray(b'')
+        if ctrlen is None:
+            ctrlen = self.ctrlen
+            if ctrlen is None:
+                if self.blocksize >= 8:
+                    ctrlen = 4
+                else:
+                    ctrlen = 0 # use the entire iv as counter
         assert 0 <= ctrlen <= self.__class__.blocksize, "Counter too long."
         assert len(nonce) + ctrlen <= self.__class__.blocksize, "Nonce too long."
         if iv is None:
@@ -186,15 +193,22 @@ class BlockCipher:
         if ctrlen == 0:
             ctrlen = self.__class__.blocksize
 
-        ctext.extend(iv)  # add nonce+iv as first block of the cipher text
+        ctext = bytearray(iv)  # add nonce+iv as first block of the cipher text
         for b in self.blocksplit(text, False):
             ctr = self.adv_ctr(ctr, ctrlen)
             z = self.encrypt_block(ctr)
             ctext.extend(bytexor(b, z))
         return bytes(ctext)
 
-    def decrypt_ctr(self, ctext: bytes, ctrlen: int = 0, nonce: bytes = b'', iv: bytes | None = None) -> bytes:
+    def decrypt_ctr(self, ctext: bytes, ctrlen: int | None = None, nonce: bytes = b'', iv: bytes | None = None) -> bytes:
         "Decrypt using CTR mode."
+        if ctrlen is None:
+            ctrlen = self.ctrlen
+            if ctrlen is None:
+                if self.blocksize >= 8:
+                    ctrlen = 4
+                else:
+                    ctrlen = 0 # use the entire iv as counter
         assert 0 <= ctrlen <= self.__class__.blocksize, "Counter too long."
         assert len(nonce) + ctrlen <= self.__class__.blocksize, "Nonce too long."
         if iv is None:
