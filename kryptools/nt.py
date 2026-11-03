@@ -144,7 +144,7 @@ def sqrt_mod(a: int, p: int) -> int|None:
             return x
         return (x * pow(2, (p - 1)//4, p)) % p
     # Cipolla's algorithm
-    for c in range(1, p):  # find a field extension
+    for c in range(0, p):  # find a field extension
         tmp = (c * c - a) % p
         if tmp == 0:
             return c

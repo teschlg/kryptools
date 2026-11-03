@@ -97,7 +97,10 @@ class EC_Weierstrass():
         "Display some basic info on the curve"
         out = "Weierstrass curve y^2 = x^3"
         if int(self.a):
-            out += f" + {self.a} x"
+            if int(self.a) == 1:
+                out += f" + x"
+            else:
+                out += f" + {self.a} x"
         if int(self.b):
             out += f" + {self.b}"
         out += f" over Z_{self.p}."
