@@ -98,12 +98,15 @@ class EC_Weierstrass():
         out = "Weierstrass curve y^2 = x^3"
         if int(self.a):
             if int(self.a) == 1:
-                out += f" + x"
+                out += " + x"
             else:
                 out += f" + {self.a} x"
         if int(self.b):
             out += f" + {self.b}"
-        out += f" over Z_{self.p}."
+        out += f" over Z_{self.p}"
+        if self.group_order:
+            out += f" of order {self.group_order}"
+        out += "."
         print(out)
 
     def add(self, x1, y1, x2, y2):
