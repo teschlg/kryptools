@@ -698,6 +698,10 @@ class Matrix:
                 K[i, k] = - M[l, j]
         return K
 
+    def img(self) -> "Matrix":
+        "Compute a basis for the image."
+        return self.transpose().rref(drop_zero_rows = True).transpose()
+
     def det(self) -> int:
         "Compute the determinant."
         n, m = self.cols, self.rows
